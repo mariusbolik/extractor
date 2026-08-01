@@ -122,6 +122,12 @@ try {
     const arrowBox = await card.locator('svg').last().boundingBox();
     assert.ok(arrowBox && arrowBox.width >= 20 && arrowBox.height >= 20, 'A source card arrow is not visible');
   }
+  const amazonIcon = page.locator('.method-card[href="/amazon/"] svg').first();
+  assert.equal(await amazonIcon.getAttribute('data-icon'), 'simple-icons:amazon', 'Amazon card does not use its SVG brand logo');
+  assert.equal(await amazonIcon.evaluate((element) => getComputedStyle(element).color), 'rgb(255, 153, 0)', 'Amazon logo does not use its brand color');
+  const instagramIcon = page.locator('.method-card[href="/instagram/"] svg').first();
+  assert.equal(await instagramIcon.getAttribute('data-icon'), 'simple-icons:instagram', 'Instagram card does not use its SVG brand logo');
+  assert.equal(await instagramIcon.evaluate((element) => getComputedStyle(element).color), 'rgb(228, 64, 95)', 'Instagram logo is not colored');
   await assertNoHorizontalOverflow('desktop homepage');
 
   const serverCardResponse = await page.request.get(`${origin}/.well-known/mcp/server-card.json`);
