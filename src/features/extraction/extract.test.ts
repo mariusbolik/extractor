@@ -31,7 +31,7 @@ describe('extractUrl', () => {
 
     expect(result.method).toBe('native-markdown');
     expect(result.content).toBe(content);
-    expect(result.kind).toBe('document');
+    expect(result.type).toBe('document');
   });
 
   it('returns useful plain text without launching a browser', async () => {
@@ -138,8 +138,8 @@ describe('extractUrl', () => {
     });
 
     expect(result.source).toBe('reddit');
-    expect(result.kind).toBe('feed');
-    expect(result.items[0].title).toBe('First post');
+    expect(result.type).toBe('feed');
+    expect(result.items![0].title).toBe('First post');
     expect(result.method).toBe('reddit-rss');
   });
 
@@ -165,16 +165,16 @@ describe('extractUrl', () => {
 
     expect(result).toMatchObject({
       source: 'bluesky',
-      kind: 'feed',
+      type: 'profile',
       method: 'bluesky-rss',
       author: '@alice.example',
       publishedAt: '2026-07-31T19:00:00.000Z',
     });
-    expect(result.items[0]).toMatchObject({
+    expect(result.items![0]).toMatchObject({
       url: 'https://bsky.app/profile/alice.example/post/3abc',
       content: 'Hello from Bluesky.\n\nSecond line.',
     });
-    expect(result.items[0].content).not.toContain('&#xA;');
+    expect(result.items![0].content).not.toContain('&#xA;');
     expect(renderPageHtmlMock).not.toHaveBeenCalled();
   });
 
@@ -198,7 +198,7 @@ describe('extractUrl', () => {
 
     expect(result).toMatchObject({
       source: 'bluesky',
-      kind: 'document',
+      type: 'post',
       method: 'bluesky-api',
       author: 'Alice (@alice.example)',
       publishedAt: '2026-07-31T19:00:00.000Z',
@@ -223,7 +223,7 @@ describe('extractUrl', () => {
     });
 
     expect(result.source).toBe('youtube');
-    expect(result.kind).toBe('document');
+    expect(result.type).toBe('video');
     expect(result.title).toBe('A video');
     expect(result.method).toBe('youtube-oembed');
   });
@@ -250,7 +250,7 @@ describe('extractUrl', () => {
     const result = await extractUrl('https://www.youtube.com/@Cloudflare', { fetcher });
 
     expect(result.source).toBe('youtube');
-    expect(result.kind).toBe('feed');
+    expect(result.type).toBe('feed');
     expect(result.title).toBe('Cloudflare');
     expect(result.method).toBe('youtube-atom');
     expect(fetcher).toHaveBeenNthCalledWith(
@@ -330,8 +330,8 @@ describe('extractUrl', () => {
 
     const result = await extractUrl('https://example.com/', { fetcher });
     expect(result.method).toBe('discovered-feed');
-    expect(result.kind).toBe('feed');
-    expect(result.items[0].title).toBe('Story');
+    expect(result.type).toBe('feed');
+    expect(result.items![0].title).toBe('Story');
     expect(renderPageHtmlMock).not.toHaveBeenCalled();
   });
 
@@ -357,7 +357,7 @@ describe('extractUrl', () => {
 
     expect(result).toMatchObject({
       source: 'shopify',
-      kind: 'document',
+      type: 'product',
       title: 'Black shirt',
       method: 'shopify-json',
       author: 'Example Store',
@@ -385,8 +385,8 @@ describe('extractUrl', () => {
 
     const result = await extractUrl('https://store.example.com/', { fetcher });
 
-    expect(result).toMatchObject({ source: 'shopify', kind: 'feed', method: 'shopify-json' });
-    expect(result.items[0]).toMatchObject({
+    expect(result).toMatchObject({ source: 'shopify', type: 'feed', method: 'shopify-json' });
+    expect(result.items![0]).toMatchObject({
       title: 'One product',
       url: 'https://store.example.com/products/one-product',
     });
@@ -425,12 +425,13 @@ describe('extractUrl', () => {
     expect(result).toMatchObject({
       url: 'https://www.amazon.de/dp/B012345678',
       source: 'amazon',
-      kind: 'document',
+      type: 'product',
       title: 'Example coffee grinder',
       author: 'Example',
       method: 'amazon-html',
     });
     expect(result.content).toContain('Price: €19.99');
+    expect(result.attributes).toMatchObject({ price: 1999, currency: 'EUR', priceDisplay: '€19.99' });
     expect(result.content).toContain('Rating: 4.7 out of 5 stars — 123 ratings');
     expect(result.content).toContain('- Adjustable grind settings.');
     expect(result.content).toContain('https://images.example.com/grinder.jpg');
@@ -481,18 +482,19 @@ describe('extractUrl', () => {
     expect(result).toMatchObject({
       url: 'https://www.amazon.de/s?k=mechanical+keyboard',
       source: 'amazon',
-      kind: 'feed',
+      type: 'feed',
       title: 'Amazon search: mechanical keyboard',
       method: 'amazon-search-html',
     });
     expect(result.items).toHaveLength(2);
-    expect(result.items[0]).toMatchObject({
+    expect(result.items![0]).toMatchObject({
       url: 'https://www.amazon.de/dp/B012345678',
       title: 'Compact mechanical keyboard',
     });
     expect(result.content).toContain('Price: €49.99');
     expect(result.content).toContain('Rating: 4.6 out of 5 stars');
     expect(result.content).toContain('Review count: 231');
+    expect(result.items![0].attributes).toMatchObject({ price: 4999, currency: 'EUR', reviewCount: 231 });
     expect(result.content).toContain('https://images.example.com/keyboard.jpg');
     expect(renderPageHtmlMock).not.toHaveBeenCalled();
   });

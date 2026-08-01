@@ -34,11 +34,23 @@ function mastodonStatusResult(body: string, url: URL, oembed: OembedData): Extra
     .map((item) => text(record(item)?.description))
     .filter(Boolean);
   const published = Date.parse(text(status.created_at));
+  const extractedMedia = media.flatMap((item) => {
+    const attachment = record(item);
+    const mediaUrl = text(attachment?.url) || text(attachment?.preview_url);
+    const mediaType = text(attachment?.type);
+    if (!mediaUrl || !['image', 'video', 'audio', 'gifv'].includes(mediaType)) return [];
+    return [{
+      type: mediaType === 'gifv' ? 'video' as const : mediaType as 'image' | 'video' | 'audio',
+      url: mediaUrl,
+      ...(text(attachment?.description) ? { alt: text(attachment?.description) } : {}),
+    }];
+  });
 
   return {
+    type: 'post',
     url: text(status.url) || url.toString(),
     source: 'mastodon',
-    kind: 'document',
+    id: text(status.id) || url.pathname.match(/\/(\d+)\/?$/)?.[1] || null,
     title: `Mastodon post by @${handle}`,
     author,
     publishedAt: Number.isNaN(published) ? null : new Date(published).toISOString(),
@@ -49,7 +61,14 @@ function mastodonStatusResult(body: string, url: URL, oembed: OembedData): Extra
       descriptions.length ? `Media descriptions:\n\n${descriptions.map((item) => `- ${escapeMarkdown(item)}`).join('\n')}` : '',
       `[View on Mastodon](${url.toString()})`,
     ].filter(Boolean).join('\n\n'),
-    items: [],
+    media: extractedMedia,
+    attributes: {
+      ...(handle ? { handle: `@${handle}` } : {}),
+      ...(warning ? { contentWarning: warning } : {}),
+      ...(extractedMedia.length ? {
+        mediaType: extractedMedia.length > 1 ? 'mixed' as const : extractedMedia[0].type,
+      } : {}),
+    },
     method: 'mastodon-oembed',
   };
 }
@@ -84,5 +103,14 @@ export async function extractMastodon(
     }
   }
 
-  return oembedDocument({ data: oembed, url, provider: 'Mastodon', source: 'mastodon', method: 'mastodon-oembed', fallbackTitle: `Mastodon post by ${text(oembed.author_name) || 'unknown author'}` });
+  return oembedDocument({
+    data: oembed,
+    url,
+    provider: 'Mastodon',
+    source: 'mastodon',
+    method: 'mastodon-oembed',
+    fallbackTitle: `Mastodon post by ${text(oembed.author_name) || 'unknown author'}`,
+    type: 'post',
+    id: statusId,
+  });
 }

@@ -10,5 +10,17 @@ export async function extractSoundCloud(
   endpoint.searchParams.set('format', 'json');
   endpoint.searchParams.set('url', url.toString());
   const data = await fetchOembed(endpoint, fetcher, 'SoundCloud');
-  return oembedDocument({ data, url, provider: 'SoundCloud', source: 'soundcloud', method: 'soundcloud-oembed', fallbackTitle: 'SoundCloud audio' });
+  const segments = url.pathname.split('/').filter(Boolean);
+  const profile = segments.length === 1;
+  return oembedDocument({
+    data,
+    url,
+    provider: 'SoundCloud',
+    source: 'soundcloud',
+    method: 'soundcloud-oembed',
+    fallbackTitle: profile ? 'SoundCloud profile' : 'SoundCloud audio',
+    type: profile ? 'profile' : 'audio',
+    id: segments.at(-1) ?? null,
+    attributes: profile && segments[0] ? { handle: segments[0] } : {},
+  });
 }

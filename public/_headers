@@ -1,5 +1,5 @@
 /*
-  Link: </sitemap.xml>; rel="sitemap"; type="application/xml", </llms.txt>; rel="describedby"; type="text/markdown", </.well-known/api-catalog>; rel="api-catalog"; type="application/linkset+json", </openapi.json>; rel="service-desc"; type="application/vnd.oai.openapi+json"
+  Link: </sitemap.xml>; rel="sitemap"; type="application/xml", </llms.txt>; rel="describedby"; type="text/markdown", </.well-known/api-catalog>; rel="api-catalog"; type="application/linkset+json", </openapi.json>; rel="service-desc"; type="application/vnd.oai.openapi+json", </schemas/extraction-v1.json>; rel="describedby"; type="application/schema+json"
   X-Content-Type-Options: nosniff
 
 /llms.txt
@@ -30,5 +30,10 @@
 
 /openapi.json
   Content-Type: application/vnd.oai.openapi+json;version=3.1
+  Access-Control-Allow-Origin: *
+  Cache-Control: public, max-age=3600
+
+/schemas/*
+  Content-Type: application/schema+json; charset=utf-8
   Access-Control-Allow-Origin: *
   Cache-Control: public, max-age=3600

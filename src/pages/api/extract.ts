@@ -11,7 +11,7 @@ import {
 export const prerender = false;
 
 const FEED_TTL = 3_600;
-const AMAZON_PRODUCT_TTL = 3_600;
+const PRODUCT_TTL = 3_600;
 const DOCUMENT_TTL = 2_592_000;
 
 function successHeaders(ttl: number, contentType: string): Headers {
@@ -79,17 +79,18 @@ export const GET: APIRoute = async ({ request, url }) => {
       },
     });
 
-    // Product price and availability are more volatile than ordinary documents.
-    const ttl = result.kind === 'feed'
+    // Products, profiles, and feeds change faster than other single entities.
+    const ttl = result.items !== undefined
       ? FEED_TTL
-      : result.source === 'amazon' ? AMAZON_PRODUCT_TTL : DOCUMENT_TTL;
+      : result.type === 'product' ? PRODUCT_TTL : DOCUMENT_TTL;
+    const publicResult = toPublicExtractionResult(result);
     if (format === 'markdown') {
-      return new Response(result.content, {
+      return new Response(publicResult.content, {
         headers: successHeaders(ttl, 'text/markdown; charset=utf-8'),
       });
     }
 
-    return new Response(JSON.stringify(toPublicExtractionResult(result)), {
+    return new Response(JSON.stringify(publicResult), {
       headers: successHeaders(ttl, 'application/json; charset=utf-8'),
     });
   } catch (error) {

@@ -35,16 +35,22 @@ curl --get 'https://extractor.mcb-software.workers.dev/api/extract' \
 
 Successful JSON responses contain:
 
+- `schemaVersion` — Currently `1`.
+- `type` — One of `document`, `article`, `product`, `post`, `profile`, `video`, `audio`, or `feed`.
+- `source` — One of `web`, `amazon`, `bluesky`, `google-news`, `instagram`, `mastodon`, `reddit`, `shopify`, `soundcloud`, `spotify`, `tiktok`, `vimeo`, `x`, or `youtube`.
+- `id` — Stable source identifier when available, otherwise `null`.
 - `url` — Canonical source URL.
-- `source` — One of `web`, `amazon`, `bluesky`, `instagram`, `mastodon`, `reddit`, `shopify`, `soundcloud`, `spotify`, `tiktok`, `vimeo`, `x`, or `youtube`.
-- `kind` — `document` or `feed`.
 - `title` — Extracted title or `null`.
 - `author` — Extracted author or `null`.
 - `publishedAt` — ISO timestamp when available, otherwise `null`.
 - `content` — Clean Markdown content.
-- `items` — Feed items; empty for a single document.
+- `media` — Public image, video, or audio references.
+- `attributes` — Fields specific to the semantic entity type.
+- `items` — Present for feed and profile responses; omitted for individual entities.
 
-Each feed item contains `url`, `title`, `author`, `publishedAt`, and `content`.
+Each item follows the same entity shape. Product and variant `price` fields are non-negative integers in the currency's minor unit; for example, `1999` with `EUR` means €19.99. Use `priceDisplay` for presentation. Shared nullable fields are present with `null`, while unavailable optional attributes are omitted.
+
+Machine-readable JSON Schema: `https://extractor.mcb-software.workers.dev/schemas/extraction-v1.json`
 
 ## Markdown response
 
@@ -60,7 +66,7 @@ Public HTTP and HTTPS articles, documentation, blogs, and other content pages. I
 
 ### Amazon
 
-Public product detail pages from supported Amazon country stores return one normalized product document. Public search results URLs containing a `k` query return up to 20 normalized product items. Submit the ordinary product or search URL. Categories, pagination, carts, accounts, reviews, and personalized offers are not supported. Results may be cached for up to one hour.
+Public product detail pages from supported Amazon country stores return one product entity. Public search results URLs containing a `k` query return a feed with up to 20 product entities. Submit the ordinary product or search URL. Categories, pagination, carts, accounts, reviews, and personalized offers are not supported. Results may be cached for up to one hour.
 
 Example: `https://www.amazon.de/product-name/dp/B09B8X9RGM`
 
@@ -68,21 +74,27 @@ Search example: `https://www.amazon.de/s?k=mechanical+keyboard`
 
 ### Bluesky
 
-Public Bluesky profile pages return recent public posts as a feed. Exact public post pages return one normalized document. Replies and parent threads are excluded. Profile feeds may omit complete embedded and quoted content.
+Public Bluesky profile pages return a profile entity with recent public post items. Exact public post pages return one post entity. Replies and parent threads are excluded. Profiles may omit complete embedded and quoted content.
 
 Example: `https://bsky.app/profile/bsky.app`
 
 Post example: `https://bsky.app/profile/bsky.app/post/3mqcp5qjdfs26`
 
+### Google News
+
+Public Google News search, topic, and top-stories pages return up to 50 article entities. Results can include public titles, publishers, dates, summaries, and source links. Full publisher article bodies, personalized For You results, Google Search, and Google Shopping are not included.
+
+Example: `https://news.google.com/search?q=Cloudflare&hl=en-US&gl=US&ceid=US%3Aen`
+
 ### Instagram
 
-Public Instagram post and reel pages return one normalized document. Public profile pages return profile details and recent public posts as a feed. Private or login-only content, stories, comments, transcripts, and media downloads are unsupported.
+Public Instagram post and reel pages return one post entity. Public profile pages return a profile entity with recent public post items. Private or login-only content, stories, comments, transcripts, and media downloads are unsupported.
 
 Profile example: `https://www.instagram.com/instagram/`
 
 ### Mastodon
 
-Public status pages on compatible instances return one document with post text, author, date, content warning, and media descriptions when available. Private statuses, timelines, complete threads, and media downloads are unsupported.
+Public status pages on compatible instances return one post entity with text, author, date, content warning, and media descriptions when available. Private statuses, timelines, complete threads, and media downloads are unsupported.
 
 Example: `https://mastodon.social/@trwnh/99664077509711321`
 
@@ -94,31 +106,31 @@ Example: `https://www.reddit.com/r/CloudFlare/`
 
 ### Shopify
 
-Public Shopify product pages return one normalized document. Public storefront and collection pages return up to 50 listed products as a feed. Submit the ordinary HTML page URL rather than a JSON endpoint. Stores may disable or protect their public product data; those pages continue through regular webpage extraction.
+Public Shopify product pages return one product entity. Public storefront and collection pages return a feed with up to 50 product entities. Submit the ordinary HTML page URL rather than a JSON endpoint. Stores may disable or protect their public product data; those pages continue through regular webpage extraction.
 
 Example: `https://store.example/products/black-shirt`
 
 ### SoundCloud
 
-Public tracks, playlists, sets, and creator profile URLs return one metadata document. Comments, waveforms, transcripts, and media downloads are not provided.
+Public tracks, playlists, and sets return an audio entity; creator pages return a profile entity. Comments, waveforms, transcripts, and media downloads are not provided.
 
 Example: `https://soundcloud.com/forss/flickermood`
 
 ### Spotify
 
-Public tracks, albums, artists, playlists, podcast shows, episodes, and supported short links return one metadata document. Lyrics, transcripts, playback data, audio analysis, and media downloads are not provided.
+Public tracks, albums, playlists, podcast shows, episodes, and supported short links return an audio entity; artist pages return a profile entity. Lyrics, transcripts, playback data, audio analysis, and media downloads are not provided.
 
 Example: `https://open.spotify.com/episode/7makk4oTQel546B0PZlDM5`
 
 ### TikTok
 
-Public TikTok video and photo post pages return one normalized document. Public creator profile pages return profile details. Short links are supported when they resolve to one of these public pages. Private, deleted, or age-restricted content, comments, transcripts, and media downloads are unsupported.
+Public TikTok video and photo post pages return one post entity. Public creator pages return a profile entity. Short links are supported when they resolve to one of these public pages. Private, deleted, or age-restricted content, comments, transcripts, and media downloads are unsupported.
 
 Example: `https://www.tiktok.com/@scout2015/video/6718335390845095173`
 
 ### Vimeo
 
-Public Vimeo video pages return one metadata document with title, author, description, upload date, duration, thumbnail, and source URL when available. Transcripts, captions, comments, and media downloads are not provided.
+Public Vimeo video pages return one video entity with title, author, description, upload date, duration, thumbnail, and source URL when available. Transcripts, captions, comments, and media downloads are not provided.
 
 Example: `https://vimeo.com/286898202`
 
@@ -136,9 +148,8 @@ Example: `https://www.youtube.com/@Cloudflare`
 
 - General limit: 30 extraction requests per client per 60 seconds.
 - Browser-rendering fallback: 5 requests per client per 60 seconds.
-- Feed results may be cached for 1 hour.
-- Amazon product and search results may be cached for 1 hour.
-- Document results may be cached for 30 days.
+- Product, profile, and feed results may be cached for 1 hour.
+- Other single-entity results may be cached for 30 days.
 - Maximum extracted result size: 2 MB.
 
 Rate-limited responses use HTTP `429` and include `Retry-After` when available. Errors use a JSON object with `error.code` and `error.message`.
@@ -148,6 +159,7 @@ When a source blocks extraction or returns an upstream failure, the error messag
 ## Discovery
 
 - OpenAPI: `https://extractor.mcb-software.workers.dev/openapi.json`
+- JSON Schema: `https://extractor.mcb-software.workers.dev/schemas/extraction-v1.json`
 - API catalog: `https://extractor.mcb-software.workers.dev/.well-known/api-catalog`
 - llms.txt: `https://extractor.mcb-software.workers.dev/llms.txt`
 - Developer docs: `https://extractor.mcb-software.workers.dev/docs/`

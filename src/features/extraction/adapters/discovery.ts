@@ -61,11 +61,16 @@ function feedResult(body: string, pageUrl: string): ExtractionResult | null {
     const itemUrl = rssChannel ? text(entry.link).trim() || text(entry.guid).trim() : linkHref(entry);
     const authorValue = entry.author as Record<string, unknown> | string | undefined;
     return {
+      type: 'article',
+      source: 'web',
+      id: text(entry.guid).trim() || null,
       url: itemUrl || pageUrl,
       title: text(entry.title).trim() || null,
       author: text(typeof authorValue === 'object' ? authorValue?.name : authorValue).trim() || null,
       publishedAt: isoDate(entry.pubDate || entry.published || entry.updated),
       content: htmlFragmentToMarkdown(rawContent, itemUrl || pageUrl) || escapeMarkdown(rawContent),
+      media: [],
+      attributes: {},
     };
   });
   if (!items.length) return null;
@@ -80,13 +85,19 @@ function feedResult(body: string, pageUrl: string): ExtractionResult | null {
   ].filter(Boolean).join('\n\n---\n\n');
 
   return {
+    type: 'feed',
     url: pageUrl,
     source: 'web',
-    kind: 'feed',
+    id: null,
     title,
     author: null,
     publishedAt: items[0]?.publishedAt ?? null,
     content,
+    media: [],
+    attributes: {
+      feedType: 'publisher',
+      ...(text(feed.description).trim() ? { description: text(feed.description).trim() } : {}),
+    },
     items,
     method: 'discovered-feed',
   };
@@ -108,14 +119,16 @@ function oembedResult(body: string, pageUrl: string): ExtractionResult | null {
   if (!contentBody && !title && !thumbnail) return null;
 
   return {
+    type: 'document',
     url: pageUrl,
     source: 'web',
-    kind: 'document',
+    id: null,
     title: title || null,
     author: author || null,
     publishedAt: null,
     content,
-    items: [],
+    media: thumbnail ? [{ type: 'image', url: thumbnail, alt: title || 'Preview' }] : [],
+    attributes: {},
     method: 'oembed',
   };
 }
@@ -133,14 +146,16 @@ function wordpressResult(body: string, pageUrl: string): ExtractionResult | null
   const canonicalUrl = typeof data.link === 'string' ? data.link : pageUrl;
 
   return {
+    type: 'article',
     url: canonicalUrl,
     source: 'web',
-    kind: 'document',
+    id: typeof data.id === 'number' || typeof data.id === 'string' ? String(data.id) : null,
     title: title || null,
     author: null,
     publishedAt: isoDate(data.date_gmt || data.date),
     content: [title ? `# ${title}` : '', bodyMarkdown].filter(Boolean).join('\n\n'),
-    items: [],
+    media: [],
+    attributes: {},
     method: 'wordpress-json',
   };
 }

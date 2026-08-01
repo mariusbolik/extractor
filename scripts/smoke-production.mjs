@@ -214,14 +214,40 @@ async function targetsFromFile(path, count) {
   };
 }
 
+const extractionSources = new Set([
+  'web', 'amazon', 'bluesky', 'google-news', 'instagram', 'mastodon', 'reddit',
+  'shopify', 'soundcloud', 'spotify', 'tiktok', 'vimeo', 'x', 'youtube',
+]);
+const entityTypes = new Set(['document', 'article', 'product', 'post', 'profile', 'video', 'audio', 'feed']);
+
+function validPrice(value) {
+  return value === undefined || (Number.isInteger(value) && value >= 0);
+}
+
+function validEntity(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  if (!entityTypes.has(value.type) || !extractionSources.has(value.source)) return false;
+  if (Object.hasOwn(value, 'kind') || Object.hasOwn(value, 'method')) return false;
+  if (!(value.id === null || typeof value.id === 'string')) return false;
+  if (typeof value.url !== 'string') return false;
+  if (!(value.title === null || typeof value.title === 'string')) return false;
+  if (!(value.author === null || typeof value.author === 'string')) return false;
+  if (!(value.publishedAt === null || typeof value.publishedAt === 'string')) return false;
+  if (typeof value.content !== 'string' || !Array.isArray(value.media)) return false;
+  if (!value.attributes || typeof value.attributes !== 'object' || Array.isArray(value.attributes)) return false;
+  if (!validPrice(value.attributes.price)) return false;
+  if (value.attributes.variants !== undefined) {
+    if (!Array.isArray(value.attributes.variants)) return false;
+    if (value.attributes.variants.some((variant) => !variant || typeof variant !== 'object' || !validPrice(variant.price))) return false;
+  }
+  if (value.type === 'feed' || value.type === 'profile') {
+    return Array.isArray(value.items) && value.items.every(validEntity);
+  }
+  return !Object.hasOwn(value, 'items');
+}
+
 function validSuccessBody(value) {
-  return value
-    && typeof value === 'object'
-    && typeof value.url === 'string'
-    && ['web', 'amazon', 'bluesky', 'instagram', 'mastodon', 'reddit', 'shopify', 'soundcloud', 'spotify', 'tiktok', 'vimeo', 'x', 'youtube'].includes(value.source)
-    && ['document', 'feed'].includes(value.kind)
-    && typeof value.content === 'string'
-    && Array.isArray(value.items);
+  return value?.schemaVersion === 1 && validEntity(value);
 }
 
 function validErrorBody(value) {
@@ -266,7 +292,7 @@ async function testTarget(target, options) {
       result.outcome = 'success';
       result.contentLength = body.content.length;
       result.extractedSource = body.source;
-      result.extractedKind = body.kind;
+      result.extractedType = body.type;
     } else if (response.ok) {
       result.outcome = 'invalid_response';
       result.errorMessage = 'Successful response did not match the public API schema.';

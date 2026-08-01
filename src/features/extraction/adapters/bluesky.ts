@@ -154,14 +154,16 @@ export async function extractBlueskyPost(
   ].filter(Boolean).join('\n\n');
 
   return {
+    type: 'post',
     url: canonicalUrl,
     source: 'bluesky',
-    kind: 'document',
+    id: rkey,
     title: `Post by @${handle}`,
     author,
     publishedAt: isoDate(record?.createdAt),
     content,
-    items: [],
+    media: [],
+    attributes: { handle: `@${handle}` },
     method: 'bluesky-api',
   };
 }
@@ -196,11 +198,16 @@ export async function extractBlueskyProfile(
   const items: ExtractedItem[] = entries.map((entry) => {
     const itemUrl = text(entry.link).trim();
     return {
+      type: 'post',
+      source: 'bluesky',
+      id: itemUrl.match(/\/post\/([^/?#]+)/)?.[1] ?? null,
       url: itemUrl || url.toString(),
       title: null,
       author,
       publishedAt: isoDate(entry.pubDate),
       content: escapeMarkdown(text(entry.description)),
+      media: [],
+      attributes: { handle: author },
     };
   });
 
@@ -218,13 +225,20 @@ export async function extractBlueskyProfile(
   ].filter(Boolean).join('\n\n---\n\n');
 
   return {
+    type: 'profile',
     url: url.toString(),
     source: 'bluesky',
-    kind: 'feed',
+    id: actor,
     title,
     author,
     publishedAt: items[0]?.publishedAt ?? null,
     content,
+    media: [],
+    attributes: {
+      handle: author,
+      ...(description ? { biography: description } : {}),
+      postCount: items.length,
+    },
     items,
     method: 'bluesky-rss',
   };

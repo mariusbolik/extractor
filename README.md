@@ -7,6 +7,7 @@ A public, cache-first GET API and small web interface that turns public URLs int
 - Generic public webpages and articles.
 - Public Amazon product detail pages and search results from supported country stores.
 - Public Bluesky profile feeds and individual posts.
+- Public Google News searches, topics, and top stories.
 - Public Instagram posts, reels, profiles, and recent profile posts.
 - Public Mastodon statuses from compatible instances.
 - Reddit posts, communities, and public user feeds.
@@ -33,6 +34,10 @@ The API is available at:
 GET /api/extract?url=https%3A%2F%2Fexample.com&format=json
 GET /api/extract?url=https%3A%2F%2Fexample.com&format=markdown
 ```
+
+Successful JSON responses use the versioned entity contract documented at
+`/docs/schema/` and published as JSON Schema at `/schemas/extraction-v1.json`.
+Product prices are integer minor units, so `1999` with `EUR` means €19.99.
 
 Run all verification:
 
@@ -90,9 +95,8 @@ The Worker name is `extractor`, producing `https://extractor.mcb-software.worker
 
 ## Cache and limits
 
-- Feeds: 1 hour at Cloudflare’s edge.
-- Amazon products and searches: 1 hour at Cloudflare’s edge.
-- Documents, posts, tweets, and videos: 30 days at the edge.
+- Products, profiles, and feeds: 1 hour at Cloudflare’s edge.
+- Other single entities and pages: 30 days at the edge.
 - Cache misses: 30 extractions per IP per minute.
 - Rendered-page fallback: 5 launches per IP per minute.
 

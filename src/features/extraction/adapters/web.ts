@@ -64,14 +64,16 @@ export async function extractWebPage(
         );
       }
       return {
+        type: 'document',
         url: fetchedUrl,
         source: 'web',
-        kind: 'document',
+        id: null,
         title: titleFromMarkdown(content),
         author: null,
         publishedAt: null,
         content,
-        items: [],
+        media: [],
+        attributes: {},
         method: 'native-markdown',
       };
     }
@@ -93,12 +95,14 @@ export async function extractWebPage(
     if (shopify) return shopify;
     const extracted = extractMarkdownFromHtml(page.body, fetchedUrl);
     return {
+      type: 'article',
       url: fetchedUrl,
       source: 'web',
-      kind: 'document',
+      id: null,
       ...extracted,
       publishedAt: null,
-      items: [],
+      media: [],
+      attributes: {},
       method: 'linkedom',
     };
   } catch (error) {
@@ -136,12 +140,14 @@ export async function extractWebPage(
     const html = await renderPageHtml(url, dependencies.browser);
     const extracted = extractMarkdownFromHtml(html, fetchedUrl);
     return {
+      type: 'article',
       url: fetchedUrl,
       source: 'web',
-      kind: 'document',
+      id: null,
       ...extracted,
       publishedAt: null,
-      items: [],
+      media: [],
+      attributes: {},
       method: 'browser',
     };
   } catch (browserError) {

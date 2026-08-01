@@ -1,0 +1,36 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SocialLanding from '../components/SocialLanding.astro';
+
+export const prerender = true;
+const title = 'Google News search and topics to Markdown or JSON — extractor.sh';
+const description = 'Convert public Google News search, topic, and top-stories pages into a normalized article feed.';
+---
+
+<BaseLayout {title} {description} path="/google-news/">
+  <SocialLanding
+    platform="Google News"
+    eyebrow="Google News extractor"
+    headline="Public news results, made reusable."
+    {description}
+    outcome="Up to 50 articles in one consistent feed."
+    capabilities={[
+      { label: 'Input', value: 'One ordinary public Google News search, topic, or top-stories page URL.' },
+      { label: 'Returns', value: 'A feed containing up to 50 normalized article entities.' },
+      { label: 'Includes', value: 'Article title, publisher, publisher URL, publication date, summary, and source link when available.' },
+      { label: 'Caching', value: 'News feeds may be cached for up to one hour.' },
+    ]}
+    supported={[
+      'Public Google News search result pages',
+      'Public Google News topic pages',
+      'Public top-stories and home pages',
+    ]}
+    limitations={[
+      'Google Search, Google Shopping, and personalized For You results are not included',
+      'Results contain article metadata and summaries, not the full publisher article body',
+      'Google redirect links are preserved when the publisher URL is not exposed',
+      'CAPTCHAs, login walls, and region selection are not bypassed',
+    ]}
+    exampleUrl="https://news.google.com/search?q=Cloudflare&hl=en-US&gl=US&ceid=US%3Aen"
+  />
+</BaseLayout>

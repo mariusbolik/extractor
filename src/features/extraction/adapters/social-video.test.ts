@@ -42,7 +42,7 @@ describe('TikTok extraction', () => {
 
     expect(result).toMatchObject({
       source: 'tiktok',
-      kind: 'document',
+      type: 'post',
       method: 'tiktok-hydration',
       author: 'Scout & Suki (@scout2015)',
       publishedAt: '2019-07-27T13:32:38.000Z',
@@ -96,7 +96,7 @@ describe('Instagram extraction', () => {
 
     expect(result).toMatchObject({
       source: 'instagram',
-      kind: 'document',
+      type: 'post',
       method: 'instagram-embed',
       author: '@instagram',
     });
@@ -131,13 +131,13 @@ describe('Instagram extraction', () => {
 
     expect(result).toMatchObject({
       source: 'instagram',
-      kind: 'feed',
+      type: 'profile',
       method: 'instagram-profile',
       author: 'Instagram (@instagram)',
     });
     expect(result.items).toHaveLength(1);
-    expect(result.items[0].url).toBe('https://www.instagram.com/p/POST123/');
-    expect(result.items[0].content).toContain('A recent post.');
+    expect(result.items![0].url).toBe('https://www.instagram.com/p/POST123/');
+    expect(result.items![0].content).toContain('A recent post.');
     expect(result.content).toContain('Posts: 20');
     expect(fetcher).toHaveBeenCalledTimes(1);
   });
@@ -162,7 +162,7 @@ describe('Instagram extraction', () => {
     }) as unknown as typeof fetch;
 
     const result = await extractUrl('https://www.instagram.com/instagram/', { fetcher });
-    expect(result).toMatchObject({ source: 'instagram', kind: 'feed', method: 'instagram-profile' });
+    expect(result).toMatchObject({ source: 'instagram', type: 'profile', method: 'instagram-profile' });
     expect(result.content).toContain('Discover what is new.');
     expect(fetcher).toHaveBeenCalledTimes(2);
   });

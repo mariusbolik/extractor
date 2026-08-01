@@ -17,25 +17,30 @@ const description = 'Supported public webpage, commerce, social, audio, podcast,
   <p>If a page cannot be read directly, extractor.sh can use a structured post, embed, or feed URL that the publisher advertises in that page. You still submit the normal HTML page URL.</p>
 
   <h2>Amazon</h2>
-  <p>Public product detail pages return one product document. Public search results pages return a feed containing up to 20 products.</p>
+  <p>Public product detail pages return one product entity. Public search results pages return a feed containing up to 20 product entities.</p>
   <pre><code>https://www.amazon.de/product-name/dp/B09B8X9RGM
 https://www.amazon.de/s?k=mechanical+keyboard</code></pre>
   <p>Submit the ordinary product or search URL. Search feeds include titles, canonical product URLs, prices, ratings, review counts, and images when present. Category browsing, pagination, carts, accounts, reviews, and personalized offers are unavailable. Results may be cached for up to one hour.</p>
 
   <h2>Bluesky</h2>
-  <p>Public Bluesky profile pages return recent public posts as a feed. Individual post pages return one normalized document.</p>
+  <p>Public Bluesky profile pages return a profile entity with recent public post items. Individual post pages return one post entity.</p>
   <pre><code>https://bsky.app/profile/bsky.app
 https://bsky.app/profile/bsky.app/post/3mqcp5qjdfs26</code></pre>
   <p>Replies and parent threads are not included. Profile feeds may omit complete embedded and quoted content.</p>
 
+  <h2>Google News</h2>
+  <p>Public Google News search, topic, and top-stories pages return a feed containing up to 50 article entities.</p>
+  <pre><code>https://news.google.com/search?q=Cloudflare&amp;hl=en-US&amp;gl=US&amp;ceid=US%3Aen</code></pre>
+  <p>Submit the ordinary Google News page URL. Results include article titles, publishers, publication dates, summaries, and source links when available. Full publisher article bodies, personalized For You results, Google Search, and Google Shopping are not included.</p>
+
   <h2>Instagram</h2>
-  <p>Public post and reel pages return one document. Public profile pages return profile details and recent public posts as a feed.</p>
+  <p>Public post and reel pages return one post entity. Public profile pages return a profile entity with recent public post items.</p>
   <pre><code>https://www.instagram.com/instagram/
 https://www.instagram.com/p/DbbY9pdm6Q2/</code></pre>
   <p>Private or login-only content, stories, comments, transcripts, and media downloads are not supported.</p>
 
   <h2>Mastodon</h2>
-  <p>Public status URLs on compatible Mastodon instances return one document containing the post, author, date, content warning, media descriptions, and source link when available.</p>
+  <p>Public status URLs on compatible Mastodon instances return one post entity containing the author, date, content warning, media descriptions, and source link when available.</p>
   <pre><code>https://mastodon.social/@trwnh/99664077509711321</code></pre>
   <p>Private statuses, timelines, complete threads, replies, and media downloads are not supported.</p>
 
@@ -46,15 +51,15 @@ https://www.instagram.com/p/DbbY9pdm6Q2/</code></pre>
     <li>Public storefront homepages</li>
   </ul>
   <pre><code>https://store.example/products/black-shirt</code></pre>
-  <p>Submit the ordinary storefront page, not its JSON URL. Product pages return one document. Storefront and collection pages return up to 50 publicly listed products as a feed. Stores that disable or protect their product data continue through regular webpage extraction.</p>
+  <p>Submit the ordinary storefront page, not its JSON URL. Product pages return one product entity. Storefront and collection pages return up to 50 product entities as a feed. Stores that disable or protect their product data continue through regular webpage extraction.</p>
 
   <h2>SoundCloud</h2>
-  <p>Public track, playlist, set, and creator profile URLs return one metadata document.</p>
+  <p>Public tracks, playlists, and sets return an audio entity. Creator pages return a profile entity.</p>
   <pre><code>https://soundcloud.com/forss/flickermood</code></pre>
   <p>Comments, waveforms, transcripts, audio analysis, and media downloads are not provided.</p>
 
   <h2>Spotify</h2>
-  <p>Public track, album, artist, playlist, podcast show, and episode URLs return one metadata document.</p>
+  <p>Public tracks, albums, playlists, podcast shows, and episodes return an audio entity. Artist pages return a profile entity.</p>
   <pre><code>https://open.spotify.com/episode/7makk4oTQel546B0PZlDM5</code></pre>
   <p>Lyrics, transcripts, playback data, audio analysis, and media downloads are not provided.</p>
 
@@ -85,7 +90,7 @@ https://www.instagram.com/p/DbbY9pdm6Q2/</code></pre>
   <p>Private, deleted, or age-restricted content, comments, transcripts, and media downloads are not supported.</p>
 
   <h2>Vimeo</h2>
-  <p>Public Vimeo video URLs, including supported channel, group, showcase, and On Demand links, return one metadata document.</p>
+  <p>Public Vimeo video URLs, including supported channel, group, showcase, and On Demand links, return one video entity.</p>
   <pre><code>https://vimeo.com/286898202</code></pre>
   <p>Private or embed-disabled videos, transcripts, captions, comments, and media downloads are not provided.</p>
 

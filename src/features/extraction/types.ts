@@ -1,5 +1,8 @@
-export type ExtractionSource = 'web' | 'amazon' | 'bluesky' | 'instagram' | 'mastodon' | 'reddit' | 'shopify' | 'soundcloud' | 'spotify' | 'tiktok' | 'vimeo' | 'x' | 'youtube';
-export type ExtractionKind = 'document' | 'feed';
+import { ExtractionError } from './errors';
+import { entityTypes, extractionSources, ExtractionResponseSchema } from './schema';
+
+export type ExtractionSource = typeof extractionSources[number];
+export type EntityType = typeof entityTypes[number];
 export type ExtractionMethod =
   | 'native-markdown'
   | 'linkedom'
@@ -9,6 +12,9 @@ export type ExtractionMethod =
   | 'bluesky-api'
   | 'bluesky-rss'
   | 'discovered-feed'
+  | 'google-news-rss'
+  | 'google-news-html'
+  | 'google-news-browser'
   | 'instagram-embed'
   | 'instagram-profile'
   | 'mastodon-oembed'
@@ -26,34 +32,85 @@ export type ExtractionMethod =
   | 'youtube-atom'
   | 'youtube-oembed';
 
+export interface ExtractedMedia {
+  type: 'image' | 'video' | 'audio';
+  url: string;
+  alt?: string;
+  width?: number;
+  height?: number;
+}
+
+export interface ProductVariant {
+  id?: string;
+  title: string;
+  price?: number;
+  currency?: string;
+  priceDisplay?: string;
+  available?: boolean;
+}
+
+export interface EntityAttributes {
+  productType?: 'physical' | 'software' | 'service';
+  brand?: string;
+  category?: string;
+  price?: number;
+  currency?: string;
+  priceDisplay?: string;
+  availability?: string;
+  rating?: number;
+  ratingScale?: number;
+  reviewCount?: number;
+  features?: string[];
+  variants?: ProductVariant[];
+  publisher?: string;
+  publisherUrl?: string;
+  handle?: string;
+  contentWarning?: string;
+  mediaType?: 'text' | 'image' | 'video' | 'audio' | 'carousel' | 'mixed';
+  durationSeconds?: number;
+  biography?: string;
+  followerCount?: number;
+  followingCount?: number;
+  postCount?: number;
+  feedType?: string;
+  query?: string;
+  description?: string;
+  language?: string;
+  country?: string;
+}
+
 export interface ExtractedItem {
+  type: EntityType;
+  source: ExtractionSource;
+  id: string | null;
   url: string;
   title: string | null;
   author: string | null;
   publishedAt: string | null;
   content: string;
+  media: ExtractedMedia[];
+  attributes: EntityAttributes;
+  items?: ExtractedItem[];
 }
 
 export interface ExtractionResult extends ExtractedItem {
-  source: ExtractionSource;
-  kind: ExtractionKind;
-  items: ExtractedItem[];
   method: ExtractionMethod;
 }
 
-export type PublicExtractionResult = Omit<ExtractionResult, 'method'>;
+export interface PublicExtractionResult extends ExtractedItem {
+  schemaVersion: 1;
+}
 
 export function toPublicExtractionResult(result: ExtractionResult): PublicExtractionResult {
-  return {
-    url: result.url,
-    source: result.source,
-    kind: result.kind,
-    title: result.title,
-    author: result.author,
-    publishedAt: result.publishedAt,
-    content: result.content,
-    items: result.items,
-  };
+  const { method: _method, ...entity } = result;
+  const parsed = ExtractionResponseSchema.safeParse({ schemaVersion: 1, ...entity });
+  if (!parsed.success) {
+    console.error('Extraction result failed schema validation', {
+      issues: parsed.error.issues.map((issue) => ({ path: issue.path.join('.'), code: issue.code })),
+    });
+    throw new ExtractionError('extraction_failed', 'The extracted data did not match the response schema.', 500);
+  }
+  return parsed.data as PublicExtractionResult;
 }
 
 export interface ExtractionDependencies {

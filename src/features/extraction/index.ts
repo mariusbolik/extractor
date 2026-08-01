@@ -3,11 +3,14 @@ export { ExtractionError, toExtractionError } from './errors';
 export { toPublicExtractionResult } from './types';
 export type {
   ExtractedItem,
+  ExtractedMedia,
+  EntityAttributes,
+  EntityType,
   ExtractionDependencies,
-  ExtractionKind,
   ExtractionMethod,
   ExtractionResult,
   ExtractionSource,
   OutputFormat,
   PublicExtractionResult,
 } from './types';
+export { ExtractionEntitySchema, ExtractionResponseSchema, extractionJsonSchema } from './schema';

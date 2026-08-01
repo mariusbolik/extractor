@@ -6,8 +6,9 @@ const DISCOVERY_LINKS = [
   '</llms.txt>; rel="describedby"; type="text/markdown"',
   '</.well-known/api-catalog>; rel="api-catalog"; type="application/linkset+json"',
   '</openapi.json>; rel="service-desc"; type="application/vnd.oai.openapi+json"',
+  '</schemas/extraction-v1.json>; rel="describedby"; type="application/schema+json"',
 ].join(', ');
-const API_CACHE_VERSION = '2026-08-amazon-search-1';
+const API_CACHE_VERSION = '2026-08-schema-v1';
 
 function acceptsMarkdown(header: string | null): boolean {
   if (!header) return false;

@@ -17,7 +17,7 @@ curl --get 'https://extractor.mcb-software.workers.dev/api/extract' \
   --data-urlencode 'format=markdown'
 ```
 
-Use `format=markdown` for a raw Markdown body or `format=json` for normalized fields. JSON is the default.
+Use `format=markdown` for a raw Markdown body or `format=json` for the versioned typed entity schema. JSON is the default. Read the [JSON Schema](https://extractor.mcb-software.workers.dev/schemas/extraction-v1.json) before storing JSON responses.
 
 Always submit the ordinary public page URL a person would open in a browser. Do not send credentials, cookies, authorization tokens, private URLs, or private data.
 

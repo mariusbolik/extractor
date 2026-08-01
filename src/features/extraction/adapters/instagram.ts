@@ -80,6 +80,7 @@ function extractInstagramPostNode(
   const mediaDescription = type === 'GraphSidecar'
     ? `Media: ${children.length || 'multiple'} carousel items`
     : type === 'GraphVideo' ? 'Media: video' : type === 'GraphImage' ? 'Media: image' : '';
+  const image = text(node.display_url) || text(node.thumbnail_src);
 
   const content = [
     `# Instagram post${author ? ` by ${escapeMarkdown(author)}` : ''}`,
@@ -89,14 +90,21 @@ function extractInstagramPostNode(
   ].filter(Boolean).join('\n\n');
 
   return {
+    type: 'post',
     url: canonicalUrl,
     source: 'instagram',
-    kind: 'document',
+    id: canonicalUrl.match(/\/(?:p|reel)\/([^/]+)/i)?.[1] ?? null,
     title: author ? `Instagram post by ${author}` : 'Instagram post',
     author,
     publishedAt: isoFromSeconds(node.taken_at_timestamp ?? node.taken_at),
     content,
-    items: [],
+    media: image ? [{ type: 'image', url: image, alt: caption || 'Instagram post' }] : [],
+    attributes: {
+      ...(username ? { handle: `@${username}` } : {}),
+      ...(type === 'GraphSidecar' ? { mediaType: 'carousel' as const }
+        : type === 'GraphVideo' ? { mediaType: 'video' as const }
+          : type === 'GraphImage' ? { mediaType: 'image' as const } : {}),
+    },
     method: 'instagram-embed',
   };
 }
@@ -134,14 +142,16 @@ async function extractInstagramPost(
   if (!text(data.html)) throw new ExtractionError('not_found', 'The Instagram post is unavailable.', 404);
 
   return {
+    type: 'post',
     url: parts.canonicalUrl,
     source: 'instagram',
-    kind: 'document',
+    id: parts.shortcode,
     title: 'Instagram post',
     author: null,
     publishedAt: null,
     content: `# Instagram post\n\n[View on Instagram](${parts.canonicalUrl})`,
-    items: [],
+    media: [],
+    attributes: {},
     method: 'instagram-embed',
   };
 }
@@ -155,11 +165,19 @@ function profilePostItem(node: UnknownRecord, author: string): ExtractedItem | n
   const firstLine = caption.split('\n').find((line) => line.trim())?.trim() || '';
 
   return {
+    type: 'post',
+    source: 'instagram',
+    id: shortcode,
     url: itemUrl,
     title: firstLine ? firstLine.slice(0, 120) : null,
     author,
     publishedAt: isoFromSeconds(node.taken_at_timestamp),
     content: caption ? escapeMarkdown(caption) : `[View on Instagram](${itemUrl})`,
+    media: text(node.display_url) ? [{ type: 'image', url: text(node.display_url), alt: caption || 'Instagram post' }] : [],
+    attributes: {
+      handle: author.match(/@[^)\s]+/)?.[0] || author,
+      mediaType: isVideo ? 'video' : 'image',
+    },
   };
 }
 
@@ -199,13 +217,22 @@ function instagramProfileResult(fields: InstagramProfileFields): ExtractionResul
   ].filter(Boolean).join('\n\n');
 
   return {
+    type: 'profile',
     url: canonicalUrl,
     source: 'instagram',
-    kind: 'feed',
+    id: handle,
     title: displayName || `@${handle}`,
     author,
     publishedAt: items[0]?.publishedAt ?? null,
     content,
+    media: [],
+    attributes: {
+      handle: `@${handle}`,
+      ...(biography ? { biography } : {}),
+      ...(followers !== null ? { followerCount: followers } : {}),
+      ...(following !== null ? { followingCount: following } : {}),
+      ...(posts !== null ? { postCount: posts } : {}),
+    },
     items,
     method: 'instagram-profile',
   };

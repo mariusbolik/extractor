@@ -23,6 +23,7 @@ ${apiExample}
 
 - [Amazon](${ORIGIN}/amazon/): Public product detail and search results pages from supported country stores.
 - [Bluesky](${ORIGIN}/bluesky/): Public profile feeds and individual posts.
+- [Google News](${ORIGIN}/google-news/): Public searches, topics, and top stories as article feeds.
 - [Instagram](${ORIGIN}/instagram/): Public posts, reels, profiles, and recent profile posts.
 - [Mastodon](${ORIGIN}/mastodon/): Public statuses from compatible federated instances.
 - [Reddit](${ORIGIN}/reddit/): Public posts, communities, and user profiles.
@@ -40,6 +41,7 @@ ${apiExample}
 - [Developer documentation](${ORIGIN}/docs/)
 - [OpenAPI 3.1](${ORIGIN}/openapi.json)
 - [API catalog](${ORIGIN}/.well-known/api-catalog)
+- [JSON Schema](${ORIGIN}/schemas/extraction-v1.json)
 - [Full agent documentation](${ORIGIN}/llms-full.txt)
 - [Pricing](${ORIGIN}/pricing/)
 `,
@@ -55,15 +57,23 @@ Call \`GET ${ORIGIN}/api/extract\` with the product or search page in the \`url\
 
 > Turn public Bluesky profiles and individual posts into clean Markdown or normalized JSON.
 
-Profile pages return recent public posts as a feed. Individual post pages return one document. Replies and parent threads are not included.
+Profile pages return a profile entity with recent public post items. Individual post pages return one post entity. Replies and parent threads are not included.
 
 Call \`GET ${ORIGIN}/api/extract\` with the Bluesky page in the \`url\` parameter.
+`,
+  '/google-news/': `# Google News extraction with extractor.sh
+
+> Turn public Google News searches, topics, and top stories into clean Markdown or typed JSON.
+
+Submit an ordinary Google News search, topic, or top-stories URL. Results contain up to 50 normalized article entities with public titles, publishers, dates, summaries, and source links when available. Full publisher article bodies, personalized results, Google Search, and Google Shopping are not included.
+
+Call \`GET ${ORIGIN}/api/extract\` with the Google News page in the \`url\` parameter.
 `,
   '/instagram/': `# Instagram extraction with extractor.sh
 
 > Turn public Instagram posts, reels, and profiles into clean Markdown or normalized JSON.
 
-Post and reel pages return one document. Public profile pages return profile details and recent public posts as a feed. Private content, stories, comments, transcripts, and media downloads are not supported.
+Post and reel pages return one post entity. Public profile pages return a profile entity with recent public post items. Private content, stories, comments, transcripts, and media downloads are not supported.
 
 Call \`GET ${ORIGIN}/api/extract\` with the ordinary Instagram page in the \`url\` parameter.
 `,
@@ -87,7 +97,7 @@ Call \`GET ${ORIGIN}/api/extract\` with the Reddit page in the \`url\` parameter
 
 > Turn public Shopify products, collections, and storefront catalogs into clean Markdown or normalized JSON.
 
-Submit an ordinary storefront page. Product pages return one document; storefront and collection pages return up to 50 publicly listed products as a feed.
+Submit an ordinary storefront page. Product pages return one product entity; storefront and collection pages return a feed with up to 50 product entities.
 
 Call \`GET ${ORIGIN}/api/extract\` with the storefront page in the \`url\` parameter.
 `,
@@ -149,6 +159,7 @@ ${apiExample}
 
 - [Quickstart](${ORIGIN}/docs/quickstart/)
 - [API reference](${ORIGIN}/docs/api/)
+- [JSON schema](${ORIGIN}/docs/schema/)
 - [Supported sources](${ORIGIN}/docs/sources/)
 - [Limits and caching](${ORIGIN}/docs/limits/)
 - [Limitations](${ORIGIN}/docs/limitations/)
@@ -168,9 +179,22 @@ Always submit an ordinary public page URL a person could open in a browser.
 - \`url\`: required absolute public HTTP or HTTPS URL, up to 2,048 characters.
 - \`format\`: optional \`json\` (default) or \`markdown\`.
 
-JSON responses contain \`url\`, \`source\`, \`kind\`, \`title\`, \`author\`, \`publishedAt\`, \`content\`, and \`items\`. Errors use an \`error\` object with \`code\` and \`message\`.
+JSON responses use schema version \`1\` and contain the shared fields \`type\`, \`source\`, \`id\`, \`url\`, \`title\`, \`author\`, \`publishedAt\`, \`content\`, \`media\`, and \`attributes\`. The semantic \`type\` is \`document\`, \`article\`, \`product\`, \`post\`, \`profile\`, \`video\`, \`audio\`, or \`feed\`. Feed and profile responses also contain \`items\`. Errors use an \`error\` object with \`code\` and \`message\`.
 
-See the [OpenAPI 3.1 document](${ORIGIN}/openapi.json) for the machine-readable contract for \`GET ${ORIGIN}/api/extract\`.
+See the [schema guide](${ORIGIN}/docs/schema/), [JSON Schema](${ORIGIN}/schemas/extraction-v1.json), and [OpenAPI 3.1 document](${ORIGIN}/openapi.json) for the machine-readable contract for \`GET ${ORIGIN}/api/extract\`.
+`,
+  '/docs/schema/': `# extractor.sh JSON response schema
+
+Every successful JSON response uses \`schemaVersion: 1\` and a semantic \`type\`: \`document\`, \`article\`, \`product\`, \`post\`, \`profile\`, \`video\`, \`audio\`, or \`feed\`.
+
+The schema applies to successful JSON responses from \`GET ${ORIGIN}/api/extract\`.
+
+The common fields are \`source\`, \`id\`, \`url\`, \`title\`, \`author\`, \`publishedAt\`, \`content\`, \`media\`, and \`attributes\`. Content is Markdown. Common nullable fields are present with \`null\` when unavailable; optional type-specific attributes are omitted. Feed and profile entities include \`items\`, whose entries use the same entity shape.
+
+Product \`attributes.price\` and variant \`price\` values are non-negative integers in the currency's minor unit. For example, \`1999\` with \`EUR\` means €19.99. \`priceDisplay\` is presentation text.
+
+- [JSON Schema Draft 2020-12](${ORIGIN}/schemas/extraction-v1.json)
+- [OpenAPI 3.1](${ORIGIN}/openapi.json)
 `,
   '/docs/sources/': `# Supported extractor.sh sources
 
@@ -179,6 +203,7 @@ Submit normal public browser URLs to \`GET ${ORIGIN}/api/extract\`.
 - Web: public HTTP and HTTPS content pages.
 - Amazon: public product detail pages and search results pages. Search feeds contain up to 20 products; results may be cached for up to one hour.
 - Bluesky: public profile feeds and individual public post pages.
+- Google News: public search, topic, and top-stories pages. Feeds contain up to 50 article entities.
 - Instagram: public post, reel, and profile pages. Profile results include recent public posts when available.
 - Mastodon: public status pages on compatible instances.
 - Shopify: public product pages, collections, and storefront homepages. Submit the normal storefront URL; catalog feeds contain up to 50 products.
@@ -196,9 +221,8 @@ Private sources, credentials, stories, transcripts, media downloads, Bluesky rep
 
 The \`GET ${ORIGIN}/api/extract\` endpoint allows 30 extraction requests per client per 60 seconds and 5 browser-heavy fallbacks per client per 60 seconds.
 
-- Documents may be cached at the edge for up to 30 days.
-- Amazon products and searches may be cached for up to 1 hour.
-- Collections may be cached for up to 1 hour.
+- Single entities and pages may be cached at the edge for up to 30 days.
+- Products, profiles, and feeds may be cached for up to 1 hour.
 - Errors are not cached.
 - URLs may contain up to 2,048 characters.
 - Extracted results may contain up to 2 MB.

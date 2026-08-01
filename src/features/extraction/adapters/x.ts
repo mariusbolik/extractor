@@ -36,15 +36,17 @@ async function extractOfficialOembed(
   const canonicalUrl = `https://x.com/${screenName}/status/${id}`;
   const author = authorName ? `${authorName} (@${screenName})` : `@${screenName}`;
   return {
+    type: 'post',
     url: canonicalUrl,
     source: 'x',
-    kind: 'document',
+    id,
     title: `Post by @${screenName}`,
     author,
     // X oEmbed exposes a human-readable date, not a stable machine timestamp.
     publishedAt: null,
     content: [`# Post by ${escapeMarkdown(author)}`, postMarkdown, `[View on X](${canonicalUrl})`].join('\n\n'),
-    items: [],
+    media: [],
+    attributes: { handle: `@${screenName}` },
     method: 'x-oembed',
   };
 }
@@ -95,15 +97,27 @@ export async function extractTweet(
 
     sections.push(`[View on X](${canonicalUrl})`);
 
+    const media = (tweet.mediaDetails ?? []).flatMap((item) => item.type === 'photo'
+      ? [{ type: 'image' as const, url: item.media_url_https, alt: item.ext_alt_text || 'Post image' }]
+      : []);
+    const mediaTypes = new Set((tweet.mediaDetails ?? []).map((item) => item.type));
+
     return {
+      type: 'post',
       url: canonicalUrl,
       source: 'x',
-      kind: 'document',
+      id,
       title: `Post by @${tweet.user.screen_name}`,
       author,
       publishedAt: new Date(tweet.created_at).toISOString(),
       content: sections.join('\n\n'),
-      items: [],
+      media,
+      attributes: {
+        handle: `@${tweet.user.screen_name}`,
+        ...(mediaTypes.size > 1 ? { mediaType: 'mixed' as const }
+          : mediaTypes.has('photo') ? { mediaType: 'image' as const }
+            : mediaTypes.has('video') || mediaTypes.has('animated_gif') ? { mediaType: 'video' as const } : {}),
+      },
       method: 'react-tweet',
     };
   } catch (error) {

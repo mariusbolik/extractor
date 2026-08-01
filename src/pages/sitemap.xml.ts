@@ -4,8 +4,8 @@ import { alternativePages, platformArticles } from '../features/marketing/conten
 export const prerender = true;
 
 const STATIC_PATHS = [
-  '/', '/amazon/', '/bluesky/', '/instagram/', '/mastodon/', '/reddit/', '/shopify/', '/soundcloud/', '/spotify/', '/tiktok/', '/vimeo/', '/x/', '/youtube/',
-  '/docs/', '/docs/quickstart/', '/docs/api/', '/docs/sources/', '/docs/limits/', '/docs/limitations/',
+  '/', '/amazon/', '/bluesky/', '/google-news/', '/instagram/', '/mastodon/', '/reddit/', '/shopify/', '/soundcloud/', '/spotify/', '/tiktok/', '/vimeo/', '/x/', '/youtube/',
+  '/docs/', '/docs/quickstart/', '/docs/api/', '/docs/schema/', '/docs/sources/', '/docs/limits/', '/docs/limitations/',
   '/pricing/', '/alternatives/', '/blog/',
 ];
 

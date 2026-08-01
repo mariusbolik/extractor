@@ -16,7 +16,7 @@ const description = 'Extract useful public Amazon product details and search res
     outcome="Public product details and search results in one consistent format."
     capabilities={[
       { label: 'Input', value: 'One public Amazon product detail URL or search results URL containing a search query.' },
-      { label: 'Returns', value: 'One normalized product document or a feed containing up to 20 search results.' },
+      { label: 'Returns', value: 'One product entity or a feed containing up to 20 product entities.' },
       { label: 'Includes', value: 'Product titles, canonical URLs, prices, ratings, review counts, images, and available product details.' },
       { label: 'Caching', value: 'Successful product and search results may be cached at Cloudflare’s edge for up to one hour.' },
     ]}

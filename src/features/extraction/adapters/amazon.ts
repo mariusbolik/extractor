@@ -19,6 +19,42 @@ interface QueryRoot {
   querySelector(selector: string): { textContent: string | null } | null;
 }
 
+interface QueryNode extends QueryRoot {
+  textContent: string | null;
+}
+
+const AMAZON_CURRENCIES: Record<string, { code: string; minorDigits: number }> = {
+  'amazon.ae': { code: 'AED', minorDigits: 2 },
+  'amazon.ca': { code: 'CAD', minorDigits: 2 },
+  'amazon.cn': { code: 'CNY', minorDigits: 2 },
+  'amazon.co.jp': { code: 'JPY', minorDigits: 0 },
+  'amazon.co.uk': { code: 'GBP', minorDigits: 2 },
+  'amazon.com': { code: 'USD', minorDigits: 2 },
+  'amazon.com.au': { code: 'AUD', minorDigits: 2 },
+  'amazon.com.be': { code: 'EUR', minorDigits: 2 },
+  'amazon.com.br': { code: 'BRL', minorDigits: 2 },
+  'amazon.com.mx': { code: 'MXN', minorDigits: 2 },
+  'amazon.com.tr': { code: 'TRY', minorDigits: 2 },
+  'amazon.de': { code: 'EUR', minorDigits: 2 },
+  'amazon.eg': { code: 'EGP', minorDigits: 2 },
+  'amazon.es': { code: 'EUR', minorDigits: 2 },
+  'amazon.fr': { code: 'EUR', minorDigits: 2 },
+  'amazon.ie': { code: 'EUR', minorDigits: 2 },
+  'amazon.in': { code: 'INR', minorDigits: 2 },
+  'amazon.it': { code: 'EUR', minorDigits: 2 },
+  'amazon.nl': { code: 'EUR', minorDigits: 2 },
+  'amazon.pl': { code: 'PLN', minorDigits: 2 },
+  'amazon.sa': { code: 'SAR', minorDigits: 2 },
+  'amazon.se': { code: 'SEK', minorDigits: 2 },
+  'amazon.sg': { code: 'SGD', minorDigits: 2 },
+};
+
+interface StructuredPrice {
+  price: number;
+  currency: string;
+  priceDisplay: string;
+}
+
 function firstText(document: QueryRoot, selectors: string[]): string | null {
   for (const selector of selectors) {
     const value = normalizedText(document.querySelector(selector)?.textContent);
@@ -35,6 +71,71 @@ function publicImageUrl(value: string | null | undefined): string | null {
   } catch {
     return null;
   }
+}
+
+function numericValue(value: string | null): number | null {
+  if (!value) return null;
+  const match = value.match(/\d+(?:[.,]\d+)?/);
+  if (!match) return null;
+  const number = Number(match[0].replace(',', '.'));
+  return Number.isFinite(number) ? number : null;
+}
+
+function integerCount(value: string | null): number | null {
+  if (!value) return null;
+  const digits = value.replace(/\D/g, '');
+  if (!digits) return null;
+  const count = Number(digits);
+  return Number.isSafeInteger(count) ? count : null;
+}
+
+function priceFromNode(root: QueryRoot, hostname: string, selectors: string[]): StructuredPrice | null {
+  const market = AMAZON_CURRENCIES[hostname.toLowerCase().replace(/^www\./, '')];
+  if (!market) return null;
+
+  for (const selector of selectors) {
+    const node = root.querySelector(selector) as unknown as QueryNode | null;
+    if (!node) continue;
+    const display = firstText(node, ['.a-offscreen']) || normalizedText(node.textContent);
+    const wholeText = firstText(node, ['.a-price-whole']);
+    const fractionText = firstText(node, ['.a-price-fraction']);
+    let price: number | null = null;
+
+    if (wholeText) {
+      const wholeDigits = wholeText.replace(/\D/g, '');
+      const fractionDigits = (fractionText || '').replace(/\D/g, '');
+      if (wholeDigits) {
+        const major = Number(wholeDigits);
+        const fraction = market.minorDigits
+          ? Number(fractionDigits.padEnd(market.minorDigits, '0').slice(0, market.minorDigits) || 0)
+          : 0;
+        const combined = major * (10 ** market.minorDigits) + fraction;
+        if (Number.isSafeInteger(combined)) price = combined;
+      }
+    }
+
+    if (price === null && display) {
+      const numeric = display.match(/[\d][\d\s.,'’]*/)?.[0]?.trim() || '';
+      const digits = numeric.replace(/\D/g, '');
+      if (digits) {
+        const separatorMatch = market.minorDigits
+          ? numeric.match(new RegExp(`[.,](\\d{${market.minorDigits}})\\D*$`))
+          : null;
+        const majorDigits = separatorMatch
+          ? numeric.slice(0, separatorMatch.index).replace(/\D/g, '')
+          : digits;
+        const fractionDigits = separatorMatch?.[1] || '';
+        const combined = Number(majorDigits || 0) * (10 ** market.minorDigits)
+          + Number(fractionDigits || 0);
+        if (Number.isSafeInteger(combined)) price = combined;
+      }
+    }
+
+    if (price !== null && display) {
+      return { price, currency: market.code, priceDisplay: display };
+    }
+  }
+  return null;
 }
 
 function productBrand(document: Document): string | null {
@@ -92,28 +193,41 @@ function amazonSearchItems(document: ParentNode, origin: string): ExtractedItem[
     const title = firstText(element, ['h2', '[data-cy="title-recipe"]']);
     if (!title) continue;
 
-    const price = firstText(element, ['.a-price .a-offscreen']);
-    const rating = firstText(element, ['.a-icon-alt', '[aria-label*="stars"]']);
-    const reviewCount = firstText(element, [
+    const structuredPrice = priceFromNode(element, new URL(origin).hostname, ['.a-price']);
+    const price = structuredPrice?.priceDisplay || firstText(element, ['.a-price .a-offscreen']);
+    const ratingText = firstText(element, ['.a-icon-alt', '[aria-label*="stars"]']);
+    const reviewCountText = firstText(element, [
       '[data-cy="reviews-block"] .s-underline-text',
       '.s-link-style .s-underline-text',
     ]);
     const image = publicImageUrl(element.querySelector('img.s-image')?.getAttribute('src'));
     const productUrl = new URL(`/dp/${asin}`, origin).toString();
+    const normalizedRating = numericValue(ratingText);
+    const normalizedReviewCount = integerCount(reviewCountText);
     const details = [
       price ? `Price: ${escapeMarkdown(price)}` : '',
-      rating ? `Rating: ${escapeMarkdown(rating)}` : '',
-      reviewCount ? `Review count: ${escapeMarkdown(reviewCount)}` : '',
+      ratingText ? `Rating: ${escapeMarkdown(ratingText)}` : '',
+      reviewCountText ? `Review count: ${escapeMarkdown(reviewCountText)}` : '',
       image ? `![${escapeMarkdown(title)}](${image})` : '',
     ].filter(Boolean).join('\n\n');
 
     seen.add(asin);
     items.push({
+      type: 'product',
+      source: 'amazon',
+      id: asin,
       url: productUrl,
       title,
       author: null,
       publishedAt: null,
       content: details,
+      media: image ? [{ type: 'image', url: image, alt: title }] : [],
+      attributes: {
+        productType: 'physical',
+        ...(structuredPrice || {}),
+        ...(normalizedRating !== null ? { rating: normalizedRating, ratingScale: 5 } : {}),
+        ...(normalizedReviewCount !== null ? { reviewCount: normalizedReviewCount } : {}),
+      },
     });
     if (items.length === 20) break;
   }
@@ -162,9 +276,15 @@ export async function extractAmazonProduct(
     || normalizedText(document.querySelector('meta[property="og:title"]')?.getAttribute('content'))
     || null;
   const brand = productBrand(document as unknown as Document);
-  const price = firstText(document as unknown as Document, [
-    '#corePrice_feature_div .a-price .a-offscreen',
-    '#corePriceDisplay_desktop_feature_div .a-price .a-offscreen',
+  const structuredPrice = priceFromNode(document as unknown as QueryRoot, url.hostname, [
+    '#corePrice_feature_div .a-price',
+    '#corePriceDisplay_desktop_feature_div .a-price',
+    '#priceblock_ourprice',
+    '#priceblock_dealprice',
+    '#price_inside_buybox',
+    '.a-price',
+  ]);
+  const price = structuredPrice?.priceDisplay || firstText(document as unknown as Document, [
     '#priceblock_ourprice',
     '#priceblock_dealprice',
     '#price_inside_buybox',
@@ -183,6 +303,8 @@ export async function extractAmazonProduct(
   const bullets = productBullets(document as unknown as Document);
   const image = productImage(document as unknown as Document);
   const canonicalUrl = new URL(`/dp/${asin}`, url.origin).toString();
+  const normalizedRating = numericValue(ratingAttribute || rating);
+  const normalizedReviewCount = integerCount(reviewCount);
 
   if (!title || (!brand && !price && !bullets.length)) {
     throw new ExtractionError(
@@ -209,14 +331,24 @@ export async function extractAmazonProduct(
   ].filter(Boolean).join('\n\n');
 
   return {
+    type: 'product',
     url: canonicalUrl,
     source: 'amazon',
-    kind: 'document',
+    id: asin,
     title,
     author: brand,
     publishedAt: null,
     content,
-    items: [],
+    media: image ? [{ type: 'image', url: image, alt: title }] : [],
+    attributes: {
+      productType: 'physical',
+      ...(brand ? { brand } : {}),
+      ...(structuredPrice || {}),
+      ...(availability ? { availability } : {}),
+      ...(normalizedRating !== null ? { rating: normalizedRating, ratingScale: 5 } : {}),
+      ...(normalizedReviewCount !== null ? { reviewCount: normalizedReviewCount } : {}),
+      ...(bullets.length ? { features: bullets } : {}),
+    },
     method: 'amazon-html',
   };
 }
@@ -271,13 +403,16 @@ export async function extractAmazonSearch(
   ].join('\n\n');
 
   return {
+    type: 'feed',
     url: canonicalUrl.toString(),
     source: 'amazon',
-    kind: 'feed',
+    id: null,
     title,
     author: null,
     publishedAt: null,
     content,
+    media: [],
+    attributes: { feedType: 'search', query },
     items,
     method: 'amazon-search-html',
   };

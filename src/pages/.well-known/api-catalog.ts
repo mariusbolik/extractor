@@ -7,6 +7,7 @@ const links = [
   '</.well-known/api-catalog>; rel="api-catalog"; type="application/linkset+json"',
   '</openapi.json>; rel="service-desc"; type="application/vnd.oai.openapi+json"',
   '</llms-full.txt>; rel="service-doc"; type="text/markdown"',
+  '</schemas/extraction-v1.json>; rel="describedby"; type="application/schema+json"',
 ].join(', ');
 
 const catalog = {
@@ -32,6 +33,13 @@ const catalog = {
           href: `${origin}/llms-full.txt`,
           title: 'extractor.sh agent documentation',
           type: 'text/markdown',
+        },
+      ],
+      describedby: [
+        {
+          href: `${origin}/schemas/extraction-v1.json`,
+          title: 'extractor.sh extraction response schema v1',
+          type: 'application/schema+json',
         },
       ],
     },

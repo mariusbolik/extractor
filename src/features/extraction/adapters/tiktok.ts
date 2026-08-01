@@ -76,6 +76,7 @@ function videoFromHydration(scope: UnknownRecord, pageUrl: URL): ExtractionResul
   const musicAuthor = text(music?.authorName);
   const hashtags = hashtagNames(item);
   const duration = Number(video?.duration);
+  const cover = text(video?.cover) || text(video?.originCover) || text(video?.dynamicCover);
 
   const content = [
     `# TikTok post by ${escapeMarkdown(author)}`,
@@ -87,14 +88,20 @@ function videoFromHydration(scope: UnknownRecord, pageUrl: URL): ExtractionResul
   ].filter(Boolean).join('\n\n');
 
   return {
+    type: 'post',
     url: canonicalUrl,
     source: 'tiktok',
-    kind: 'document',
+    id,
     title: `TikTok post by @${username}`,
     author,
     publishedAt: isoFromSeconds(item.createTime),
     content,
-    items: [],
+    media: cover ? [{ type: 'image', url: cover, alt: description || 'TikTok post' }] : [],
+    attributes: {
+      handle: `@${username}`,
+      mediaType: postType === 'photo' ? 'image' : 'video',
+      ...(Number.isFinite(duration) && duration > 0 ? { durationSeconds: Math.round(duration) } : {}),
+    },
     method: 'tiktok-hydration',
   };
 }
@@ -103,6 +110,7 @@ function profileFromHydration(scope: UnknownRecord): ExtractionResult | null {
   const detail = record(scope['webapp.user-detail']);
   const userInfo = record(detail?.userInfo);
   const user = record(userInfo?.user);
+  const stats = record(userInfo?.stats);
   if (!user) return null;
 
   const username = text(user.uniqueId);
@@ -121,13 +129,22 @@ function profileFromHydration(scope: UnknownRecord): ExtractionResult | null {
   ].filter(Boolean).join('\n\n');
 
   return {
+    type: 'profile',
     url: canonicalUrl,
     source: 'tiktok',
-    kind: 'document',
+    id: text(user.id) || username,
     title: displayName || `@${username}`,
     author,
     publishedAt: null,
     content,
+    media: text(user.avatarLarger) ? [{ type: 'image', url: text(user.avatarLarger), alt: author }] : [],
+    attributes: {
+      handle: `@${username}`,
+      ...(biography ? { biography } : {}),
+      ...(Number.isFinite(Number(stats?.followerCount)) ? { followerCount: Number(stats?.followerCount) } : {}),
+      ...(Number.isFinite(Number(stats?.followingCount)) ? { followingCount: Number(stats?.followingCount) } : {}),
+      ...(Number.isFinite(Number(stats?.videoCount)) ? { postCount: Number(stats?.videoCount) } : {}),
+    },
     items: [],
     method: 'tiktok-hydration',
   };
@@ -154,10 +171,12 @@ async function extractOembed(url: URL, fetcher: typeof fetch): Promise<Extractio
     throw new ExtractionError('not_found', 'The TikTok post or profile is unavailable.', 404);
   }
 
+  const profile = /^\/@[^/]+\/?$/i.test(url.pathname);
   return {
+    type: profile ? 'profile' : 'post',
     url: canonicalUrl,
     source: 'tiktok',
-    kind: 'document',
+    id: url.pathname.match(/\/(?:video|photo)\/(\d+)/)?.[1] ?? (profile ? url.pathname.slice(2).replace(/\/$/, '') : null),
     title,
     author: authorName || null,
     publishedAt: null,
@@ -166,7 +185,9 @@ async function extractOembed(url: URL, fetcher: typeof fetch): Promise<Extractio
       representation,
       `[View on TikTok](${canonicalUrl})`,
     ].filter(Boolean).join('\n\n'),
-    items: [],
+    media: text(data.thumbnail_url) ? [{ type: 'image', url: text(data.thumbnail_url), alt: title }] : [],
+    attributes: authorName ? { handle: authorName } : {},
+    ...(profile ? { items: [] } : {}),
     method: 'tiktok-oembed',
   };
 }

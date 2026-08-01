@@ -4,7 +4,7 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 
 export const prerender = true;
 const title = 'Developer documentation — extractor.sh';
-const description = 'Developer documentation for extracting public web, Reddit, X, and YouTube URLs as Markdown or JSON.';
+const description = 'Developer documentation for extracting public web, news, commerce, social, audio, and video URLs as Markdown or typed JSON.';
 ---
 
 <DocsLayout {title} {description} path="/docs/">
@@ -31,6 +31,11 @@ const description = 'Developer documentation for extracting public web, Reddit, 
     <a class="group border-2 border-black p-5 no-underline hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_#000]" href="/docs/sources/">
       <span class="font-heading text-[1.05rem] font-normal">Supported sources</span>
       <span class="mt-3 block font-normal">The public page URLs you can submit.</span>
+      <Icon class="mt-6 size-5" name="heroicons:arrow-right" aria-hidden="true" />
+    </a>
+    <a class="group border-2 border-black p-5 no-underline hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_#000]" href="/docs/schema/">
+      <span class="font-heading text-[1.05rem] font-normal">JSON schema</span>
+      <span class="mt-3 block font-normal">Types, shared fields, product prices, and collection items.</span>
       <Icon class="mt-6 size-5" name="heroicons:arrow-right" aria-hidden="true" />
     </a>
     <a class="group border-2 border-black p-5 no-underline hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0_#000]" href="/docs/limits/">

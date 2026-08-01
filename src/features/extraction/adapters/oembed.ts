@@ -1,7 +1,7 @@
 import { ExtractionError } from '../errors';
 import { fetchPublicPage } from '../fetch';
 import { escapeMarkdown, htmlFragmentToMarkdown } from '../markdown';
-import type { ExtractionMethod, ExtractionResult, ExtractionSource } from '../types';
+import type { EntityAttributes, EntityType, ExtractionMethod, ExtractionResult, ExtractionSource } from '../types';
 
 export type OembedData = Record<string, unknown>;
 
@@ -38,10 +38,13 @@ interface OembedDocumentOptions {
   source: ExtractionSource;
   method: ExtractionMethod;
   fallbackTitle: string;
+  type: EntityType;
+  id: string | null;
+  attributes?: EntityAttributes;
 }
 
 export function oembedDocument(options: OembedDocumentOptions): ExtractionResult {
-  const { data, url, provider, source, method, fallbackTitle } = options;
+  const { data, url, provider, source, method, fallbackTitle, type, id, attributes = {} } = options;
   const title = text(data.title) || fallbackTitle;
   const author = text(data.author_name) || null;
   const description = htmlFragmentToMarkdown(text(data.description), url.toString());
@@ -68,14 +71,19 @@ export function oembedDocument(options: OembedDocumentOptions): ExtractionResult
   ].filter(Boolean).join('\n\n');
 
   return {
+    type,
     url: url.toString(),
     source,
-    kind: 'document',
+    id,
     title,
     author,
     publishedAt,
     content,
-    items: [],
+    media: thumbnail ? [{ type: 'image', url: thumbnail, alt: `${title} thumbnail` }] : [],
+    attributes: Number.isFinite(duration) && duration > 0 && ['video', 'audio', 'post'].includes(type)
+      ? { ...attributes, durationSeconds: Math.round(duration) }
+      : attributes,
+    ...(type === 'profile' ? { items: [] } : {}),
     method,
   };
 }

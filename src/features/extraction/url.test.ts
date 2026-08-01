@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ExtractionError } from './errors';
-import { amazonProductAsin, amazonSearchQuery, isBlueskyProfileUrl, isInstagramUrl, isPossibleMastodonStatusUrl, isRedditUrl, isSoundCloudUrl, isSpotifyUrl, isTikTokUrl, isVimeoUrl, isXUrl, isYouTubeUrl, validateTargetUrl } from './url';
+import { amazonProductAsin, amazonSearchQuery, isBlueskyProfileUrl, isGoogleNewsUrl, isInstagramUrl, isPossibleMastodonStatusUrl, isRedditUrl, isSoundCloudUrl, isSpotifyUrl, isTikTokUrl, isVimeoUrl, isXUrl, isYouTubeUrl, validateTargetUrl } from './url';
 
 describe('validateTargetUrl', () => {
   it('accepts and normalizes public HTTP URLs', () => {
@@ -63,6 +63,10 @@ describe('source URL detection', () => {
     expect(isInstagramUrl(new URL('https://www.instagram.com/instagram/'))).toBe(true);
     expect(isInstagramUrl(new URL('https://www.instagram.com/explore/'))).toBe(false);
     expect(isInstagramUrl(new URL('https://instagram.com.example.org/p/abc/'))).toBe(false);
+    expect(isGoogleNewsUrl(new URL('https://news.google.com/search?q=Cloudflare'))).toBe(true);
+    expect(isGoogleNewsUrl(new URL('https://news.google.com/topics/TOPIC123'))).toBe(true);
+    expect(isGoogleNewsUrl(new URL('https://news.google.com/'))).toBe(true);
+    expect(isGoogleNewsUrl(new URL('https://news.google.com.example.org/search?q=Cloudflare'))).toBe(false);
   });
 
   it('recognizes public oEmbed provider URLs without accepting lookalike hosts', () => {

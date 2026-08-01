@@ -7,9 +7,11 @@ The public preview requires no account or API key. Call `GET /api/extract` with 
 ## API
 
 - [OpenAPI 3.1 specification](https://extractor.mcb-software.workers.dev/openapi.json): Complete machine-readable contract for the extraction endpoint.
+- [JSON Schema](https://extractor.mcb-software.workers.dev/schemas/extraction-v1.json): Versioned schema for every successful JSON extraction.
 - [API catalog](https://extractor.mcb-software.workers.dev/.well-known/api-catalog): RFC 9727 Linkset for API discovery.
 - [Full agent documentation](https://extractor.mcb-software.workers.dev/llms-full.txt): Inputs, outputs, supported sources, limits, and examples in one Markdown document.
 - [Developer documentation](https://extractor.mcb-software.workers.dev/docs/): Human-readable quickstart, API reference, sources, limits, and caching.
+- [JSON schema guide](https://extractor.mcb-software.workers.dev/docs/schema/): Semantic entity types, shared fields, media, attributes, collection items, and price units.
 - [Limitations](https://extractor.mcb-software.workers.dev/docs/limitations/): CAPTCHAs, access controls, request regions, and source-specific boundaries.
 - [Authentication](https://extractor.mcb-software.workers.dev/auth.md): The public API currently requires no authentication.
 - [Agent skill](https://extractor.mcb-software.workers.dev/.well-known/agent-skills/extract-public-url/SKILL.md): Instructions for extracting one public URL.
@@ -20,6 +22,7 @@ The public preview requires no account or API key. Call `GET /api/extract` with 
 - [Web extraction](https://extractor.mcb-software.workers.dev/): Homepage and interactive extractor.
 - [Amazon extraction](https://extractor.mcb-software.workers.dev/amazon/): Public product detail and search results pages from supported country stores.
 - [Bluesky extraction](https://extractor.mcb-software.workers.dev/bluesky/): Public profile feeds and individual public posts, without replies or parent threads.
+- [Google News extraction](https://extractor.mcb-software.workers.dev/google-news/): Public searches, topics, and top stories as article feeds.
 - [Instagram extraction](https://extractor.mcb-software.workers.dev/instagram/): Public posts, reels, profiles, and recent profile posts.
 - [Mastodon extraction](https://extractor.mcb-software.workers.dev/mastodon/): Public statuses from compatible federated instances.
 - [Shopify extraction](https://extractor.mcb-software.workers.dev/shopify/): Public product pages, collection pages, and storefront catalogs.

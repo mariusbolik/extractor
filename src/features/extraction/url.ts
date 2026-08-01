@@ -102,6 +102,13 @@ export function isYouTubeUrl(url: URL): boolean {
   return ['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be'].includes(hostname);
 }
 
+export function isGoogleNewsUrl(url: URL): boolean {
+  if (url.hostname.toLowerCase() !== 'news.google.com') return false;
+  if (url.pathname === '/' || /^\/topstories\/?$/i.test(url.pathname)) return true;
+  if (/^\/search\/?$/i.test(url.pathname)) return Boolean(url.searchParams.get('q')?.trim());
+  return /^\/topics\/[A-Za-z0-9_-]+\/?$/i.test(url.pathname);
+}
+
 export function isVimeoUrl(url: URL): boolean {
   const hostname = url.hostname.toLowerCase();
   if (!['vimeo.com', 'www.vimeo.com', 'player.vimeo.com'].includes(hostname)) return false;

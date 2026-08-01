@@ -24,19 +24,24 @@ const description = 'Reference for the extractor.sh GET API, including query par
 
   <h2>JSON response</h2>
   <pre><code>{`{
-  "url": "https://example.com/article",
+  "schemaVersion": 1,
+  "type": "article",
   "source": "web",
-  "kind": "document",
+  "id": null,
+  "url": "https://example.com/article",
   "title": "Example article",
   "author": null,
   "publishedAt": null,
   "content": "# Example article\\n\\n...",
-  "items": []
+  "media": [],
+  "attributes": {}
 }`}</code></pre>
   <ul>
-    <li><code>source</code> is <code>web</code>, <code>amazon</code>, <code>bluesky</code>, <code>instagram</code>, <code>mastodon</code>, <code>reddit</code>, <code>shopify</code>, <code>soundcloud</code>, <code>spotify</code>, <code>tiktok</code>, <code>vimeo</code>, <code>x</code>, or <code>youtube</code>.</li>
-    <li><code>kind</code> is <code>document</code> for one item or <code>feed</code> for a collection.</li>
-    <li><code>items</code> contains normalized collection items and is empty for a single document.</li>
+    <li><code>schemaVersion</code> is currently <code>1</code>.</li>
+    <li><code>type</code> is <code>document</code>, <code>article</code>, <code>product</code>, <code>post</code>, <code>profile</code>, <code>video</code>, <code>audio</code>, or <code>feed</code>.</li>
+    <li><code>source</code> identifies the adapter: <code>web</code>, <code>amazon</code>, <code>bluesky</code>, <code>google-news</code>, <code>instagram</code>, <code>mastodon</code>, <code>reddit</code>, <code>shopify</code>, <code>soundcloud</code>, <code>spotify</code>, <code>tiktok</code>, <code>vimeo</code>, <code>x</code>, or <code>youtube</code>.</li>
+    <li><code>content</code> is always Markdown, even inside a JSON response.</li>
+    <li><code>items</code> is present for <code>feed</code> and <code>profile</code> results and omitted for individual entities.</li>
   </ul>
 
   <h2>Markdown response</h2>
@@ -59,6 +64,7 @@ const description = 'Reference for the extractor.sh GET API, including query par
         <tr><td><code>415</code></td><td>The source is not an HTML, Markdown, or plain-text page.</td></tr>
         <tr><td><code>422</code></td><td>The page was reachable but useful content could not be extracted.</td></tr>
         <tr><td><code>429</code></td><td>The per-client rate limit was exceeded.</td></tr>
+        <tr><td><code>500</code></td><td>The extracted data could not be represented by the public response schema.</td></tr>
         <tr><td><code>502</code></td><td>The public source blocked access, rate-limited the request, or returned an upstream error. The error message includes the source status when available.</td></tr>
         <tr><td><code>504</code></td><td>The source did not respond or finish loading before the timeout.</td></tr>
       </tbody>
@@ -66,5 +72,5 @@ const description = 'Reference for the extractor.sh GET API, including query par
   </div>
 
   <h2>Machine-readable contract</h2>
-  <p>Use the <a href="/openapi.json">OpenAPI 3.1 document</a> for the complete machine-readable schema.</p>
+  <p>Use the <a href="/schemas/extraction-v1.json">JSON Schema</a> for the versioned entity contract and the <a href="/openapi.json">OpenAPI 3.1 document</a> for the complete endpoint definition. The <a href="/docs/schema/">schema guide</a> explains price units, null values, media, attributes, and nested items.</p>
 </DocsLayout>

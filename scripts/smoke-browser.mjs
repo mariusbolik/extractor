@@ -30,7 +30,34 @@ async function assertNoHorizontalOverflow(label) {
   );
 }
 
-async function submitExtraction({ url, format, source, kind, text }) {
+function assertEntity(entity, expectedSource, expectedType) {
+  assert.equal(entity.source, expectedSource);
+  assert.equal(entity.type, expectedType);
+  assert.equal(Object.hasOwn(entity, 'kind'), false, 'Legacy kind field is still public');
+  assert.equal(Object.hasOwn(entity, 'method'), false, 'Internal extraction method leaked publicly');
+  assert.equal(typeof entity.url, 'string');
+  assert.ok(entity.id === null || typeof entity.id === 'string');
+  assert.ok(entity.title === null || typeof entity.title === 'string');
+  assert.ok(entity.author === null || typeof entity.author === 'string');
+  assert.ok(entity.publishedAt === null || typeof entity.publishedAt === 'string');
+  assert.equal(typeof entity.content, 'string');
+  assert.ok(Array.isArray(entity.media));
+  assert.equal(typeof entity.attributes, 'object');
+  if (expectedType === 'feed' || expectedType === 'profile') assert.ok(Array.isArray(entity.items));
+  else assert.equal(Object.hasOwn(entity, 'items'), false, `${expectedType} must not expose items`);
+}
+
+function assertIntegerPrices(entity) {
+  if (entity.attributes?.price !== undefined) {
+    assert.ok(Number.isInteger(entity.attributes.price) && entity.attributes.price >= 0, 'Product price is not an integer minor-unit value');
+  }
+  for (const variant of entity.attributes?.variants || []) {
+    if (variant.price !== undefined) assert.ok(Number.isInteger(variant.price) && variant.price >= 0, 'Variant price is not an integer minor-unit value');
+  }
+  for (const item of entity.items || []) assertIntegerPrices(item);
+}
+
+async function submitExtraction({ url, format, source, type, text }) {
   await page.locator('#url').fill(url);
   await page.locator(`input[name="format"][value="${format}"]`).check();
 
@@ -58,9 +85,9 @@ async function submitExtraction({ url, format, source, kind, text }) {
 
   if (format === 'json') {
     const payload = JSON.parse(await content.locator('pre').innerText());
-    assert.equal(payload.source, source);
-    assert.equal(payload.kind, kind);
-    assert.equal(Object.hasOwn(payload, 'method'), false, 'Internal extraction method leaked publicly');
+    assert.equal(payload.schemaVersion, 1);
+    assertEntity(payload, source, type);
+    assertIntegerPrices(payload);
   } else {
     assert.match(response.headers()['content-type'] || '', /^text\/markdown/i);
   }
@@ -70,7 +97,7 @@ try {
   const home = await page.goto(`${origin}/`, { waitUntil: 'networkidle' });
   assert.equal(home?.status(), 200);
   await page.locator('#extract-form').waitFor();
-  assert.equal(await page.locator('.method-card').count(), 12);
+  assert.equal(await page.locator('.method-card').count(), 13);
   assert.equal(await page.locator('footer a[href="/alternatives/"]').count(), 1, 'Alternatives footer link is missing');
   assert.equal(await page.locator('footer a[href="/blog/"]').count(), 1, 'Blog footer link is missing');
   for (const card of await page.locator('.method-card').all()) {
@@ -84,104 +111,125 @@ try {
     url: 'https://bsky.app/profile/bsky.app/post/3mqcp5qjdfs26',
     format: 'markdown',
     source: 'bluesky',
-    kind: 'document',
+    type: 'post',
     text: /Post by Bluesky/,
   });
   await submitExtraction({
     url: 'https://bsky.app/profile/bsky.app',
     format: 'json',
     source: 'bluesky',
-    kind: 'feed',
+    type: 'profile',
     text: /"source": "bluesky"/,
   });
   await submitExtraction({
     url: 'https://x.com/jack/status/20',
     format: 'json',
     source: 'x',
-    kind: 'document',
+    type: 'post',
     text: /just setting up my twttr/,
   });
   await submitExtraction({
     url: 'https://vimeo.com/286898202?extractor_adapter=browser-1',
     format: 'json',
     source: 'vimeo',
-    kind: 'document',
+    type: 'video',
     text: /My video/i,
   });
   await submitExtraction({
     url: 'https://soundcloud.com/forss/flickermood?extractor_adapter=browser-1',
     format: 'json',
     source: 'soundcloud',
-    kind: 'document',
+    type: 'audio',
     text: /Flickermood by Forss/i,
   });
   await submitExtraction({
     url: 'https://open.spotify.com/episode/7makk4oTQel546B0PZlDM5?extractor_adapter=browser-1',
     format: 'json',
     source: 'spotify',
-    kind: 'document',
+    type: 'audio',
     text: /My Path to Spotify/i,
   });
   await submitExtraction({
     url: 'https://mastodon.social/@trwnh/99664077509711321?extractor_adapter=browser-1',
     format: 'json',
     source: 'mastodon',
-    kind: 'document',
+    type: 'post',
     text: /Mastodon Flat CSS/i,
   });
   await submitExtraction({
     url: 'https://www.tiktok.com/@scout2015/video/6718335390845095173',
     format: 'json',
     source: 'tiktok',
-    kind: 'document',
+    type: 'post',
     text: /Scramble up ur name/i,
   });
   await submitExtraction({
     url: 'https://www.instagram.com/p/DbbY9pdm6Q2/',
     format: 'json',
     source: 'instagram',
-    kind: 'document',
+    type: 'post',
     text: /Instagram post/i,
   });
   await submitExtraction({
     url: 'https://www.instagram.com/instagram/',
     format: 'json',
     source: 'instagram',
-    kind: 'feed',
+    type: 'profile',
     text: /"source": "instagram"/,
   });
   await submitExtraction({
     url: 'https://www.allbirds.com/products/mens-cruiser-shadow-blue-natural-white-sole',
     format: 'json',
     source: 'shopify',
-    kind: 'document',
+    type: 'product',
     text: /Men's Cruiser/,
   });
   await submitExtraction({
     url: 'https://www.allbirds.com/',
     format: 'json',
     source: 'shopify',
-    kind: 'feed',
+    type: 'feed',
     text: /"source": "shopify"/,
   });
   await submitExtraction({
     url: 'https://www.amazon.de/echo-dot-2022/dp/B09B8X9RGM',
     format: 'json',
     source: 'amazon',
-    kind: 'document',
+    type: 'product',
     text: /Echo Dot/i,
   });
   await submitExtraction({
     url: 'https://www.amazon.de/s?k=mechanical+keyboard&extractor_adapter=browser-1',
     format: 'json',
     source: 'amazon',
-    kind: 'feed',
+    type: 'feed',
     text: /Amazon search: mechanical keyboard/i,
+  });
+  await submitExtraction({
+    url: 'https://news.google.com/search?q=Cloudflare&hl=en-US&gl=US&ceid=US%3Aen',
+    format: 'json',
+    source: 'google-news',
+    type: 'feed',
+    text: /"source": "google-news"/,
+  });
+  await submitExtraction({
+    url: 'https://www.reddit.com/r/CloudFlare/',
+    format: 'json',
+    source: 'reddit',
+    type: 'feed',
+    text: /"source": "reddit"/,
+  });
+  await submitExtraction({
+    url: 'https://www.youtube.com/@Cloudflare',
+    format: 'json',
+    source: 'youtube',
+    type: 'feed',
+    text: /"source": "youtube"/,
   });
 
   const contentRoutes = [
-    '/amazon/', '/bluesky/', '/instagram/', '/mastodon/', '/shopify/', '/soundcloud/', '/spotify/', '/tiktok/', '/vimeo/',
-    '/docs/api/', '/docs/sources/', '/docs/limitations/', '/pricing/',
+    '/amazon/', '/bluesky/', '/google-news/', '/instagram/', '/mastodon/', '/shopify/', '/soundcloud/', '/spotify/', '/tiktok/', '/vimeo/',
+    '/docs/api/', '/docs/schema/', '/docs/sources/', '/docs/limitations/', '/pricing/',
     '/alternatives/', '/blog/',
     ...alternativePages.map((item) => `/alternatives/${item.slug}/`),
     ...platformArticles.map((item) => `/blog/${item.slug}/`),
@@ -193,7 +241,7 @@ try {
     await assertNoHorizontalOverflow(route);
   }
 
-  for (const route of ['/amazon/', '/bluesky/', '/instagram/', '/mastodon/', '/reddit/', '/shopify/', '/soundcloud/', '/spotify/', '/tiktok/', '/vimeo/', '/x/', '/youtube/']) {
+  for (const route of ['/amazon/', '/bluesky/', '/google-news/', '/instagram/', '/mastodon/', '/reddit/', '/shopify/', '/soundcloud/', '/spotify/', '/tiktok/', '/vimeo/', '/x/', '/youtube/']) {
     const response = await page.goto(`${origin}${route}`, { waitUntil: 'networkidle' });
     assert.equal(response?.status(), 200, `${route} returned HTTP ${response?.status()}`);
     assert.equal(await page.locator('#capabilities-heading').count(), 1, `${route} is missing its capabilities section`);
@@ -203,7 +251,7 @@ try {
   assert.equal(sitemapResponse.status(), 200, '/sitemap.xml is unavailable');
   assert.match(sitemapResponse.headers()['content-type'] || '', /^application\/xml/i);
   const sitemap = await sitemapResponse.text();
-  assert.equal((sitemap.match(/<loc>/g) || []).length, 40, 'Sitemap does not contain every public page');
+  assert.equal((sitemap.match(/<loc>/g) || []).length, 43, 'Sitemap does not contain every public page');
   for (const route of contentRoutes) {
     assert.ok(sitemap.includes(`${origin}${route}`), `${route} is missing from sitemap.xml`);
   }

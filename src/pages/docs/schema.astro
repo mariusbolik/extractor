@@ -1,0 +1,82 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+
+export const prerender = true;
+const title = 'JSON response schema — extractor.sh docs';
+const description = 'The versioned extractor.sh JSON entity schema, including common fields, semantic types, product prices, media, attributes, and collection items.';
+---
+
+<DocsLayout {title} {description} path="/docs/schema/">
+  <p class="!mt-0 font-mono text-[0.78rem] font-extrabold uppercase tracking-[0.14em]">JSON schema</p>
+  <h1>One shape. Typed entities.</h1>
+  <p class="text-[1.08rem]">Every successful JSON response follows schema version <code>1</code>. Shared fields stay consistent while <code>type</code> and <code>attributes</code> describe the entity.</p>
+
+  <h2>Common fields</h2>
+  <div class="overflow-x-auto">
+    <table>
+      <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td><code>schemaVersion</code></td><td><code>1</code></td><td>The response contract version.</td></tr>
+        <tr><td><code>type</code></td><td>enum</td><td><code>document</code>, <code>article</code>, <code>product</code>, <code>post</code>, <code>profile</code>, <code>video</code>, <code>audio</code>, or <code>feed</code>.</td></tr>
+        <tr><td><code>source</code></td><td>enum</td><td>The recognized source adapter, such as <code>web</code>, <code>amazon</code>, or <code>google-news</code>.</td></tr>
+        <tr><td><code>id</code></td><td>string or null</td><td>A stable source identifier when one is available.</td></tr>
+        <tr><td><code>url</code></td><td>URL</td><td>The canonical or submitted public URL.</td></tr>
+        <tr><td><code>title</code></td><td>string or null</td><td>The entity title or display label.</td></tr>
+        <tr><td><code>author</code></td><td>string or null</td><td>The public author, publisher, or creator name.</td></tr>
+        <tr><td><code>publishedAt</code></td><td>ISO date or null</td><td>The publication timestamp when the source exposes one.</td></tr>
+        <tr><td><code>content</code></td><td>string</td><td>The primary content represented as Markdown.</td></tr>
+        <tr><td><code>media</code></td><td>array</td><td>Typed public image, video, or audio references.</td></tr>
+        <tr><td><code>attributes</code></td><td>object</td><td>Fields specific to the selected entity type.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Product example</h2>
+  <pre><code>{`{
+  "schemaVersion": 1,
+  "type": "product",
+  "source": "amazon",
+  "id": "B09B8X9RGM",
+  "url": "https://www.amazon.de/dp/B09B8X9RGM",
+  "title": "Example product",
+  "author": null,
+  "publishedAt": null,
+  "content": "# Example product\\n\\nPublic product details.",
+  "media": [],
+  "attributes": {
+    "price": 1999,
+    "currency": "EUR",
+    "priceDisplay": "€19.99",
+    "availability": "In stock"
+  }
+}`}</code></pre>
+  <p><code>price</code> is always an integer in the currency’s minor unit: <code>1999</code> with <code>EUR</code> means €19.99. Use <code>priceDisplay</code> only for presentation.</p>
+
+  <h2>Feeds and profiles</h2>
+  <p><code>feed</code> and <code>profile</code> responses include an <code>items</code> array. Each item uses the same entity shape and can be an article, product, post, video, or another supported type. Other response types omit <code>items</code>.</p>
+  <pre><code>{`{
+  "schemaVersion": 1,
+  "type": "feed",
+  "source": "google-news",
+  "id": null,
+  "url": "https://news.google.com/search?q=Cloudflare",
+  "title": "Google News: Cloudflare",
+  "author": null,
+  "publishedAt": null,
+  "content": "# Google News: Cloudflare",
+  "media": [],
+  "attributes": { "feedType": "search", "query": "Cloudflare" },
+  "items": [
+    { "type": "article", "source": "google-news", "id": "…", "url": "https://…", "title": "…", "author": "…", "publishedAt": "2026-08-01T10:00:00.000Z", "content": "…", "media": [], "attributes": {} }
+  ]
+}`}</code></pre>
+
+  <h2>Nulls and omitted fields</h2>
+  <p>Shared nullable fields are always present and use <code>null</code> when the source does not provide a value. Optional type-specific details inside <code>attributes</code> and optional media details are omitted when unavailable.</p>
+
+  <h2>Machine-readable definitions</h2>
+  <ul>
+    <li><a href="/schemas/extraction-v1.json">JSON Schema Draft 2020-12</a></li>
+    <li><a href="/openapi.json">OpenAPI 3.1 document</a></li>
+  </ul>
+</DocsLayout>

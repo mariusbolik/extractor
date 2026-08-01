@@ -16,9 +16,9 @@ const description = 'Extract public SoundCloud tracks, playlists, sets, and prof
     outcome="Tracks, playlists, and profiles in one format."
     capabilities={[
       { label: 'Input', value: 'One public SoundCloud track, playlist, set, or creator profile URL.' },
-      { label: 'Returns', value: 'One normalized metadata document.' },
+      { label: 'Returns', value: 'One audio entity, or a profile entity for creator pages.' },
       { label: 'Includes', value: 'Title, creator, public description, artwork, content type, and canonical URL when available.' },
-      { label: 'Caching', value: 'Successful results may be cached at Cloudflare’s edge for up to 30 days.' },
+      { label: 'Caching', value: 'Profiles may be cached for one hour; audio entities for up to 30 days.' },
     ]}
     supported={['Public SoundCloud tracks', 'Public playlists and sets', 'Public creator profile URLs']}
     limitations={['No private or deleted audio', 'No comments, waveform data, transcripts, or media downloads', 'The result describes the public audio; it does not analyze the recording']}

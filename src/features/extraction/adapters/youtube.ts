@@ -57,14 +57,16 @@ async function extractVideo(
   ].filter(Boolean).join('\n\n');
 
   return {
+    type: 'video',
     url: canonicalUrl,
     source: 'youtube',
-    kind: 'document',
+    id,
     title,
     author,
     publishedAt: null,
     content,
-    items: [],
+    media: thumbnail ? [{ type: 'image', url: thumbnail, alt: 'Video thumbnail' }] : [],
+    attributes: {},
     method: 'youtube-oembed',
   };
 }
@@ -128,6 +130,9 @@ export async function extractYouTube(
     const thumbnailNode = list(media['media:thumbnail'] as Record<string, unknown> | Record<string, unknown>[] | undefined)[0];
     const thumbnail = text(thumbnailNode?.['@_url']);
     return {
+      type: 'video',
+      source: 'youtube',
+      id: text(entry['yt:videoId']) || itemUrl.match(/[?&]v=([^&]+)/)?.[1] || null,
       url: itemUrl,
       title: itemTitle,
       author: itemAuthor,
@@ -136,6 +141,8 @@ export async function extractYouTube(
         description ? escapeMarkdown(description) : '',
         thumbnail ? `![Video thumbnail](${thumbnail})` : '',
       ].filter(Boolean).join('\n\n'),
+      media: thumbnail ? [{ type: 'image', url: thumbnail, alt: itemTitle || 'Video thumbnail' }] : [],
+      attributes: {},
     };
   });
 
@@ -151,13 +158,18 @@ export async function extractYouTube(
   ].join('\n\n---\n\n');
 
   return {
+    type: 'feed',
     url: url.toString(),
     source: 'youtube',
-    kind: 'feed',
+    id: url.searchParams.get('list') || url.pathname.match(/^\/(?:channel|user)\/([^/]+)/)?.[1] || null,
     title,
     author,
     publishedAt: text(feed.updated).trim() || null,
     content,
+    media: [],
+    attributes: {
+      feedType: url.searchParams.get('list') ? 'playlist' : 'channel',
+    },
     items,
     method: 'youtube-atom',
   };

@@ -14,9 +14,10 @@
 
 - Use only public GET requests for extraction.
 - Preserve the generic fallback order: native `text/markdown`, LinkeDOM/readability, then Browser Run.
-- Route recognized Amazon products/searches, Bluesky profiles/posts, Instagram posts/profiles, Reddit, Shopify, SoundCloud, Spotify, TikTok posts/profiles, Vimeo, X, and YouTube URLs through their dedicated adapters first.
+- Route recognized Amazon products/searches, Bluesky profiles/posts, Google News searches/topics/top stories, Instagram posts/profiles, Reddit, Shopify, SoundCloud, Spotify, TikTok posts/profiles, Vimeo, X, and YouTube URLs through their dedicated adapters first.
 - For an exact Amazon product URL, extract the ASIN and fetch Amazon's compact product page. For an Amazon search URL containing `k`, fetch its compact search representation and return up to 20 product items. Do not send recognized Amazon products or searches to Browser Run.
 - Use Bluesky's public profile RSS for exact profile pages and its public AppView for exact post pages. Post requests must use zero reply and parent depth.
+- For Google News search, topic, and top-stories pages, try the public feed first and ordinary HTML second. Use the rate-limited Browser Run only when both cheap requests fail, return at most 50 article entities, and cache a successful result for one hour.
 - Prefer X's public oEmbed response before the existing server-side fallback.
 - For recognized TikTok pages, prefer public page data and fall back to TikTok's public oEmbed response. Resolve supported short links, but do not launch Browser Run for TikTok.
 - For recognized Instagram posts and reels, use their public embed representation; for exact public profiles, return profile details and recent public posts when exposed. Do not launch Browser Run for Instagram.
@@ -24,9 +25,11 @@
 - Treat status-shaped URLs on arbitrary domains as possible Mastodon posts. Validate them through the instance's public oEmbed endpoint, enrich confirmed statuses through public status data, and otherwise return the URL to normal webpage extraction. Confirmed Mastodon posts must not launch Browser Run.
 - Try publisher-advertised WordPress JSON, oEmbed, and feed links only after ordinary HTML extraction fails and before Browser Run.
 - For confirmed Shopify storefront HTML, prefer its public product JSON before theme parsing. Exact product pages are documents; storefront and collection pages are feeds capped at 50 products.
-- Keep JSON output normalized through the types in `src/features/extraction/types.ts`.
+- Keep public JSON output on schema version 1. Treat `src/features/extraction/schema.ts` as the runtime and generated JSON Schema source of truth and keep TypeScript types in `src/features/extraction/types.ts` aligned with it.
+- Use semantic entity types: `document`, `article`, `product`, `post`, `profile`, `video`, `audio`, and `feed`. Keep shared nullable fields present; omit unavailable optional type-specific attributes. Only profiles and feeds contain `items`.
+- Represent product and variant `price` values as non-negative integers in the currency's minor unit. Keep display text separate in `priceDisplay`.
 - Preserve URL safety checks, redirect validation, timeouts, size limits, and Browser Run cleanup.
-- Successful feeds and Amazon product results cache for 1 hour; other successful extractions cache for 30 days. Errors must not be cached.
+- Successful products, profiles, and feeds cache for 1 hour; other successful extractions cache for 30 days. Errors must not be cached.
 - Cache successful API responses through the versioned `caches.default` key in `src/worker.ts`. Cache hits must bypass rate-limited extraction work and expose `X-Extractor-Cache: HIT`; bump the internal version when a deployment must not reuse older result shapes.
 - Rate-limit uncached extraction work to 30 requests/IP/minute and Browser Run to 5 requests/IP/minute.
 
@@ -53,6 +56,8 @@ bun run deploy:dry
 ```
 
 Add fixture tests for extraction changes. After deployment, smoke-test both API formats and verify a repeated identical GET becomes an edge cache hit.
+
+Every adapter fixture and production smoke must assert the public v1 schema, including `schemaVersion`, semantic `type`, absence of internal `method`, and integer minor-unit prices where applicable.
 
 Chromium verification is mandatory after changes to extraction adapters, the homepage form, result rendering, layouts, or public documentation:
 

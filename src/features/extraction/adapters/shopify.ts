@@ -3,6 +3,7 @@ import { escapeMarkdown, htmlFragmentToMarkdown } from '../markdown';
 import type { ExtractedItem, ExtractionDependencies, ExtractionResult } from '../types';
 
 interface ShopifyProduct extends Record<string, unknown> {
+  id?: string | number;
   title?: string;
   handle?: string;
   body_html?: string;
@@ -14,6 +15,7 @@ interface ShopifyProduct extends Record<string, unknown> {
   images?: unknown[];
   featured_image?: unknown;
   variants?: unknown[];
+  price?: string | number;
 }
 
 function isShopifyStorefront(html: string, url: URL): boolean {
@@ -76,6 +78,35 @@ function imageUrl(value: unknown): string | null {
   return imageUrl(image.src || image.url);
 }
 
+function storefrontCurrency(html: string): string | null {
+  const value = html.match(/Shopify\.currency\s*=\s*\{[^}]*["']active["']\s*:\s*["']([A-Z]{3})["']/i)?.[1]
+    ?? html.match(/["']currency(?:Code)?["']\s*:\s*["']([A-Z]{3})["']/i)?.[1]
+    ?? html.match(/property=["']product:price:currency["'][^>]*content=["']([A-Z]{3})["']/i)?.[1];
+  return value?.toUpperCase() || null;
+}
+
+function minorDigits(currency: string | null): number {
+  return currency && ['BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'PYG', 'RWF', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF'].includes(currency)
+    ? 0
+    : 2;
+}
+
+function minorPrice(value: unknown, currency: string | null): number | null {
+  if (typeof value === 'number') return Number.isSafeInteger(value) && value >= 0 ? value : null;
+  if (typeof value !== 'string' || !/^\d+(?:\.\d+)?$/.test(value.trim())) return null;
+  const digits = minorDigits(currency);
+  const [whole, fraction = ''] = value.trim().split('.');
+  const price = Number(whole) * (10 ** digits)
+    + Number(fraction.padEnd(digits, '0').slice(0, digits) || 0);
+  return Number.isSafeInteger(price) ? price : null;
+}
+
+function priceDisplay(price: number, currency: string | null): string {
+  const digits = minorDigits(currency);
+  const major = (price / (10 ** digits)).toFixed(digits);
+  return currency ? `${major} ${currency}` : major;
+}
+
 function productUrl(product: ShopifyProduct, storeUrl: URL): string {
   if (typeof product.url === 'string') return new URL(product.url, storeUrl.origin).toString();
   if (typeof product.handle === 'string') {
@@ -96,6 +127,24 @@ function variantSummary(value: unknown): string | null {
     typeof variant.available === 'boolean' ? (variant.available ? 'Available' : 'Unavailable') : '',
   ].filter(Boolean);
   return parts.length ? `- ${parts.map((part) => escapeMarkdown(String(part))).join(' — ')}` : null;
+}
+
+function structuredVariant(value: unknown, currency: string | null) {
+  if (!value || typeof value !== 'object') return null;
+  const variant = value as Record<string, unknown>;
+  const title = typeof variant.title === 'string' ? variant.title.trim() : '';
+  if (!title) return null;
+  const price = minorPrice(variant.price, currency);
+  return {
+    ...(variant.id !== undefined ? { id: String(variant.id) } : {}),
+    title,
+    ...(price !== null ? {
+      price,
+      ...(currency ? { currency } : {}),
+      priceDisplay: priceDisplay(price, currency),
+    } : {}),
+    ...(typeof variant.available === 'boolean' ? { available: variant.available } : {}),
+  };
 }
 
 function productMarkdown(product: ShopifyProduct, storeUrl: URL): string {
@@ -126,15 +175,43 @@ function productMarkdown(product: ShopifyProduct, storeUrl: URL): string {
   ].filter(Boolean).join('\n\n');
 }
 
-function productItem(product: ShopifyProduct, storeUrl: URL): ExtractedItem | null {
+function productItem(product: ShopifyProduct, storeUrl: URL, currency: string | null): ExtractedItem | null {
   const title = typeof product.title === 'string' ? product.title.trim() : '';
   if (!title) return null;
+  const images = [product.featured_image, ...(product.images || [])]
+    .map(imageUrl)
+    .filter((value, index, values): value is string => Boolean(value) && values.indexOf(value) === index)
+    .slice(0, 8);
+  const variants = (product.variants || [])
+    .map((variant) => structuredVariant(variant, currency))
+    .filter((variant): variant is NonNullable<typeof variant> => variant !== null)
+    .slice(0, 50);
+  const directPrice = minorPrice(product.price, currency);
+  const firstPrice = directPrice ?? variants.find((variant) => variant.available !== false && variant.price !== undefined)?.price
+    ?? variants.find((variant) => variant.price !== undefined)?.price
+    ?? null;
+  const vendor = typeof product.vendor === 'string' ? product.vendor || null : null;
   return {
+    type: 'product',
+    source: 'shopify',
+    id: product.id !== undefined ? String(product.id) : typeof product.handle === 'string' ? product.handle : null,
     url: productUrl(product, storeUrl),
     title,
-    author: typeof product.vendor === 'string' ? product.vendor || null : null,
+    author: vendor,
     publishedAt: date(product.published_at),
     content: productMarkdown(product, storeUrl),
+    media: images.map((url) => ({ type: 'image', url, alt: title })),
+    attributes: {
+      productType: 'physical',
+      ...(vendor ? { brand: vendor } : {}),
+      ...(typeof product.product_type === 'string' && product.product_type ? { category: product.product_type } : {}),
+      ...(firstPrice !== null ? {
+        price: firstPrice,
+        ...(currency ? { currency } : {}),
+        priceDisplay: priceDisplay(firstPrice, currency),
+      } : {}),
+      ...(variants.length ? { variants } : {}),
+    },
   };
 }
 
@@ -145,6 +222,7 @@ export async function extractShopifyStorefront(
 ): Promise<ExtractionResult | null> {
   if (!isShopifyStorefront(html, url)) return null;
   const { endpoint, exactProduct } = endpointFor(url);
+  const currency = storefrontCurrency(html);
 
   try {
     const response = await fetchPublicPage(endpoint, dependencies.fetcher ?? fetch, 'application/json');
@@ -154,29 +232,29 @@ export async function extractShopifyStorefront(
       : Array.isArray((payload as { products?: ShopifyProduct[] }).products)
         ? (payload as { products: ShopifyProduct[] }).products
         : [];
-    const items = products.map((product) => productItem(product, url)).filter((item): item is ExtractedItem => item !== null);
+    const items = products.map((product) => productItem(product, url, currency)).filter((item): item is ExtractedItem => item !== null);
     if (!items.length) return null;
 
     if (exactProduct) {
       const item = items[0];
       return {
         ...item,
-        source: 'shopify',
-        kind: 'document',
-        items: [],
         method: 'shopify-json',
       };
     }
 
     const title = collectionPath(url) ? 'Shopify collection products' : 'Shopify products';
     return {
+      type: 'feed',
       url: url.toString(),
       source: 'shopify',
-      kind: 'feed',
+      id: collectionPath(url)?.handle ?? null,
       title,
       author: null,
       publishedAt: items[0]?.publishedAt ?? null,
       content: [`# ${title}`, ...items.map((item) => item.content)].join('\n\n---\n\n'),
+      media: [],
+      attributes: { feedType: collectionPath(url) ? 'collection' : 'catalog' },
       items,
       method: 'shopify-json',
     };

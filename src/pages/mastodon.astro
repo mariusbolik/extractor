@@ -16,7 +16,7 @@ const description = 'Extract public posts from compatible Mastodon instances int
     outcome="Public posts from many instances in one format."
     capabilities={[
       { label: 'Input', value: 'One public Mastodon status URL in the form https://instance/@user/status-id.' },
-      { label: 'Returns', value: 'One normalized post document.' },
+      { label: 'Returns', value: 'One normalized post entity.' },
       { label: 'Includes', value: 'Post text, author, publication date, content warning, media descriptions, and canonical URL when available.' },
       { label: 'Caching', value: 'Successful post results may be cached at Cloudflare’s edge for up to 30 days.' },
     ]}

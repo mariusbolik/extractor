@@ -14,5 +14,14 @@ export async function extractVimeo(
   const endpoint = new URL('https://vimeo.com/api/oembed.json');
   endpoint.searchParams.set('url', sourceUrl.toString());
   const data = await fetchOembed(endpoint, fetcher, 'Vimeo');
-  return oembedDocument({ data, url: sourceUrl, provider: 'Vimeo', source: 'vimeo', method: 'vimeo-oembed', fallbackTitle: 'Vimeo video' });
+  return oembedDocument({
+    data,
+    url: sourceUrl,
+    provider: 'Vimeo',
+    source: 'vimeo',
+    method: 'vimeo-oembed',
+    fallbackTitle: 'Vimeo video',
+    type: 'video',
+    id: sourceUrl.pathname.match(/\/(\d+)/)?.[1] ?? null,
+  });
 }

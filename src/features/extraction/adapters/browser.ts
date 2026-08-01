@@ -35,6 +35,12 @@ export async function renderPageHtml(url: URL, binding: BrowserRun): Promise<str
   try {
     browser = await puppeteer.launch(binding);
     const page = await browser.newPage();
+    // Cloudflare's Chromium build identifies itself as headless by default,
+    // which causes some otherwise public pages to return a challenge before
+    // their DOM exists. A conventional browser identity avoids that false
+    // negative without adding cookies, credentials, or challenge bypassing.
+    await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36');
+    await page.setExtraHTTPHeaders({ 'Accept-Language': 'en-US,en;q=0.9' });
     await page.setRequestInterception(true);
     page.on('request', (request) => {
       // Extraction needs DOM text, not visual assets. Blocking these resource

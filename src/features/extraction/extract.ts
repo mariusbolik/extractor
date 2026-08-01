@@ -1,5 +1,6 @@
 import { extractAmazonProduct, extractAmazonSearch } from './adapters/amazon';
 import { extractBlueskyPost, extractBlueskyProfile } from './adapters/bluesky';
+import { extractGoogleNews } from './adapters/google-news';
 import { extractInstagram } from './adapters/instagram';
 import { extractMastodon } from './adapters/mastodon';
 import { extractReddit } from './adapters/reddit';
@@ -11,8 +12,8 @@ import { extractWebPage } from './adapters/web';
 import { extractTweet } from './adapters/x';
 import { extractYouTube } from './adapters/youtube';
 import { ExtractionError } from './errors';
-import type { ExtractionDependencies, ExtractionResult } from './types';
-import { amazonProductAsin, amazonSearchQuery, isBlueskyPostUrl, isBlueskyProfileUrl, isInstagramUrl, isPossibleMastodonStatusUrl, isRedditUrl, isSoundCloudUrl, isSpotifyUrl, isTikTokUrl, isVimeoUrl, isXUrl, isYouTubeUrl, validateTargetUrl } from './url';
+import { toPublicExtractionResult, type ExtractionDependencies, type ExtractionResult } from './types';
+import { amazonProductAsin, amazonSearchQuery, isBlueskyPostUrl, isBlueskyProfileUrl, isGoogleNewsUrl, isInstagramUrl, isPossibleMastodonStatusUrl, isRedditUrl, isSoundCloudUrl, isSpotifyUrl, isTikTokUrl, isVimeoUrl, isXUrl, isYouTubeUrl, validateTargetUrl } from './url';
 
 const MAX_OUTPUT_BYTES = 2 * 1024 * 1024;
 
@@ -25,6 +26,7 @@ export async function extractUrl(
 
   if (amazonProductAsin(url)) result = await extractAmazonProduct(url, dependencies);
   else if (amazonSearchQuery(url)) result = await extractAmazonSearch(url, dependencies);
+  else if (isGoogleNewsUrl(url)) result = await extractGoogleNews(url, dependencies);
   else if (isBlueskyPostUrl(url)) result = await extractBlueskyPost(url, dependencies);
   else if (isBlueskyProfileUrl(url)) result = await extractBlueskyProfile(url, dependencies);
   else if (isInstagramUrl(url)) result = await extractInstagram(url, dependencies);
@@ -37,6 +39,10 @@ export async function extractUrl(
   else if (isYouTubeUrl(url)) result = await extractYouTube(url, dependencies);
   else if (isPossibleMastodonStatusUrl(url)) result = await extractMastodon(url, dependencies) ?? await extractWebPage(url, dependencies);
   else result = await extractWebPage(url, dependencies);
+
+  // Validate every adapter result before it can power either JSON or Markdown.
+  // This keeps source-specific parsing bugs from silently changing the public contract.
+  toPublicExtractionResult(result);
 
   if (new TextEncoder().encode(JSON.stringify(result)).byteLength > MAX_OUTPUT_BYTES) {
     throw new ExtractionError('content_too_large', 'The extracted result is larger than 2 MB.', 413);

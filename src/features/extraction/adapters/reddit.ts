@@ -62,12 +62,18 @@ export async function extractReddit(
   const items: ExtractedItem[] = entries.map((entry) => {
     const permalink = entryUrl(entry) || url.toString();
     const bodyHtml = text(entry.content);
+    const author = text((entry.author as Record<string, unknown> | undefined)?.name).trim() || null;
     return {
+      type: 'post',
+      source: 'reddit',
+      id: permalink.match(/\/comments\/([a-z0-9]+)/i)?.[1] ?? null,
       url: permalink,
       title: text(entry.title).trim() || null,
-      author: text((entry.author as Record<string, unknown> | undefined)?.name).trim() || null,
+      author,
       publishedAt: text(entry.updated).trim() || text(entry.published).trim() || null,
       content: htmlFragmentToMarkdown(bodyHtml, permalink),
+      media: [],
+      attributes: author ? { handle: author } : {},
     };
   });
 
@@ -81,9 +87,6 @@ export async function extractReddit(
     return {
       ...item,
       content,
-      source: 'reddit',
-      kind: 'document',
-      items: [],
       method: 'reddit-rss',
     };
   }
@@ -99,13 +102,16 @@ export async function extractReddit(
   ].join('\n\n---\n\n');
 
   return {
+    type: 'feed',
     url: url.toString(),
     source: 'reddit',
-    kind: 'feed',
+    id: url.pathname.match(/^\/(?:r|u|user)\/([^/]+)/i)?.[1] ?? null,
     title,
     author: null,
     publishedAt: text(feed.updated).trim() || null,
     content,
+    media: [],
+    attributes: { feedType: /\/r\//i.test(url.pathname) ? 'community' : 'profile' },
     items,
     method: 'reddit-rss',
   };
