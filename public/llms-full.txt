@@ -182,4 +182,4 @@ When a source blocks extraction or returns an upstream failure, the error messag
 
 ## Pricing
 
-Pay-as-you-go billing is planned at €0.49 / 1,000 extractions. Checkout is not yet available.
+Pay-as-you-go billing is planned at €0.49 / 1,000 extractions. Credits never expire. Checkout is not yet available.

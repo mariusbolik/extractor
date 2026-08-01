@@ -260,7 +260,7 @@ extractor.sh is designed for straightforward extraction of public content throug
 
 > Simple pay-as-you-go pricing: €0.49 / 1,000 extractions.
 
-There are no subscriptions, tiers, or monthly commitments. Checkout is coming soon and is not currently available. API usage is documented at \`GET ${ORIGIN}/api/extract\`.
+There are no subscriptions or tiers, and credits never expire. Checkout is coming soon and is not currently available. API usage is documented at \`GET ${ORIGIN}/api/extract\`.
 `,
 };
 
