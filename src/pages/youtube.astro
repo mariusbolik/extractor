@@ -14,6 +14,12 @@ const description = 'Extract public YouTube video metadata, channels, and playli
     headline="YouTube metadata, made usable."
     {description}
     outcome="Videos and channels in one consistent format."
+    capabilities={[
+      { label: 'Input', value: 'One public video, Shorts, channel, handle, user, or playlist URL.' },
+      { label: 'Returns', value: 'One document for a video or a normalized feed for channels and playlists.' },
+      { label: 'Includes', value: 'Public titles, descriptions, authors, publication dates, thumbnails, and canonical links when available.' },
+      { label: 'Caching', value: 'Feeds may be cached for one hour; video documents for up to 30 days.' },
+    ]}
     supported={[
       'Public watch, Shorts, and youtu.be video URLs',
       'Public channel, handle, and legacy user pages',

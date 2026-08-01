@@ -8,9 +8,13 @@ A public, cache-first GET API and small web interface that turns public URLs int
 - Public Amazon product detail pages from supported country stores.
 - Public Bluesky profile feeds and individual posts.
 - Public Instagram posts, reels, profiles, and recent profile posts.
+- Public Mastodon statuses from compatible instances.
 - Reddit posts, communities, and public user feeds.
 - Public Shopify products, collections, and storefront catalogs.
+- Public SoundCloud tracks, playlists, sets, and profiles.
+- Public Spotify music and podcast metadata.
 - Public TikTok video and photo posts plus creator profiles.
+- Public Vimeo video metadata.
 - Public X and Twitter status URLs.
 - YouTube videos, channels, handles, users, and playlists.
 

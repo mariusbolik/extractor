@@ -14,6 +14,12 @@ const description = 'Convert public Bluesky profiles and individual posts into c
     headline="Public Bluesky content, made reusable."
     {description}
     outcome="Profiles and posts in one consistent format."
+    capabilities={[
+      { label: 'Input', value: 'One public Bluesky profile or individual post URL.' },
+      { label: 'Returns', value: 'A feed for profiles or one document for an individual post.' },
+      { label: 'Includes', value: 'Profile details, recent posts, post text, author, timestamp, and canonical links when available.' },
+      { label: 'Caching', value: 'Profile feeds may be cached for one hour; post documents for up to 30 days.' },
+    ]}
     supported={[
       'Public Bluesky profile pages',
       'Individual public Bluesky post pages',

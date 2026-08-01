@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ExtractionError } from './errors';
-import { amazonProductAsin, isBlueskyProfileUrl, isInstagramUrl, isRedditUrl, isTikTokUrl, isXUrl, isYouTubeUrl, validateTargetUrl } from './url';
+import { amazonProductAsin, isBlueskyProfileUrl, isInstagramUrl, isPossibleMastodonStatusUrl, isRedditUrl, isSoundCloudUrl, isSpotifyUrl, isTikTokUrl, isVimeoUrl, isXUrl, isYouTubeUrl, validateTargetUrl } from './url';
 
 describe('validateTargetUrl', () => {
   it('accepts and normalizes public HTTP URLs', () => {
@@ -63,6 +63,17 @@ describe('source URL detection', () => {
     expect(isInstagramUrl(new URL('https://www.instagram.com/instagram/'))).toBe(true);
     expect(isInstagramUrl(new URL('https://www.instagram.com/explore/'))).toBe(false);
     expect(isInstagramUrl(new URL('https://instagram.com.example.org/p/abc/'))).toBe(false);
+  });
+
+  it('recognizes public oEmbed provider URLs without accepting lookalike hosts', () => {
+    expect(isVimeoUrl(new URL('https://vimeo.com/286898202'))).toBe(true);
+    expect(isVimeoUrl(new URL('https://vimeo.com.example/video/286898202'))).toBe(false);
+    expect(isSoundCloudUrl(new URL('https://soundcloud.com/forss/flickermood'))).toBe(true);
+    expect(isSoundCloudUrl(new URL('https://soundcloud.com/search?q=test'))).toBe(false);
+    expect(isSpotifyUrl(new URL('https://open.spotify.com/episode/7makk4oTQel546B0PZlDM5'))).toBe(true);
+    expect(isSpotifyUrl(new URL('https://open.spotify.example/track/abc'))).toBe(false);
+    expect(isPossibleMastodonStatusUrl(new URL('https://mastodon.social/@trwnh/99664077509711321'))).toBe(true);
+    expect(isPossibleMastodonStatusUrl(new URL('https://example.com/article/123'))).toBe(false);
   });
 
   it.each([

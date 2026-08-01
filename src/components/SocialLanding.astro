@@ -9,10 +9,11 @@ interface Props {
   outcome: string;
   supported: string[];
   limitations: string[];
+  capabilities: Array<{ label: string; value: string }>;
   exampleUrl: string;
 }
 
-const { platform, eyebrow, headline, description, outcome, supported, limitations, exampleUrl } = Astro.props;
+const { platform, eyebrow, headline, description, outcome, supported, limitations, capabilities, exampleUrl } = Astro.props;
 const apiExample = `curl --get 'https://extractor.mcb-software.workers.dev/api/extract' \\
   --data-urlencode 'url=${exampleUrl}' \\
   --data-urlencode 'format=markdown'`;
@@ -33,6 +34,19 @@ const apiExample = `curl --get 'https://extractor.mcb-software.workers.dev/api/e
     <li class="border-t-2 border-black pt-4"><span class="mb-[10px] block font-mono font-black" aria-hidden="true">02</span>Choose readable Markdown or structured JSON.</li>
     <li class="border-t-2 border-black pt-4"><span class="mb-[10px] block font-mono font-black" aria-hidden="true">03</span>Get clean content through one cacheable GET request.</li>
   </ol>
+</section>
+
+<section class="mt-6 border-2 border-black bg-white p-[clamp(24px,5vw,52px)]" aria-labelledby="capabilities-heading">
+  <p class="mb-4 font-mono text-[0.8rem] font-extrabold uppercase tracking-[0.14em]">Capabilities</p>
+  <h2 class="mb-6 font-heading text-[clamp(1.55rem,3vw,2.4rem)] font-normal leading-[1.02] tracking-[-0.045em]" id="capabilities-heading">What the extractor does.</h2>
+  <dl class="grid grid-cols-2 gap-x-8 gap-y-6 max-[760px]:grid-cols-1">
+    {capabilities.map((capability) => (
+      <div class="border-t-2 border-black pt-4">
+        <dt class="mb-2 font-mono text-[0.76rem] font-extrabold uppercase tracking-[0.12em]">{capability.label}</dt>
+        <dd class="m-0 leading-[1.7]">{capability.value}</dd>
+      </div>
+    ))}
+  </dl>
 </section>
 
 <div class="grid grid-cols-2 gap-6 max-[760px]:grid-cols-1 max-[760px]:gap-0">

@@ -14,6 +14,12 @@ const description = 'Convert a public X or Twitter status URL into clean Markdow
     headline="A public post. Just the content."
     {description}
     outcome="Public posts in one consistent format."
+    capabilities={[
+      { label: 'Input', value: 'One public x.com or legacy twitter.com status URL.' },
+      { label: 'Returns', value: 'One normalized post document.' },
+      { label: 'Includes', value: 'Post text, author, timestamp, public media references, and canonical URL when available.' },
+      { label: 'Caching', value: 'Successful post results may be cached at Cloudflare’s edge for up to 30 days.' },
+    ]}
     supported={[
       'Public x.com status URLs',
       'Legacy twitter.com status URLs',

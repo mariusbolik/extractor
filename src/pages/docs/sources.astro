@@ -3,7 +3,7 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 
 export const prerender = true;
 const title = 'Supported sources — extractor.sh docs';
-const description = 'Supported public webpage, Amazon, Bluesky, Instagram, Reddit, Shopify, TikTok, X, and YouTube URL formats for the extractor.sh API.';
+const description = 'Supported public webpage, commerce, social, audio, podcast, and video URL formats for the extractor.sh API.';
 ---
 
 <DocsLayout {title} {description} path="/docs/sources/">
@@ -33,6 +33,11 @@ https://bsky.app/profile/bsky.app/post/3mqcp5qjdfs26</code></pre>
 https://www.instagram.com/p/DbbY9pdm6Q2/</code></pre>
   <p>Private or login-only content, stories, comments, transcripts, and media downloads are not supported.</p>
 
+  <h2>Mastodon</h2>
+  <p>Public status URLs on compatible Mastodon instances return one document containing the post, author, date, content warning, media descriptions, and source link when available.</p>
+  <pre><code>https://mastodon.social/@trwnh/99664077509711321</code></pre>
+  <p>Private statuses, timelines, complete threads, replies, and media downloads are not supported.</p>
+
   <h2>Shopify</h2>
   <ul>
     <li>Public storefront product pages</li>
@@ -41,6 +46,16 @@ https://www.instagram.com/p/DbbY9pdm6Q2/</code></pre>
   </ul>
   <pre><code>https://store.example/products/black-shirt</code></pre>
   <p>Submit the ordinary storefront page, not its JSON URL. Product pages return one document. Storefront and collection pages return up to 50 publicly listed products as a feed. Stores that disable or protect their product data continue through regular webpage extraction.</p>
+
+  <h2>SoundCloud</h2>
+  <p>Public track, playlist, set, and creator profile URLs return one metadata document.</p>
+  <pre><code>https://soundcloud.com/forss/flickermood</code></pre>
+  <p>Comments, waveforms, transcripts, audio analysis, and media downloads are not provided.</p>
+
+  <h2>Spotify</h2>
+  <p>Public track, album, artist, playlist, podcast show, and episode URLs return one metadata document.</p>
+  <pre><code>https://open.spotify.com/episode/7makk4oTQel546B0PZlDM5</code></pre>
+  <p>Lyrics, transcripts, playback data, audio analysis, and media downloads are not provided.</p>
 
   <h2>Reddit</h2>
   <ul>
@@ -67,6 +82,11 @@ https://www.instagram.com/p/DbbY9pdm6Q2/</code></pre>
   </ul>
   <pre><code>https://www.tiktok.com/@scout2015/video/6718335390845095173</code></pre>
   <p>Private, deleted, or age-restricted content, comments, transcripts, and media downloads are not supported.</p>
+
+  <h2>Vimeo</h2>
+  <p>Public Vimeo video URLs, including supported channel, group, showcase, and On Demand links, return one metadata document.</p>
+  <pre><code>https://vimeo.com/286898202</code></pre>
+  <p>Private or embed-disabled videos, transcripts, captions, comments, and media downloads are not provided.</p>
 
   <h2>YouTube</h2>
   <ul>

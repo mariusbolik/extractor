@@ -1,0 +1,27 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SocialLanding from '../components/SocialLanding.astro';
+
+export const prerender = true;
+const title = 'Spotify music and podcasts to Markdown or JSON — extractor.sh';
+const description = 'Extract public Spotify tracks, albums, artists, shows, episodes, and playlists into clean Markdown or normalized JSON.';
+---
+
+<BaseLayout {title} {description} path="/spotify/">
+  <SocialLanding
+    platform="Spotify"
+    eyebrow="Spotify extractor"
+    headline="Spotify metadata, without the player."
+    {description}
+    outcome="Music and podcast links in one format."
+    capabilities={[
+      { label: 'Input', value: 'One public Spotify track, album, artist, podcast show, episode, playlist, or supported short link.' },
+      { label: 'Returns', value: 'One normalized metadata document.' },
+      { label: 'Includes', value: 'Public title, artwork, content type, and canonical or submitted URL when available.' },
+      { label: 'Caching', value: 'Successful results may be cached at Cloudflare’s edge for up to 30 days.' },
+    ]}
+    supported={['Public Spotify tracks, albums, and artists', 'Public podcast shows and episodes', 'Public playlists and supported spotify.link URLs']}
+    limitations={['No private or unavailable content', 'No lyrics, transcripts, audio analysis, playback data, or media downloads', 'Creator and release details depend on the public metadata Spotify exposes']}
+    exampleUrl="https://open.spotify.com/episode/7makk4oTQel546B0PZlDM5"
+  />
+</BaseLayout>

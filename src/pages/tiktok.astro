@@ -14,6 +14,12 @@ const description = 'Convert public TikTok videos, photo posts, and creator prof
     headline="Public TikTok content, without the clutter."
     {description}
     outcome="Posts and profiles in one consistent format."
+    capabilities={[
+      { label: 'Input', value: 'One public TikTok video, photo post, creator profile, or supported short link.' },
+      { label: 'Returns', value: 'One normalized document.' },
+      { label: 'Includes', value: 'Caption, creator, date, hashtags, duration, sound details, or profile details when exposed.' },
+      { label: 'Caching', value: 'Successful results may be cached at Cloudflare’s edge for up to 30 days.' },
+    ]}
     supported={[
       'Public TikTok video and photo post pages',
       'Public TikTok creator profile pages',

@@ -218,7 +218,7 @@ function validSuccessBody(value) {
   return value
     && typeof value === 'object'
     && typeof value.url === 'string'
-    && ['web', 'amazon', 'bluesky', 'instagram', 'reddit', 'shopify', 'tiktok', 'x', 'youtube'].includes(value.source)
+    && ['web', 'amazon', 'bluesky', 'instagram', 'mastodon', 'reddit', 'shopify', 'soundcloud', 'spotify', 'tiktok', 'vimeo', 'x', 'youtube'].includes(value.source)
     && ['document', 'feed'].includes(value.kind)
     && typeof value.content === 'string'
     && Array.isArray(value.items);
@@ -254,7 +254,7 @@ async function testTarget(target, options) {
       ...target,
       status: response.status,
       durationMs: Date.now() - startedAt,
-      cacheStatus: response.headers.get('cf-cache-status'),
+      cacheStatus: response.headers.get('x-extractor-cache') || response.headers.get('cf-cache-status'),
       cfRay: response.headers.get('cf-ray'),
       contentLength: text.length,
       outcome: 'source_error',
@@ -355,7 +355,7 @@ async function requestProbe(targetUrl, format, options) {
       status: response.status,
       durationMs: Date.now() - startedAt,
       contentType: response.headers.get('content-type'),
-      cacheStatus: response.headers.get('cf-cache-status'),
+      cacheStatus: response.headers.get('x-extractor-cache') || response.headers.get('cf-cache-status'),
       contentLength: body.length,
     };
   } catch (error) {

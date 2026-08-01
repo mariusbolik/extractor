@@ -24,9 +24,13 @@ ${apiExample}
 - [Amazon](${ORIGIN}/amazon/): Public product detail pages from supported country stores.
 - [Bluesky](${ORIGIN}/bluesky/): Public profile feeds and individual posts.
 - [Instagram](${ORIGIN}/instagram/): Public posts, reels, profiles, and recent profile posts.
+- [Mastodon](${ORIGIN}/mastodon/): Public statuses from compatible federated instances.
 - [Reddit](${ORIGIN}/reddit/): Public posts, communities, and user profiles.
 - [Shopify](${ORIGIN}/shopify/): Public products, collections, and storefront catalogs.
+- [SoundCloud](${ORIGIN}/soundcloud/): Public tracks, playlists, sets, and creator profiles.
+- [Spotify](${ORIGIN}/spotify/): Public music, artist, playlist, and podcast links.
 - [TikTok](${ORIGIN}/tiktok/): Public video and photo posts, short links, and creator profiles.
+- [Vimeo](${ORIGIN}/vimeo/): Public video metadata.
 - [X](${ORIGIN}/x/): Public X and Twitter status URLs.
 - [YouTube](${ORIGIN}/youtube/): Public videos, channels, and playlists.
 - Web pages: Public HTTP and HTTPS pages.
@@ -63,6 +67,14 @@ Post and reel pages return one document. Public profile pages return profile det
 
 Call \`GET ${ORIGIN}/api/extract\` with the ordinary Instagram page in the \`url\` parameter.
 `,
+  '/mastodon/': `# Mastodon extraction with extractor.sh
+
+> Turn one public Mastodon status into clean Markdown or normalized JSON.
+
+Submit a public status URL from a compatible instance. Results can include the post text, author, publication date, content warning, and media descriptions. Private statuses, timelines, complete threads, and media downloads are not supported.
+
+Call \`GET ${ORIGIN}/api/extract\` with the Mastodon status in the \`url\` parameter.
+`,
   '/reddit/': `# Reddit extraction with extractor.sh
 
 > Turn public Reddit posts, communities, and profiles into clean Markdown or normalized JSON.
@@ -79,6 +91,22 @@ Submit an ordinary storefront page. Product pages return one document; storefron
 
 Call \`GET ${ORIGIN}/api/extract\` with the storefront page in the \`url\` parameter.
 `,
+  '/soundcloud/': `# SoundCloud extraction with extractor.sh
+
+> Turn a public SoundCloud track, playlist, set, or profile into clean Markdown or normalized JSON.
+
+Results contain public metadata rather than audio, transcripts, comments, or media downloads.
+
+Call \`GET ${ORIGIN}/api/extract\` with the SoundCloud page in the \`url\` parameter.
+`,
+  '/spotify/': `# Spotify extraction with extractor.sh
+
+> Turn a public Spotify music or podcast link into clean Markdown or normalized JSON.
+
+Tracks, albums, artists, playlists, shows, and episodes are supported. Lyrics, transcripts, playback data, audio analysis, and media downloads are not included.
+
+Call \`GET ${ORIGIN}/api/extract\` with the Spotify page in the \`url\` parameter.
+`,
   '/tiktok/': `# TikTok extraction with extractor.sh
 
 > Turn public TikTok video and photo posts or creator profiles into clean Markdown or normalized JSON.
@@ -86,6 +114,14 @@ Call \`GET ${ORIGIN}/api/extract\` with the storefront page in the \`url\` param
 Submit an ordinary public TikTok page or short link. Private, deleted, or age-restricted content, comments, transcripts, and media downloads are not supported.
 
 Call \`GET ${ORIGIN}/api/extract\` with the TikTok page in the \`url\` parameter.
+`,
+  '/vimeo/': `# Vimeo extraction with extractor.sh
+
+> Turn public Vimeo video metadata into clean Markdown or normalized JSON.
+
+Results can include title, author, description, upload date, duration, thumbnail, and source URL. Transcripts, captions, comments, and media downloads are not included.
+
+Call \`GET ${ORIGIN}/api/extract\` with the Vimeo video page in the \`url\` parameter.
 `,
   '/x/': `# X extraction with extractor.sh
 
@@ -144,8 +180,12 @@ Submit normal public browser URLs to \`GET ${ORIGIN}/api/extract\`.
 - Amazon: public product detail pages. Submit the ordinary product URL; results may be cached for up to one hour.
 - Bluesky: public profile feeds and individual public post pages.
 - Instagram: public post, reel, and profile pages. Profile results include recent public posts when available.
+- Mastodon: public status pages on compatible instances.
 - Shopify: public product pages, collections, and storefront homepages. Submit the normal storefront URL; catalog feeds contain up to 50 products.
+- SoundCloud: public tracks, playlists, sets, and creator profiles.
+- Spotify: public tracks, albums, artists, playlists, podcast shows, and episodes.
 - TikTok: public video posts, photo posts, short links, and creator profile pages.
+- Vimeo: public video pages, including supported channel, group, showcase, and On Demand links.
 - Reddit: public post, subreddit, community, and user profile pages.
 - X: public x.com and twitter.com status pages.
 - YouTube: public video, Shorts, channel, handle, user, and playlist pages.

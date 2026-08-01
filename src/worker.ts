@@ -7,6 +7,7 @@ const DISCOVERY_LINKS = [
   '</.well-known/api-catalog>; rel="api-catalog"; type="application/linkset+json"',
   '</openapi.json>; rel="service-desc"; type="application/vnd.oai.openapi+json"',
 ].join(', ');
+const API_CACHE_VERSION = '2026-08-oembed-1';
 
 function acceptsMarkdown(header: string | null): boolean {
   if (!header) return false;
@@ -22,6 +23,23 @@ function addVary(headers: Headers, value: string): void {
   const values = new Set((headers.get('Vary') ?? '').split(',').map((item) => item.trim()).filter(Boolean));
   values.add(value);
   headers.set('Vary', [...values].join(', '));
+}
+
+function apiCacheKey(request: Request): Request {
+  const url = new URL(request.url);
+  // The version exists only in the Cache API key. Bumping it makes adapter
+  // deployments immediately independent from results stored by older code.
+  url.searchParams.set('__extractor_cache', API_CACHE_VERSION);
+  return new Request(url.toString(), { method: 'GET' });
+}
+
+function publicApiResponse(response: Response, cacheStatus: 'HIT' | 'MISS'): Response {
+  const output = new Response(response.body, response);
+  output.headers.delete('X-Extractor-Cache-TTL');
+  output.headers.set('Cache-Control', 'public, max-age=0, must-revalidate');
+  output.headers.set('Link', DISCOVERY_LINKS);
+  output.headers.set('X-Extractor-Cache', cacheStatus);
+  return output;
 }
 
 export default {
@@ -41,6 +59,25 @@ export default {
           'X-Content-Type-Options': 'nosniff',
         },
       });
+    }
+
+    if (request.method === 'GET' && url.pathname === '/api/extract') {
+      const cache = (caches as CacheStorage & { default: Cache }).default;
+      const cacheKey = apiCacheKey(request);
+      const cached = await cache.match(cacheKey);
+      if (cached) return publicApiResponse(cached, 'HIT');
+
+      const response = await handle(request, env, context);
+      const ttl = Number(response.headers.get('X-Extractor-Cache-TTL'));
+      if (response.ok && Number.isFinite(ttl) && ttl > 0) {
+        const stored = new Response(response.clone().body, response);
+        stored.headers.set('Cache-Control', `public, max-age=${ttl}`);
+        // Cache writes should not delay the caller. Errors and rate-limit
+        // responses never carry a storage TTL and therefore are never stored.
+        context.waitUntil(cache.put(cacheKey, stored));
+        return publicApiResponse(response, 'MISS');
+      }
+      return publicApiResponse(response, 'MISS');
     }
 
     const response = await handle(request, env, context);

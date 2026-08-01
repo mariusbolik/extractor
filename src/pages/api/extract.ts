@@ -18,11 +18,11 @@ function successHeaders(ttl: number, contentType: string): Headers {
   return new Headers({
     'Access-Control-Allow-Origin': '*',
     'Cache-Control': 'public, max-age=0, must-revalidate',
-    'Cloudflare-CDN-Cache-Control': `public, max-age=${ttl}`,
     'Cache-Tag': 'extractor-api',
     'Content-Type': contentType,
     'X-Content-Type-Options': 'nosniff',
     'X-Robots-Tag': 'noindex',
+    'X-Extractor-Cache-TTL': String(ttl),
   });
 }
 

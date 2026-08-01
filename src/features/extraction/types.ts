@@ -1,4 +1,4 @@
-export type ExtractionSource = 'web' | 'amazon' | 'bluesky' | 'instagram' | 'reddit' | 'shopify' | 'tiktok' | 'x' | 'youtube';
+export type ExtractionSource = 'web' | 'amazon' | 'bluesky' | 'instagram' | 'mastodon' | 'reddit' | 'shopify' | 'soundcloud' | 'spotify' | 'tiktok' | 'vimeo' | 'x' | 'youtube';
 export type ExtractionKind = 'document' | 'feed';
 export type ExtractionMethod =
   | 'native-markdown'
@@ -10,12 +10,16 @@ export type ExtractionMethod =
   | 'discovered-feed'
   | 'instagram-embed'
   | 'instagram-profile'
+  | 'mastodon-oembed'
   | 'oembed'
   | 'wordpress-json'
   | 'reddit-rss'
   | 'shopify-json'
+  | 'soundcloud-oembed'
+  | 'spotify-oembed'
   | 'tiktok-hydration'
   | 'tiktok-oembed'
+  | 'vimeo-oembed'
   | 'x-oembed'
   | 'react-tweet'
   | 'youtube-atom'

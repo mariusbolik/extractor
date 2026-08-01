@@ -36,7 +36,7 @@ curl --get 'https://extractor.mcb-software.workers.dev/api/extract' \
 Successful JSON responses contain:
 
 - `url` — Canonical source URL.
-- `source` — One of `web`, `amazon`, `bluesky`, `instagram`, `reddit`, `shopify`, `tiktok`, `x`, or `youtube`.
+- `source` — One of `web`, `amazon`, `bluesky`, `instagram`, `mastodon`, `reddit`, `shopify`, `soundcloud`, `spotify`, `tiktok`, `vimeo`, `x`, or `youtube`.
 - `kind` — `document` or `feed`.
 - `title` — Extracted title or `null`.
 - `author` — Extracted author or `null`.
@@ -50,7 +50,7 @@ Each feed item contains `url`, `title`, `author`, `publishedAt`, and `content`.
 
 With `format=markdown`, the response body is raw Markdown with `Content-Type: text/markdown; charset=utf-8`.
 
-The public website pages also support HTTP content negotiation. Send `Accept: text/markdown` to `/`, `/amazon/`, `/bluesky/`, `/instagram/`, `/reddit/`, `/shopify/`, `/tiktok/`, `/x/`, or `/youtube/` to receive an agent-readable Markdown representation.
+The public website pages also support HTTP content negotiation. Send `Accept: text/markdown` to any platform landing page to receive an agent-readable Markdown representation.
 
 ## Supported sources
 
@@ -78,6 +78,12 @@ Public Instagram post and reel pages return one normalized document. Public prof
 
 Profile example: `https://www.instagram.com/instagram/`
 
+### Mastodon
+
+Public status pages on compatible instances return one document with post text, author, date, content warning, and media descriptions when available. Private statuses, timelines, complete threads, and media downloads are unsupported.
+
+Example: `https://mastodon.social/@trwnh/99664077509711321`
+
 ### Reddit
 
 Public Reddit post pages, subreddit and community pages, and public user profile pages. Private and quarantined communities are unsupported. Post extraction does not include the complete comment tree.
@@ -90,11 +96,29 @@ Public Shopify product pages return one normalized document. Public storefront a
 
 Example: `https://store.example/products/black-shirt`
 
+### SoundCloud
+
+Public tracks, playlists, sets, and creator profile URLs return one metadata document. Comments, waveforms, transcripts, and media downloads are not provided.
+
+Example: `https://soundcloud.com/forss/flickermood`
+
+### Spotify
+
+Public tracks, albums, artists, playlists, podcast shows, episodes, and supported short links return one metadata document. Lyrics, transcripts, playback data, audio analysis, and media downloads are not provided.
+
+Example: `https://open.spotify.com/episode/7makk4oTQel546B0PZlDM5`
+
 ### TikTok
 
 Public TikTok video and photo post pages return one normalized document. Public creator profile pages return profile details. Short links are supported when they resolve to one of these public pages. Private, deleted, or age-restricted content, comments, transcripts, and media downloads are unsupported.
 
 Example: `https://www.tiktok.com/@scout2015/video/6718335390845095173`
+
+### Vimeo
+
+Public Vimeo video pages return one metadata document with title, author, description, upload date, duration, thumbnail, and source URL when available. Transcripts, captions, comments, and media downloads are not provided.
+
+Example: `https://vimeo.com/286898202`
 
 ### X
 

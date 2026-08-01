@@ -14,6 +14,12 @@ const description = 'Convert public Instagram posts, reels, and profiles into cl
     headline="Public Instagram content, made reusable."
     {description}
     outcome="Posts and profiles in one consistent format."
+    capabilities={[
+      { label: 'Input', value: 'One public Instagram post, reel, or profile URL.' },
+      { label: 'Returns', value: 'One document for posts and reels, or a feed for profiles.' },
+      { label: 'Includes', value: 'Caption, author, media type, timestamp, profile counts, and recent profile posts when exposed.' },
+      { label: 'Caching', value: 'Profile feeds may be cached for one hour; post documents for up to 30 days.' },
+    ]}
     supported={[
       'Public Instagram post and reel pages',
       'Public Instagram profile pages',

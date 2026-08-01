@@ -14,6 +14,12 @@ const description = 'Extract useful public Amazon product details into clean Mar
     headline="Product details, minus the storefront noise."
     {description}
     outcome="Public product details in one consistent format."
+    capabilities={[
+      { label: 'Input', value: 'One exact public Amazon product detail URL containing an ASIN.' },
+      { label: 'Returns', value: 'One normalized product document.' },
+      { label: 'Includes', value: 'Title, brand, price, rating, availability, image, features, and canonical URL when present.' },
+      { label: 'Caching', value: 'Successful product results may be cached at Cloudflare’s edge for up to one hour.' },
+    ]}
     supported={[
       'Public product detail URLs from supported Amazon country stores',
       'Product title, brand, price, rating, availability, image, and features when present',

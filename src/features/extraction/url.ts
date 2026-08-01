@@ -102,6 +102,30 @@ export function isYouTubeUrl(url: URL): boolean {
   return ['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be'].includes(hostname);
 }
 
+export function isVimeoUrl(url: URL): boolean {
+  const hostname = url.hostname.toLowerCase();
+  if (!['vimeo.com', 'www.vimeo.com', 'player.vimeo.com'].includes(hostname)) return false;
+  return /^\/(?:\d+|video\/\d+|album\/\d+\/video\/\d+|channels\/[^/]+\/\d+|groups\/[^/]+\/videos\/\d+|ondemand\/[^/]+\/\d+)\/?$/i.test(url.pathname);
+}
+
+export function isSoundCloudUrl(url: URL): boolean {
+  const hostname = url.hostname.toLowerCase();
+  if (!['soundcloud.com', 'www.soundcloud.com', 'm.soundcloud.com'].includes(hostname)) return false;
+  const firstSegment = url.pathname.split('/').filter(Boolean)[0]?.toLowerCase();
+  return Boolean(firstSegment && !['discover', 'search', 'stream', 'upload', 'you'].includes(firstSegment));
+}
+
+export function isSpotifyUrl(url: URL): boolean {
+  const hostname = url.hostname.toLowerCase();
+  if (hostname === 'spotify.link') return url.pathname !== '/';
+  if (hostname !== 'open.spotify.com') return false;
+  return /^\/(?:intl-[a-z]{2}\/)?(?:track|album|artist|episode|show|playlist)\/[A-Za-z0-9]+\/?$/i.test(url.pathname);
+}
+
+export function isPossibleMastodonStatusUrl(url: URL): boolean {
+  return /^\/@[^/]+\/\d+\/?$/i.test(url.pathname);
+}
+
 export function isTikTokUrl(url: URL): boolean {
   const hostname = url.hostname.toLowerCase();
   if (hostname === 'vm.tiktok.com' || hostname === 'vt.tiktok.com') return true;

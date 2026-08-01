@@ -70,7 +70,7 @@ try {
   const home = await page.goto(`${origin}/`, { waitUntil: 'networkidle' });
   assert.equal(home?.status(), 200);
   await page.locator('#extract-form').waitFor();
-  assert.equal(await page.locator('.method-card').count(), 8);
+  assert.equal(await page.locator('.method-card').count(), 12);
   assert.equal(await page.locator('footer a[href="/alternatives/"]').count(), 1, 'Alternatives footer link is missing');
   assert.equal(await page.locator('footer a[href="/blog/"]').count(), 1, 'Blog footer link is missing');
   for (const card of await page.locator('.method-card').all()) {
@@ -100,6 +100,34 @@ try {
     source: 'x',
     kind: 'document',
     text: /just setting up my twttr/,
+  });
+  await submitExtraction({
+    url: 'https://vimeo.com/286898202?extractor_adapter=browser-1',
+    format: 'json',
+    source: 'vimeo',
+    kind: 'document',
+    text: /My video/i,
+  });
+  await submitExtraction({
+    url: 'https://soundcloud.com/forss/flickermood?extractor_adapter=browser-1',
+    format: 'json',
+    source: 'soundcloud',
+    kind: 'document',
+    text: /Flickermood by Forss/i,
+  });
+  await submitExtraction({
+    url: 'https://open.spotify.com/episode/7makk4oTQel546B0PZlDM5?extractor_adapter=browser-1',
+    format: 'json',
+    source: 'spotify',
+    kind: 'document',
+    text: /My Path to Spotify/i,
+  });
+  await submitExtraction({
+    url: 'https://mastodon.social/@trwnh/99664077509711321?extractor_adapter=browser-1',
+    format: 'json',
+    source: 'mastodon',
+    kind: 'document',
+    text: /Mastodon Flat CSS/i,
   });
   await submitExtraction({
     url: 'https://www.tiktok.com/@scout2015/video/6718335390845095173',
@@ -145,7 +173,7 @@ try {
   });
 
   const contentRoutes = [
-    '/amazon/', '/bluesky/', '/instagram/', '/shopify/', '/tiktok/',
+    '/amazon/', '/bluesky/', '/instagram/', '/mastodon/', '/shopify/', '/soundcloud/', '/spotify/', '/tiktok/', '/vimeo/',
     '/docs/api/', '/docs/sources/', '/docs/limitations/', '/pricing/',
     '/alternatives/', '/blog/',
     ...alternativePages.map((item) => `/alternatives/${item.slug}/`),
@@ -158,11 +186,17 @@ try {
     await assertNoHorizontalOverflow(route);
   }
 
+  for (const route of ['/amazon/', '/bluesky/', '/instagram/', '/mastodon/', '/reddit/', '/shopify/', '/soundcloud/', '/spotify/', '/tiktok/', '/vimeo/', '/x/', '/youtube/']) {
+    const response = await page.goto(`${origin}${route}`, { waitUntil: 'networkidle' });
+    assert.equal(response?.status(), 200, `${route} returned HTTP ${response?.status()}`);
+    assert.equal(await page.locator('#capabilities-heading').count(), 1, `${route} is missing its capabilities section`);
+  }
+
   const sitemapResponse = await page.request.get(`${origin}/sitemap.xml`);
   assert.equal(sitemapResponse.status(), 200, '/sitemap.xml is unavailable');
   assert.match(sitemapResponse.headers()['content-type'] || '', /^application\/xml/i);
   const sitemap = await sitemapResponse.text();
-  assert.equal((sitemap.match(/<loc>/g) || []).length, 32, 'Sitemap does not contain every public page');
+  assert.equal((sitemap.match(/<loc>/g) || []).length, 40, 'Sitemap does not contain every public page');
   for (const route of contentRoutes) {
     assert.ok(sitemap.includes(`${origin}${route}`), `${route} is missing from sitemap.xml`);
   }

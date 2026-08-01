@@ -3,7 +3,7 @@
   "info": {
     "title": "extractor.sh API",
     "version": "1.0.0",
-    "description": "Extract public webpages, Amazon products, Bluesky profiles and posts, Instagram posts and profiles, Reddit URLs, Shopify storefronts, TikTok posts and profiles, X posts, and YouTube URLs into clean Markdown or normalized JSON. The API is public, GET-only, and requires no authentication.",
+    "description": "Extract supported public webpage, commerce, social, audio, podcast, and video URLs into clean Markdown or normalized JSON. The API is public, GET-only, and requires no authentication.",
     "license": {
       "name": "Proprietary"
     }
@@ -54,6 +54,10 @@
             "headers": {
               "Cache-Control": {
                 "schema": { "type": "string" }
+              },
+              "X-Extractor-Cache": {
+                "description": "Whether the versioned Worker cache served the response.",
+                "schema": { "type": "string", "enum": ["HIT", "MISS"] }
               }
             },
             "content": {
@@ -144,7 +148,7 @@
           "url": { "type": "string", "format": "uri" },
           "source": {
             "type": "string",
-            "enum": ["web", "amazon", "bluesky", "instagram", "reddit", "shopify", "tiktok", "x", "youtube"]
+            "enum": ["web", "amazon", "bluesky", "instagram", "mastodon", "reddit", "shopify", "soundcloud", "spotify", "tiktok", "vimeo", "x", "youtube"]
           },
           "kind": {
             "type": "string",
