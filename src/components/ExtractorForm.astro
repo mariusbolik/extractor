@@ -6,7 +6,7 @@ import { Icon } from 'astro-icon/components';
   <form id="extract-form" action="/api/extract" method="get">
     <label class="text-[0.88rem] font-extrabold" for="url">Website URL</label>
     <div class="mt-[9px] grid grid-cols-[1fr_auto] gap-[14px] max-[660px]:grid-cols-1">
-      <input class="min-h-[52px] min-w-0 border-2 border-black bg-white px-[15px] py-3 text-black placeholder:text-black/50" id="url" name="url" type="url" inputmode="url" autocomplete="url" required maxlength="2048" placeholder="https://example.com/article" />
+      <input class="min-h-[52px] min-w-0 border-2 border-black bg-white px-[15px] py-3 text-black placeholder:text-black/50" id="url" name="url" type="url" inputmode="url" autocomplete="url" required maxlength="2048" placeholder="https://www.amazon.com/dp/B09B8X9RGM" />
       <button class="inline-flex min-h-[52px] cursor-pointer items-center justify-center gap-[9px] border-[2px_5px_5px_2px] border-black bg-white px-[22px] py-[10px] font-[850] transition-[transform,border-width] duration-100 hover:translate-x-[2px] hover:translate-y-[2px] hover:border-[4px_3px_3px_4px] active:translate-x-[3px] active:translate-y-[3px] active:border-[5px_2px_2px_5px] max-[660px]:w-full" type="submit">Extract <Icon class="size-[19px] shrink-0" name="heroicons:arrow-right" aria-hidden="true" /></button>
     </div>
     <fieldset class="mt-[18px] flex items-center gap-5 border-0 p-0 max-[660px]:flex-col max-[660px]:items-start max-[660px]:gap-[10px]">
