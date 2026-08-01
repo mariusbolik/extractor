@@ -130,6 +130,7 @@ try {
   const amazonIcon = page.locator('.method-card[href="/amazon/"] svg').first();
   assert.equal(await amazonIcon.getAttribute('data-brand-icon'), 'amazon', 'Amazon card does not use its inline SVG brand logo');
   assert.deepEqual(await amazonIcon.locator('path').evaluateAll((paths) => paths.map((path) => path.getAttribute('fill'))), ['#f90', '#000'], 'Amazon logo does not use its black and orange artwork');
+  assert.equal(await amazonIcon.locator('path[fill="#000"]').getAttribute('fill-rule'), 'evenodd', 'Amazon logo counter is not transparent');
   const instagramIcon = page.locator('.method-card[href="/instagram/"] svg').first();
   assert.equal(await instagramIcon.getAttribute('data-brand-icon'), 'instagram', 'Instagram card does not use its inline SVG brand logo');
   assert.equal(await instagramIcon.locator('defs stop').count(), 3, 'Instagram logo gradient is missing');
