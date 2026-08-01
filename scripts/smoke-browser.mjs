@@ -110,7 +110,12 @@ try {
   const home = await page.goto(homeUrl.toString(), { waitUntil: 'networkidle' });
   assert.equal(home?.status(), 200);
   await page.locator('#extract-form').waitFor();
+  const formatRadios = page.locator('input[name="format"]');
   assert.equal(await page.locator('input[name="format"][value="json"]').isChecked(), true, 'JSON is not the default website output');
+  for (const radio of await formatRadios.all()) {
+    const borderRadius = await radio.evaluate((element) => getComputedStyle(element).borderRadius);
+    assert.equal(borderRadius, '0px', 'A format radio is not square');
+  }
   assert.equal(await page.locator('.method-card').count(), 15);
   assert.equal(await page.locator('footer a[href="/alternatives/"]').count(), 1, 'Alternatives footer link is missing');
   assert.equal(await page.locator('footer a[href="/blog/"]').count(), 1, 'Blog footer link is missing');
@@ -142,8 +147,18 @@ try {
   assert.equal(await worksWith.locator('a[href="/instagram/"] [data-brand-icon="instagram"]').count(), 1, 'Works with row has the wrong Instagram artwork');
   const worksWithLinks = worksWith.locator('a');
   const firstWorksWithLink = worksWithLinks.first();
-  const worksWithRadius = await firstWorksWithLink.evaluate((element) => getComputedStyle(element).borderRadius);
+  const worksWithStyle = await firstWorksWithLink.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return {
+      backgroundColor: style.backgroundColor,
+      borderColor: style.borderColor,
+      borderRadius: style.borderRadius,
+    };
+  });
+  const worksWithRadius = worksWithStyle.borderRadius;
   assert.notEqual(worksWithRadius, '0px', 'Works with icons are not circular');
+  assert.match(worksWithStyle.backgroundColor, /^(?:rgb\(245, 245, 245\)|oklch\(0\.97 0 none\))$/, 'Works with circles do not have a light-gray background');
+  assert.match(worksWithStyle.borderColor, /^(?:rgb\(255, 255, 255\)|oklch\(1 0 none\))$/, 'Works with circles do not have white borders');
   const [firstWorksWithBox, secondWorksWithBox] = await Promise.all([
     firstWorksWithLink.boundingBox(),
     worksWithLinks.nth(1).boundingBox(),
