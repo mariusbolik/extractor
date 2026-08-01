@@ -23,8 +23,10 @@ The public preview requires no account or API key. Call `GET /api/extract` with 
 
 - [Web extraction](https://extractor.mcb-software.workers.dev/): Homepage and interactive extractor.
 - [Amazon extraction](https://extractor.mcb-software.workers.dev/amazon/): Public product detail and search results pages from supported country stores.
+- [Apple App Store extraction](https://extractor.mcb-software.workers.dev/app-store/): Public iPhone and iPad app detail pages as software products.
 - [Bluesky extraction](https://extractor.mcb-software.workers.dev/bluesky/): Public profile feeds and individual public posts, without replies or parent threads.
 - [Google News extraction](https://extractor.mcb-software.workers.dev/google-news/): Public searches, topics, and top stories as article feeds.
+- [Google Play extraction](https://extractor.mcb-software.workers.dev/google-play/): Public Android app detail pages as software products.
 - [Instagram extraction](https://extractor.mcb-software.workers.dev/instagram/): Public posts, reels, profiles, and recent profile posts.
 - [Mastodon extraction](https://extractor.mcb-software.workers.dev/mastodon/): Public statuses from compatible federated instances.
 - [Shopify extraction](https://extractor.mcb-software.workers.dev/shopify/): Public product pages, collection pages, and storefront catalogs.

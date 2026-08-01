@@ -9,12 +9,14 @@ export type ExtractionMethod =
   | 'browser'
   | 'amazon-html'
   | 'amazon-search-html'
+  | 'app-store-lookup'
   | 'bluesky-api'
   | 'bluesky-rss'
   | 'discovered-feed'
   | 'google-news-rss'
   | 'google-news-html'
   | 'google-news-browser'
+  | 'google-play-html'
   | 'instagram-embed'
   | 'instagram-profile'
   | 'mastodon-oembed'
@@ -62,6 +64,10 @@ export interface EntityAttributes {
   reviewCount?: number;
   features?: string[];
   variants?: ProductVariant[];
+  softwareVersion?: string;
+  operatingSystem?: string;
+  contentRating?: string;
+  developerUrl?: string;
   publisher?: string;
   publisherUrl?: string;
   handle?: string;

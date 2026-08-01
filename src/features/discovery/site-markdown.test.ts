@@ -7,8 +7,10 @@ describe('agent-readable site Markdown', () => {
     for (const path of [
       '/',
       '/amazon/',
+      '/app-store/',
       '/bluesky/',
       '/google-news/',
+      '/google-play/',
       '/instagram/',
       '/mastodon/',
       '/reddit/',

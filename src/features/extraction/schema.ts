@@ -1,7 +1,7 @@
 import { z } from 'zod/v4';
 
 export const extractionSources = [
-  'web', 'amazon', 'bluesky', 'google-news', 'instagram', 'mastodon', 'reddit',
+  'web', 'amazon', 'app-store', 'bluesky', 'google-news', 'google-play', 'instagram', 'mastodon', 'reddit',
   'shopify', 'soundcloud', 'spotify', 'tiktok', 'vimeo', 'x', 'youtube',
 ] as const;
 
@@ -49,6 +49,10 @@ const ProductAttributesSchema = z.strictObject({
   reviewCount: nonNegativeInteger.optional(),
   features: z.array(z.string()).optional(),
   variants: z.array(ProductVariantSchema).optional(),
+  softwareVersion: z.string().optional(),
+  operatingSystem: z.string().optional(),
+  contentRating: z.string().optional(),
+  developerUrl: z.url().optional(),
 });
 const PostAttributesSchema = z.strictObject({
   handle: z.string().optional(),

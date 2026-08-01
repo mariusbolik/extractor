@@ -179,6 +179,25 @@ export function amazonSearchQuery(url: URL): string | null {
   return query && query.length <= 200 ? query : null;
 }
 
+export function appStoreTrackId(url: URL): string | null {
+  const hostname = url.hostname.toLowerCase();
+  if (!['apps.apple.com', 'www.apps.apple.com'].includes(hostname)) return null;
+
+  // Normal App Store links end in the numeric identifier even when Apple adds
+  // a localized country segment and a human-readable app slug before it.
+  return url.pathname.match(/\/id(\d{5,20})(?:\/|$)/i)?.[1] ?? null;
+}
+
+export function googlePlayPackageId(url: URL): string | null {
+  if (url.hostname.toLowerCase() !== 'play.google.com') return null;
+  if (!/^\/store\/apps\/details\/?$/i.test(url.pathname)) return null;
+
+  const packageId = url.searchParams.get('id')?.trim() ?? '';
+  return /^(?=.{3,255}$)[A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z][A-Za-z0-9_]*)+$/.test(packageId)
+    ? packageId
+    : null;
+}
+
 export function isBlueskyProfileUrl(url: URL): boolean {
   const hostname = url.hostname.toLowerCase();
   return (hostname === 'bsky.app' || hostname === 'www.bsky.app')

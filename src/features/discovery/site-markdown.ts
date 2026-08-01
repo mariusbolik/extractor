@@ -22,8 +22,10 @@ ${apiExample}
 ## Supported sources
 
 - [Amazon](${ORIGIN}/amazon/): Public product detail and search results pages from supported country stores.
+- [Apple App Store](${ORIGIN}/app-store/): Public iPhone and iPad app detail pages as software products.
 - [Bluesky](${ORIGIN}/bluesky/): Public profile feeds and individual posts.
 - [Google News](${ORIGIN}/google-news/): Public searches, topics, and top stories as article feeds.
+- [Google Play](${ORIGIN}/google-play/): Public Android app detail pages as software products.
 - [Instagram](${ORIGIN}/instagram/): Public posts, reels, profiles, and recent profile posts.
 - [Mastodon](${ORIGIN}/mastodon/): Public statuses from compatible federated instances.
 - [Reddit](${ORIGIN}/reddit/): Public posts, communities, and user profiles.
@@ -54,6 +56,14 @@ Submit an ordinary product URL containing an ASIN, such as \`https://www.amazon.
 
 Call \`GET ${ORIGIN}/api/extract\` with the product or search page in the \`url\` parameter.
 `,
+  '/app-store/': `# Apple App Store extraction with extractor.sh
+
+> Turn one public App Store app detail page into clean Markdown or normalized product JSON.
+
+Submit an ordinary apps.apple.com app URL containing its numeric app ID. Results can include the app name, developer, description, integer minor-unit price, rating, version, release details, icon, and screenshots. Search, charts, reviews, accounts, and app downloads are not included.
+
+Call \`GET ${ORIGIN}/api/extract\` with the App Store page in the \`url\` parameter.
+`,
   '/bluesky/': `# Bluesky extraction with extractor.sh
 
 > Turn public Bluesky profiles and individual posts into clean Markdown or normalized JSON.
@@ -69,6 +79,14 @@ Call \`GET ${ORIGIN}/api/extract\` with the Bluesky page in the \`url\` paramete
 Submit an ordinary Google News search, topic, or top-stories URL. Results contain up to 50 normalized article entities with public titles, publishers, dates, summaries, and source links when available. Full publisher article bodies, personalized results, Google Search, and Google Shopping are not included.
 
 Call \`GET ${ORIGIN}/api/extract\` with the Google News page in the \`url\` parameter.
+`,
+  '/google-play/': `# Google Play extraction with extractor.sh
+
+> Turn one public Google Play app detail page into clean Markdown or normalized product JSON.
+
+Submit an ordinary play.google.com app URL containing its Android package ID. Results can include the app name, developer, description, integer minor-unit price, rating, category, content rating, icon, and screenshots. Search, category browsing, reviews, accounts, and APK downloads are not included.
+
+Call \`GET ${ORIGIN}/api/extract\` with the Google Play page in the \`url\` parameter.
 `,
   '/instagram/': `# Instagram extraction with extractor.sh
 
@@ -219,8 +237,10 @@ Submit normal public browser URLs to \`GET ${ORIGIN}/api/extract\`.
 
 - Web: public HTTP and HTTPS content pages.
 - Amazon: public product detail pages and search results pages. Search feeds contain up to 20 products; results may be cached for up to one hour.
+- Apple App Store: public app detail pages containing a numeric app ID. Results are software product entities.
 - Bluesky: public profile feeds and individual public post pages.
 - Google News: public search, topic, and top-stories pages. Feeds contain up to 50 article entities.
+- Google Play: public app detail pages containing an Android package ID. Results are software product entities.
 - Instagram: public post, reel, and profile pages. Profile results include recent public posts when available.
 - Mastodon: public status pages on compatible instances.
 - Shopify: public product pages, collections, and storefront homepages. Submit the normal storefront URL; catalog feeds contain up to 50 products.

@@ -45,7 +45,7 @@ Successful JSON responses contain:
 
 - `schemaVersion` — Currently `1`.
 - `type` — One of `document`, `article`, `product`, `post`, `profile`, `video`, `audio`, or `feed`.
-- `source` — One of `web`, `amazon`, `bluesky`, `google-news`, `instagram`, `mastodon`, `reddit`, `shopify`, `soundcloud`, `spotify`, `tiktok`, `vimeo`, `x`, or `youtube`.
+- `source` — One of `web`, `amazon`, `app-store`, `bluesky`, `google-news`, `google-play`, `instagram`, `mastodon`, `reddit`, `shopify`, `soundcloud`, `spotify`, `tiktok`, `vimeo`, `x`, or `youtube`.
 - `id` — Stable source identifier when available, otherwise `null`.
 - `url` — Canonical source URL.
 - `title` — Extracted title or `null`.
@@ -57,6 +57,8 @@ Successful JSON responses contain:
 - `items` — Present for feed and profile responses; omitted for individual entities.
 
 Each item follows the same entity shape. Product and variant `price` fields are non-negative integers in the currency's minor unit; for example, `1999` with `EUR` means €19.99. Use `priceDisplay` for presentation. Shared nullable fields are present with `null`, while unavailable optional attributes are omitted.
+
+Software products can additionally include `softwareVersion`, `operatingSystem`, `contentRating`, and `developerUrl` attributes.
 
 Machine-readable JSON Schema: `https://extractor.mcb-software.workers.dev/schemas/extraction-v1.json`
 
@@ -80,6 +82,12 @@ Example: `https://www.amazon.de/product-name/dp/B09B8X9RGM`
 
 Search example: `https://www.amazon.de/s?k=mechanical+keyboard`
 
+### Apple App Store
+
+Public Apple App Store app detail pages return one software product entity. Results can include the numeric app ID, name, developer, description, integer minor-unit price, ratings, version, operating-system requirement, release details, icon, and screenshots. Search, charts, reviews, accounts, and app downloads are not included. Results may be cached for up to one hour.
+
+Example: `https://apps.apple.com/us/app/chatgpt/id6448311069`
+
 ### Bluesky
 
 Public Bluesky profile pages return a profile entity with recent public post items. Exact public post pages return one post entity. Replies and parent threads are excluded. Profiles may omit complete embedded and quoted content.
@@ -93,6 +101,12 @@ Post example: `https://bsky.app/profile/bsky.app/post/3mqcp5qjdfs26`
 Public Google News search, topic, and top-stories pages return up to 50 article entities. Results can include public titles, publishers, dates, summaries, and source links. Full publisher article bodies, personalized For You results, Google Search, and Google Shopping are not included.
 
 Example: `https://news.google.com/search?q=Cloudflare&hl=en-US&gl=US&ceid=US%3Aen`
+
+### Google Play
+
+Public Google Play app detail pages return one software product entity. Results can include the Android package ID, name, developer, description, integer minor-unit price, rating, category, content rating, icon, and screenshots. Search, category browsing, reviews, accounts, and APK downloads are not included. Results may be cached for up to one hour.
+
+Example: `https://play.google.com/store/apps/details?id=com.openai.chatgpt`
 
 ### Instagram
 

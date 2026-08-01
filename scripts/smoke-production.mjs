@@ -215,7 +215,7 @@ async function targetsFromFile(path, count) {
 }
 
 const extractionSources = new Set([
-  'web', 'amazon', 'bluesky', 'google-news', 'instagram', 'mastodon', 'reddit',
+  'web', 'amazon', 'app-store', 'bluesky', 'google-news', 'google-play', 'instagram', 'mastodon', 'reddit',
   'shopify', 'soundcloud', 'spotify', 'tiktok', 'vimeo', 'x', 'youtube',
 ]);
 const entityTypes = new Set(['document', 'article', 'product', 'post', 'profile', 'video', 'audio', 'feed']);

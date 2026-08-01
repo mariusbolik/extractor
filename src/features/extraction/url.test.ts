@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ExtractionError } from './errors';
-import { amazonProductAsin, amazonSearchQuery, isBlueskyProfileUrl, isGoogleNewsUrl, isInstagramUrl, isPossibleMastodonStatusUrl, isRedditUrl, isSoundCloudUrl, isSpotifyUrl, isTikTokUrl, isVimeoUrl, isXUrl, isYouTubeUrl, validateTargetUrl } from './url';
+import { amazonProductAsin, amazonSearchQuery, appStoreTrackId, googlePlayPackageId, isBlueskyProfileUrl, isGoogleNewsUrl, isInstagramUrl, isPossibleMastodonStatusUrl, isRedditUrl, isSoundCloudUrl, isSpotifyUrl, isTikTokUrl, isVimeoUrl, isXUrl, isYouTubeUrl, validateTargetUrl } from './url';
 
 describe('validateTargetUrl', () => {
   it('accepts and normalizes public HTTP URLs', () => {
@@ -67,6 +67,11 @@ describe('source URL detection', () => {
     expect(isGoogleNewsUrl(new URL('https://news.google.com/topics/TOPIC123'))).toBe(true);
     expect(isGoogleNewsUrl(new URL('https://news.google.com/'))).toBe(true);
     expect(isGoogleNewsUrl(new URL('https://news.google.com.example.org/search?q=Cloudflare'))).toBe(false);
+    expect(appStoreTrackId(new URL('https://apps.apple.com/us/app/chatgpt/id6448311069'))).toBe('6448311069');
+    expect(appStoreTrackId(new URL('https://apps.apple.com.example.org/us/app/chatgpt/id6448311069'))).toBeNull();
+    expect(googlePlayPackageId(new URL('https://play.google.com/store/apps/details?id=com.openai.chatgpt'))).toBe('com.openai.chatgpt');
+    expect(googlePlayPackageId(new URL('https://play.google.com/store/games?id=com.openai.chatgpt'))).toBeNull();
+    expect(googlePlayPackageId(new URL('https://play.google.com.example.org/store/apps/details?id=com.openai.chatgpt'))).toBeNull();
   });
 
   it('recognizes public oEmbed provider URLs without accepting lookalike hosts', () => {

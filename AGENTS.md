@@ -14,8 +14,9 @@
 
 - Use only public GET requests for extraction.
 - Preserve the generic fallback order: native `text/markdown`, LinkeDOM/readability, then Browser Run.
-- Route recognized Amazon products/searches, Bluesky profiles/posts, Google News searches/topics/top stories, Instagram posts/profiles, Reddit, Shopify, SoundCloud, Spotify, TikTok posts/profiles, Vimeo, X, and YouTube URLs through their dedicated adapters first.
+- Route recognized Amazon products/searches, Apple App Store apps, Bluesky profiles/posts, Google News searches/topics/top stories, Google Play apps, Instagram posts/profiles, Reddit, Shopify, SoundCloud, Spotify, TikTok posts/profiles, Vimeo, X, and YouTube URLs through their dedicated adapters first.
 - For an exact Amazon product URL, extract the ASIN and fetch Amazon's compact product page. For an Amazon search URL containing `k`, fetch its compact search representation and return up to 20 product items. Do not send recognized Amazon products or searches to Browser Run.
+- For exact Apple App Store pages, use the numeric app ID with Apple's public lookup service. For exact Google Play pages, parse the public app page's structured metadata and visible description. Return software product entities and never send either recognized app source to Browser Run.
 - Use Bluesky's public profile RSS for exact profile pages and its public AppView for exact post pages. Post requests must use zero reply and parent depth.
 - For Google News search, topic, and top-stories pages, try the public feed first and ordinary HTML second. Use the rate-limited Browser Run only when both cheap requests fail, return at most 50 article entities, and cache a successful result for one hour.
 - Prefer X's public oEmbed response before the existing server-side fallback.

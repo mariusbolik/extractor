@@ -18,7 +18,7 @@ const description = 'The versioned extractor.sh JSON entity schema, including co
       <tbody>
         <tr><td><code>schemaVersion</code></td><td><code>1</code></td><td>The response contract version.</td></tr>
         <tr><td><code>type</code></td><td>enum</td><td><code>document</code>, <code>article</code>, <code>product</code>, <code>post</code>, <code>profile</code>, <code>video</code>, <code>audio</code>, or <code>feed</code>.</td></tr>
-        <tr><td><code>source</code></td><td>enum</td><td>The recognized source adapter, such as <code>web</code>, <code>amazon</code>, or <code>google-news</code>.</td></tr>
+        <tr><td><code>source</code></td><td>enum</td><td>The recognized source adapter, such as <code>web</code>, <code>amazon</code>, <code>app-store</code>, or <code>google-play</code>.</td></tr>
         <tr><td><code>id</code></td><td>string or null</td><td>A stable source identifier when one is available.</td></tr>
         <tr><td><code>url</code></td><td>URL</td><td>The canonical or submitted public URL.</td></tr>
         <tr><td><code>title</code></td><td>string or null</td><td>The entity title or display label.</td></tr>
@@ -51,6 +51,7 @@ const description = 'The versioned extractor.sh JSON entity schema, including co
   }
 }`}</code></pre>
   <p><code>price</code> is always an integer in the currency’s minor unit: <code>1999</code> with <code>EUR</code> means €19.99. Use <code>priceDisplay</code> only for presentation.</p>
+  <p>Software products can additionally expose <code>softwareVersion</code>, <code>operatingSystem</code>, <code>contentRating</code>, and <code>developerUrl</code>. Unavailable fields are omitted.</p>
 
   <h2>Feeds and profiles</h2>
   <p><code>feed</code> and <code>profile</code> responses include an <code>items</code> array. Each item uses the same entity shape and can be an article, product, post, video, or another supported type. Other response types omit <code>items</code>.</p>

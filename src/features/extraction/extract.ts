@@ -1,6 +1,8 @@
 import { extractAmazonProduct, extractAmazonSearch } from './adapters/amazon';
+import { extractAppStoreApp } from './adapters/app-store';
 import { extractBlueskyPost, extractBlueskyProfile } from './adapters/bluesky';
 import { extractGoogleNews } from './adapters/google-news';
+import { extractGooglePlayApp } from './adapters/google-play';
 import { extractInstagram } from './adapters/instagram';
 import { extractMastodon } from './adapters/mastodon';
 import { extractReddit } from './adapters/reddit';
@@ -13,7 +15,7 @@ import { extractTweet } from './adapters/x';
 import { extractYouTube } from './adapters/youtube';
 import { ExtractionError } from './errors';
 import { toPublicExtractionResult, type ExtractionDependencies, type ExtractionResult } from './types';
-import { amazonProductAsin, amazonSearchQuery, isBlueskyPostUrl, isBlueskyProfileUrl, isGoogleNewsUrl, isInstagramUrl, isPossibleMastodonStatusUrl, isRedditUrl, isSoundCloudUrl, isSpotifyUrl, isTikTokUrl, isVimeoUrl, isXUrl, isYouTubeUrl, validateTargetUrl } from './url';
+import { amazonProductAsin, amazonSearchQuery, appStoreTrackId, googlePlayPackageId, isBlueskyPostUrl, isBlueskyProfileUrl, isGoogleNewsUrl, isInstagramUrl, isPossibleMastodonStatusUrl, isRedditUrl, isSoundCloudUrl, isSpotifyUrl, isTikTokUrl, isVimeoUrl, isXUrl, isYouTubeUrl, validateTargetUrl } from './url';
 
 const MAX_OUTPUT_BYTES = 2 * 1024 * 1024;
 
@@ -26,6 +28,8 @@ export async function extractUrl(
 
   if (amazonProductAsin(url)) result = await extractAmazonProduct(url, dependencies);
   else if (amazonSearchQuery(url)) result = await extractAmazonSearch(url, dependencies);
+  else if (appStoreTrackId(url)) result = await extractAppStoreApp(url, dependencies);
+  else if (googlePlayPackageId(url)) result = await extractGooglePlayApp(url, dependencies);
   else if (isGoogleNewsUrl(url)) result = await extractGoogleNews(url, dependencies);
   else if (isBlueskyPostUrl(url)) result = await extractBlueskyPost(url, dependencies);
   else if (isBlueskyProfileUrl(url)) result = await extractBlueskyProfile(url, dependencies);

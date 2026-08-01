@@ -1,0 +1,36 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SocialLanding from '../components/SocialLanding.astro';
+
+export const prerender = true;
+const title = 'Apple App Store apps to Markdown or JSON — extractor.sh';
+const description = 'Extract public Apple App Store app details into clean Markdown or normalized product JSON.';
+---
+
+<BaseLayout {title} {description} path="/app-store/">
+  <SocialLanding
+    platform="App Store"
+    eyebrow="App Store extractor"
+    headline="App listings, ready to use."
+    {description}
+    outcome="Public iPhone and iPad app metadata in one consistent product format."
+    capabilities={[
+      { label: 'Input', value: 'One ordinary public apps.apple.com app detail URL containing its numeric app ID.' },
+      { label: 'Returns', value: 'One software product entity with a stable App Store ID and canonical URL.' },
+      { label: 'Includes', value: 'App name, developer, description, price, ratings, category, version, release details, icon, and screenshots when available.' },
+      { label: 'Caching', value: 'Successful app results may be cached at Cloudflare’s edge for up to one hour.' },
+    ]}
+    supported={[
+      'Public iPhone and iPad app detail pages on apps.apple.com',
+      'Localized App Store URLs containing a numeric app ID',
+      'Free and paid apps with integer minor-unit prices',
+      'Public descriptions, release notes, icons, and screenshots',
+    ]}
+    limitations={[
+      'No App Store search, charts, reviews, account data, or app downloads',
+      'Removed or country-restricted apps may be unavailable',
+      'Prices and availability can vary by country and may be cached for up to one hour',
+    ]}
+    exampleUrl="https://apps.apple.com/us/app/chatgpt/id6448311069"
+  />
+</BaseLayout>

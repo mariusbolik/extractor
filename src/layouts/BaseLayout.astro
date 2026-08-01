@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import { Icon } from 'astro-icon/components';
 
 interface Props {
   title: string;
@@ -77,6 +78,7 @@ const structuredData = schema ?? {
         <a href="/docs/">Developer docs</a>
         <a href="/docs/mcp/">MCP server</a>
         <a href="/pricing/">Pricing</a>
+        <a class="inline-flex items-center gap-1.5 bg-black px-2.5 py-1 text-white no-underline" href="https://dlvr.sh" target="_blank" rel="noopener noreferrer">dlvr.sh <Icon class="size-4 shrink-0" name="heroicons:arrow-top-right-on-square" aria-hidden="true" /></a>
       </nav>
     </footer>
   </body>
