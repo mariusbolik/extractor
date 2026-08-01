@@ -7,6 +7,8 @@ description: Extract a public webpage or supported platform page as clean Markdo
 
 Use extractor.sh when you need readable content from one public HTTP or HTTPS page.
 
+MCP clients can connect directly to the hosted Streamable HTTP endpoint at `https://extractor.mcb-software.workers.dev/mcp` and call `extract_public_url`. The tool accepts `url` and optional `format`, which defaults to `markdown`.
+
 ## Request
 
 Call the GET-only endpoint with an absolute public page URL:
@@ -28,4 +30,4 @@ Always submit the ordinary public page URL a person would open in a browser. Do 
 - Maximum URL length: 2,048 characters
 - Maximum extracted result size: 2 MB
 
-See [developer documentation](https://extractor.mcb-software.workers.dev/docs/) for response fields, supported sources, caching, and errors.
+See [MCP documentation](https://extractor.mcb-software.workers.dev/docs/mcp/) for client configuration and [developer documentation](https://extractor.mcb-software.workers.dev/docs/) for response fields, supported sources, caching, and errors.

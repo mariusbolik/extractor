@@ -6,7 +6,7 @@
       "type": "skill-md",
       "description": "Extract a public webpage or supported platform page as clean Markdown or normalized JSON using extractor.sh.",
       "url": "/.well-known/agent-skills/extract-public-url/SKILL.md",
-      "digest": "sha256:1571fb810c83f2e285ef56fe03f1ff305d4199fb4ab745191851e5148b6e1975"
+      "digest": "sha256:bddc246e20c42c40f20885be7971fc5e238ae7a450f86b631bfc96505d5e243c"
     }
   ]
 }

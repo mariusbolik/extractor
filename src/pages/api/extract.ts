@@ -2,17 +2,12 @@ import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
 import {
   ExtractionError,
-  extractUrl,
+  runPublicExtraction,
   toExtractionError,
-  toPublicExtractionResult,
   type OutputFormat,
 } from '../../features/extraction';
 
 export const prerender = false;
-
-const FEED_TTL = 3_600;
-const PRODUCT_TTL = 3_600;
-const DOCUMENT_TTL = 2_592_000;
 
 function successHeaders(ttl: number, contentType: string): Headers {
   return new Headers({
@@ -66,31 +61,14 @@ export const GET: APIRoute = async ({ request, url }) => {
   const clientKey = request.headers.get('cf-connecting-ip') || 'local-development';
 
   try {
-    const rate = await env.EXTRACT_RATE_LIMITER.limit({ key: clientKey });
-    if (!rate.success) {
-      throw new ExtractionError('rate_limited', 'Extraction rate limit exceeded.', 429, 60);
-    }
-
-    const result = await extractUrl(rawUrl, {
-      browser: env.BROWSER,
-      allowBrowser: async () => {
-        const browserRate = await env.BROWSER_RATE_LIMITER.limit({ key: clientKey });
-        return browserRate.success;
-      },
-    });
-
-    // Products, profiles, and feeds change faster than other single entities.
-    const ttl = result.items !== undefined
-      ? FEED_TTL
-      : result.type === 'product' ? PRODUCT_TTL : DOCUMENT_TTL;
-    const publicResult = toPublicExtractionResult(result);
+    const { result, ttl } = await runPublicExtraction(rawUrl, clientKey, env);
     if (format === 'markdown') {
-      return new Response(publicResult.content, {
+      return new Response(result.content, {
         headers: successHeaders(ttl, 'text/markdown; charset=utf-8'),
       });
     }
 
-    return new Response(JSON.stringify(publicResult), {
+    return new Response(JSON.stringify(result), {
       headers: successHeaders(ttl, 'application/json; charset=utf-8'),
     });
   } catch (error) {

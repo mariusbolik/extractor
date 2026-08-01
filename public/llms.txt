@@ -6,6 +6,8 @@ The public preview requires no account or API key. Call `GET /api/extract` with 
 
 ## API
 
+- [Hosted MCP server](https://extractor.mcb-software.workers.dev/docs/mcp/): Connect to the Streamable HTTP endpoint and call `extract_public_url`.
+- [MCP Server Card](https://extractor.mcb-software.workers.dev/.well-known/mcp/server-card.json): Machine-readable MCP discovery metadata.
 - [OpenAPI 3.1 specification](https://extractor.mcb-software.workers.dev/openapi.json): Complete machine-readable contract for the extraction endpoint.
 - [JSON Schema](https://extractor.mcb-software.workers.dev/schemas/extraction-v1.json): Versioned schema for every successful JSON extraction.
 - [API catalog](https://extractor.mcb-software.workers.dev/.well-known/api-catalog): RFC 9727 Linkset for API discovery.

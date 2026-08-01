@@ -1,5 +1,7 @@
 import { handle } from '@astrojs/cloudflare/handler';
+import { apiCacheKey } from './features/extraction';
 import { getSiteMarkdown } from './features/discovery/site-markdown';
+import { mcpHandler } from './features/mcp/server';
 
 const DISCOVERY_LINKS = [
   '</sitemap.xml>; rel="sitemap"; type="application/xml"',
@@ -7,8 +9,8 @@ const DISCOVERY_LINKS = [
   '</.well-known/api-catalog>; rel="api-catalog"; type="application/linkset+json"',
   '</openapi.json>; rel="service-desc"; type="application/vnd.oai.openapi+json"',
   '</schemas/extraction-v1.json>; rel="describedby"; type="application/schema+json"',
+  '</.well-known/mcp/server-card.json>; rel="describedby"; type="application/json"',
 ].join(', ');
-const API_CACHE_VERSION = '2026-08-schema-v1';
 
 function acceptsMarkdown(header: string | null): boolean {
   if (!header) return false;
@@ -26,14 +28,6 @@ function addVary(headers: Headers, value: string): void {
   headers.set('Vary', [...values].join(', '));
 }
 
-function apiCacheKey(request: Request): Request {
-  const url = new URL(request.url);
-  // The version exists only in the Cache API key. Bumping it makes adapter
-  // deployments immediately independent from results stored by older code.
-  url.searchParams.set('__extractor_cache', API_CACHE_VERSION);
-  return new Request(url.toString(), { method: 'GET' });
-}
-
 function publicApiResponse(response: Response, cacheStatus: 'HIT' | 'MISS'): Response {
   const output = new Response(response.body, response);
   output.headers.delete('X-Extractor-Cache-TTL');
@@ -47,6 +41,13 @@ export default {
   async fetch(request, env, context) {
     const url = new URL(request.url);
     const markdown = getSiteMarkdown(url.pathname);
+
+    if (url.pathname === '/mcp') {
+      const response = await mcpHandler(request, env, context);
+      const decorated = new Response(response.body, response);
+      decorated.headers.set('Link', DISCOVERY_LINKS);
+      return decorated;
+    }
 
     if ((request.method === 'GET' || request.method === 'HEAD') && markdown && acceptsMarkdown(request.headers.get('Accept'))) {
       return new Response(request.method === 'HEAD' ? null : markdown, {

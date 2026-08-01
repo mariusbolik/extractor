@@ -8,6 +8,7 @@ const links = [
   '</openapi.json>; rel="service-desc"; type="application/vnd.oai.openapi+json"',
   '</llms-full.txt>; rel="service-doc"; type="text/markdown"',
   '</schemas/extraction-v1.json>; rel="describedby"; type="application/schema+json"',
+  '</.well-known/mcp/server-card.json>; rel="describedby"; type="application/json"',
 ].join(', ');
 
 const catalog = {
@@ -18,6 +19,11 @@ const catalog = {
         {
           href: `${origin}/api/extract`,
           title: 'Public URL extraction API',
+          type: 'application/json',
+        },
+        {
+          href: `${origin}/mcp`,
+          title: 'Hosted MCP extraction server',
           type: 'application/json',
         },
       ],
@@ -40,6 +46,11 @@ const catalog = {
           href: `${origin}/schemas/extraction-v1.json`,
           title: 'extractor.sh extraction response schema v1',
           type: 'application/schema+json',
+        },
+        {
+          href: `${origin}/.well-known/mcp/server-card.json`,
+          title: 'extractor.sh MCP Server Card',
+          type: 'application/json',
         },
       ],
     },

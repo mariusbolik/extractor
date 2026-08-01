@@ -42,6 +42,8 @@
 - Platform card marks come from the Iconify `logos` pack; official brand colors are allowed.
 - Do not add a client framework for simple interactions. Keep browser JavaScript small and sanitize rendered Markdown.
 - Add every new public page to the custom `/sitemap.xml` route and provide an agent-readable Markdown representation when practical.
+- Keep the hosted `/mcp` server stateless. Its tools must reuse the public extraction cache and both Worker rate-limit bindings so MCP cannot bypass browser-rendering cost controls.
+- When changing MCP behavior, update `/docs/mcp/`, the MCP Server Card, API catalog, agent skill, and `llms*.txt`, then verify `initialize`, `tools/list`, and `tools/call` against production.
 
 ## Verification
 

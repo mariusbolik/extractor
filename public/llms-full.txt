@@ -6,6 +6,14 @@ Base URL: `https://extractor.mcb-software.workers.dev`
 
 The public preview requires no account, API key, OAuth flow, or payment. Do not send credentials, cookies, private URLs, or non-public data.
 
+## Hosted MCP server
+
+Connect an MCP-compatible client to the stateless Streamable HTTP endpoint:
+
+`https://extractor.mcb-software.workers.dev/mcp`
+
+The server exposes one read-only tool, `extract_public_url`, with a required absolute public `url` and optional `format` of `markdown` (default) or `json`. MCP and GET requests share extraction cache entries and rate limits. See `https://extractor.mcb-software.workers.dev/docs/mcp/` for configuration and usage.
+
 ## Endpoint
 
 `GET /api/extract`
@@ -165,6 +173,8 @@ When a source blocks extraction or returns an upstream failure, the error messag
 - Developer docs: `https://extractor.mcb-software.workers.dev/docs/`
 - Authentication: `https://extractor.mcb-software.workers.dev/auth.md`
 - Agent Skills index: `https://extractor.mcb-software.workers.dev/.well-known/agent-skills/index.json`
+- Hosted MCP server: `https://extractor.mcb-software.workers.dev/mcp`
+- MCP Server Card: `https://extractor.mcb-software.workers.dev/.well-known/mcp/server-card.json`
 - Limitations: `https://extractor.mcb-software.workers.dev/docs/limitations/`
 - Sitemap: `https://extractor.mcb-software.workers.dev/sitemap.xml`
 - Alternatives: `https://extractor.mcb-software.workers.dev/alternatives/`

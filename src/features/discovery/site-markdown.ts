@@ -39,6 +39,7 @@ ${apiExample}
 ## Documentation
 
 - [Developer documentation](${ORIGIN}/docs/)
+- [Hosted MCP server](${ORIGIN}/docs/mcp/): Connect to \`${ORIGIN}/mcp\` and call \`extract_public_url\`.
 - [OpenAPI 3.1](${ORIGIN}/openapi.json)
 - [API catalog](${ORIGIN}/.well-known/api-catalog)
 - [JSON Schema](${ORIGIN}/schemas/extraction-v1.json)
@@ -158,6 +159,7 @@ ${apiExample}
 ## Documentation
 
 - [Quickstart](${ORIGIN}/docs/quickstart/)
+- [Hosted MCP server](${ORIGIN}/docs/mcp/)
 - [API reference](${ORIGIN}/docs/api/)
 - [JSON schema](${ORIGIN}/docs/schema/)
 - [Supported sources](${ORIGIN}/docs/sources/)
@@ -171,6 +173,20 @@ Call \`GET ${ORIGIN}/api/extract\` with a required public \`url\` and optional \
 ${apiExample}
 
 Always submit an ordinary public page URL a person could open in a browser.
+`,
+  '/docs/mcp/': `# extractor.sh hosted MCP server
+
+Connect an MCP-compatible client to the public stateless Streamable HTTP endpoint at \`${ORIGIN}/mcp\`. No account, API key, or OAuth flow is required.
+
+## Tool: extract_public_url
+
+- \`url\`: required absolute public HTTP or HTTPS page URL.
+- \`format\`: optional \`markdown\` (default) or \`json\`.
+
+Markdown is best for reading and summarizing. JSON follows extractor.sh schema version 1. The MCP server and \`GET ${ORIGIN}/api/extract\` share the same Cloudflare cache and rate limits, including the lower browser-rendering limit. Do not send credentials, cookies, private URLs, or private data.
+
+- [MCP Server Card](${ORIGIN}/.well-known/mcp/server-card.json)
+- [Limits and caching](${ORIGIN}/docs/limits/)
 `,
   '/docs/api/': `# extractor.sh API reference
 

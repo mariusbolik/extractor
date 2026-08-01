@@ -1,0 +1,52 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+
+export const prerender = true;
+const title = 'Hosted MCP server — extractor.sh docs';
+const description = 'Connect an MCP client to extractor.sh and extract public URLs as clean Markdown or normalized JSON.';
+---
+
+<DocsLayout {title} {description} path="/docs/mcp/">
+  <p class="!mt-0 font-mono text-[0.78rem] font-extrabold uppercase tracking-[0.14em]">Hosted MCP server</p>
+  <h1>Extraction for<br />MCP clients.</h1>
+  <p class="text-[1.08rem]">Connect an MCP-compatible client directly to extractor.sh. The hosted server is public, stateless, and requires no API key.</p>
+
+  <h2>Endpoint</h2>
+  <pre><code>https://extractor.mcb-software.workers.dev/mcp</code></pre>
+  <p>The endpoint uses Streamable HTTP. Add it as a remote HTTP MCP server in your client. A common configuration shape is:</p>
+  <pre><code>{`{
+  "mcpServers": {
+    "extractor": {
+      "url": "https://extractor.mcb-software.workers.dev/mcp"
+    }
+  }
+}`}</code></pre>
+  <p>Client configuration keys vary. If your client only launches local commands, use its supported remote-MCP bridge and point that bridge at the endpoint above.</p>
+
+  <h2>Tool</h2>
+  <h3><code>extract_public_url</code></h3>
+  <p>Extract one ordinary public page URL. The tool is read-only and accepts:</p>
+  <table>
+    <thead><tr><th>Input</th><th>Required</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>url</code></td><td>Yes</td><td>An absolute public HTTP or HTTPS page URL.</td></tr>
+      <tr><td><code>format</code></td><td>No</td><td><code>markdown</code> (default) or <code>json</code>.</td></tr>
+    </tbody>
+  </table>
+  <p>Choose Markdown when an agent will read or summarize the result. Choose JSON for stable, typed fields using <a href="/docs/schema/">schema version 1</a>.</p>
+
+  <h2>Example task</h2>
+  <pre><code>Use extract_public_url to read https://example.com/article as Markdown.</code></pre>
+
+  <h2>Limits and safety</h2>
+  <ul>
+    <li>The same extraction and browser-rendering rate limits as the <a href="/docs/api/">GET API</a> apply.</li>
+    <li>MCP and GET requests share Cloudflare edge cache entries. Cache hits do not consume an extraction request.</li>
+    <li>Only public HTTP and HTTPS URLs are accepted. Do not send credentials, cookies, private URLs, or private data.</li>
+    <li>CAPTCHAs, login walls, paywalls, and region selection are not supported.</li>
+    <li>Tool errors include a stable error code and a specific human-readable message.</li>
+  </ul>
+
+  <h2>Discovery</h2>
+  <p>The public <a href="/.well-known/mcp/server-card.json">MCP Server Card</a> describes the endpoint, transport, authentication status, and capabilities. The runtime tool definition remains authoritative.</p>
+</DocsLayout>

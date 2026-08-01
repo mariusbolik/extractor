@@ -1,6 +1,6 @@
 # extractor.sh
 
-A public, cache-first GET API and small web interface that turns public URLs into clean Markdown or normalized JSON.
+A public, cache-first GET API, hosted MCP server, and small web interface that turns public URLs into clean Markdown or normalized JSON.
 
 ## Supported sources
 
@@ -34,6 +34,8 @@ The API is available at:
 GET /api/extract?url=https%3A%2F%2Fexample.com&format=json
 GET /api/extract?url=https%3A%2F%2Fexample.com&format=markdown
 ```
+
+MCP clients can connect to the hosted Streamable HTTP endpoint at `/mcp` and call the read-only `extract_public_url` tool. See `/docs/mcp/` for configuration.
 
 Successful JSON responses use the versioned entity contract documented at
 `/docs/schema/` and published as JSON Schema at `/schemas/extraction-v1.json`.

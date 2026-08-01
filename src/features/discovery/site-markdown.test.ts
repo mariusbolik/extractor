@@ -21,6 +21,7 @@ describe('agent-readable site Markdown', () => {
       '/youtube/',
       '/docs/',
       '/docs/quickstart/',
+      '/docs/mcp/',
       '/docs/api/',
       '/docs/schema/',
       '/docs/sources/',

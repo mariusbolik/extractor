@@ -1,5 +1,7 @@
 export { extractUrl } from './extract';
 export { ExtractionError, toExtractionError } from './errors';
+export { apiCacheKey, extractionTtl } from './cache';
+export { runPublicExtraction } from './service';
 export { toPublicExtractionResult } from './types';
 export type {
   ExtractedItem,

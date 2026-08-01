@@ -24,7 +24,9 @@
     "@fontsource/archivo-black": "^5.3.0",
     "@iconify-json/heroicons": "^1.2.3",
     "@iconify-json/logos": "^1.2.11",
+    "@modelcontextprotocol/server": "2.0.0",
     "@mozilla/readability": "0.6.0",
+    "agents": "0.20.1",
     "astro": "7.1.6",
     "astro-icon": "^1.1.5",
     "dompurify": "3.4.12",
@@ -40,6 +42,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "0.9.10",
+    "@modelcontextprotocol/client": "2.0.0",
     "@tailwindcss/vite": "^4.3.3",
     "@types/turndown": "5.0.6",
     "defuddle": "^0.19.2",

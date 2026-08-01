@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { Client, StreamableHTTPClientTransport } from '@modelcontextprotocol/client';
 import { chromium } from 'playwright';
 import { alternativePages, platformArticles } from '../src/features/marketing/content.ts';
 
@@ -9,6 +10,7 @@ const context = await browser.newContext({
   colorScheme: 'light',
 });
 const page = await context.newPage();
+const mcpClient = new Client({ name: 'extractor-production-smoke', version: '1.0.0' });
 const browserErrors = [];
 
 page.on('pageerror', (error) => browserErrors.push(`pageerror: ${error.message}`));
@@ -100,12 +102,35 @@ try {
   assert.equal(await page.locator('.method-card').count(), 13);
   assert.equal(await page.locator('footer a[href="/alternatives/"]').count(), 1, 'Alternatives footer link is missing');
   assert.equal(await page.locator('footer a[href="/blog/"]').count(), 1, 'Blog footer link is missing');
+  assert.equal(await page.locator('a[href="/docs/mcp/"]').count() > 0, true, 'Hosted MCP documentation link is missing');
+  assert.equal(await page.locator('#mcp pre code').textContent(), `${origin}/mcp`);
   for (const card of await page.locator('.method-card').all()) {
     assert.equal(await card.locator('svg').count(), 2, 'A source card is missing its platform or arrow icon');
     const arrowBox = await card.locator('svg').last().boundingBox();
     assert.ok(arrowBox && arrowBox.width >= 20 && arrowBox.height >= 20, 'A source card arrow is not visible');
   }
   await assertNoHorizontalOverflow('desktop homepage');
+
+  const serverCardResponse = await page.request.get(`${origin}/.well-known/mcp/server-card.json`);
+  assert.equal(serverCardResponse.status(), 200, 'MCP Server Card is unavailable');
+  const serverCard = await serverCardResponse.json();
+  assert.equal(serverCard.serverInfo?.name, 'extractor.sh');
+  assert.equal(serverCard.transport?.endpoint, `${origin}/mcp`);
+  assert.equal(serverCard.capabilities?.tools, true);
+
+  await mcpClient.connect(new StreamableHTTPClientTransport(new URL(`${origin}/mcp`)));
+  const tools = await mcpClient.listTools();
+  assert.deepEqual(tools.tools.map((tool) => tool.name), ['extract_public_url']);
+  const mcpResult = await mcpClient.callTool({
+    name: 'extract_public_url',
+    arguments: { url: 'https://example.com/', format: 'json' },
+  });
+  assert.notEqual(mcpResult.isError, true, 'MCP extraction returned a tool error');
+  const mcpText = mcpResult.content.find((item) => item.type === 'text')?.text;
+  assert.ok(mcpText, 'MCP extraction did not return text content');
+  const mcpExtraction = JSON.parse(mcpText);
+  assert.equal(mcpExtraction.schemaVersion, 1);
+  assertEntity(mcpExtraction, 'web', 'article');
 
   await submitExtraction({
     url: 'https://bsky.app/profile/bsky.app/post/3mqcp5qjdfs26',
@@ -229,7 +254,7 @@ try {
 
   const contentRoutes = [
     '/amazon/', '/bluesky/', '/google-news/', '/instagram/', '/mastodon/', '/shopify/', '/soundcloud/', '/spotify/', '/tiktok/', '/vimeo/',
-    '/docs/api/', '/docs/schema/', '/docs/sources/', '/docs/limitations/', '/pricing/',
+    '/docs/mcp/', '/docs/api/', '/docs/schema/', '/docs/sources/', '/docs/limitations/', '/pricing/',
     '/alternatives/', '/blog/',
     ...alternativePages.map((item) => `/alternatives/${item.slug}/`),
     ...platformArticles.map((item) => `/blog/${item.slug}/`),
@@ -251,7 +276,7 @@ try {
   assert.equal(sitemapResponse.status(), 200, '/sitemap.xml is unavailable');
   assert.match(sitemapResponse.headers()['content-type'] || '', /^application\/xml/i);
   const sitemap = await sitemapResponse.text();
-  assert.equal((sitemap.match(/<loc>/g) || []).length, 43, 'Sitemap does not contain every public page');
+  assert.equal((sitemap.match(/<loc>/g) || []).length, 44, 'Sitemap does not contain every public page');
   for (const route of contentRoutes) {
     assert.ok(sitemap.includes(`${origin}${route}`), `${route} is missing from sitemap.xml`);
   }
@@ -272,6 +297,7 @@ try {
   assert.deepEqual(browserErrors, [], `Chromium reported errors:\n${browserErrors.join('\n')}`);
   process.stdout.write('Chromium production smoke passed: extraction adapters, alternatives, all platform articles, sitemap.xml, docs, pricing, and desktop/mobile layouts.\n');
 } finally {
+  await mcpClient.close().catch(() => {});
   await context.close();
   await browser.close();
 }
