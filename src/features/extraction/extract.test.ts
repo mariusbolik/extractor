@@ -393,6 +393,156 @@ describe('extractUrl', () => {
     expect(renderPageHtmlMock).not.toHaveBeenCalled();
   });
 
+  it.each([
+    {
+      name: 'localized product',
+      target: 'https://store.example.com/de-de/products/black-shirt?variant=123',
+      endpoint: 'https://store.example.com/de-de/products/black-shirt.js',
+      type: 'product',
+      feedType: undefined,
+    },
+    {
+      name: 'collection-nested product',
+      target: 'https://store.example.com/collections/shirts/products/black-shirt',
+      endpoint: 'https://store.example.com/products/black-shirt.js',
+      type: 'product',
+      feedType: undefined,
+    },
+    {
+      name: 'localized collection-nested product',
+      target: 'https://store.example.com/fr-fr/collections/shirts/products/black-shirt',
+      endpoint: 'https://store.example.com/fr-fr/products/black-shirt.js',
+      type: 'product',
+      feedType: undefined,
+    },
+    {
+      name: 'collection',
+      target: 'https://store.example.com/collections/shirts?sort_by=best-selling',
+      endpoint: 'https://store.example.com/collections/shirts/products.json?limit=50',
+      type: 'feed',
+      feedType: 'collection',
+    },
+    {
+      name: 'legacy tagged collection',
+      target: 'https://store.example.com/en/collections/shirts/summer',
+      endpoint: 'https://store.example.com/en/collections/shirts/products.json?limit=50',
+      type: 'feed',
+      feedType: 'collection',
+    },
+    {
+      name: 'localized storefront',
+      target: 'https://store.example.com/de',
+      endpoint: 'https://store.example.com/de/products.json?limit=50',
+      type: 'feed',
+      feedType: 'catalog',
+    },
+    {
+      name: 'localized collection index',
+      target: 'https://store.example.com/fr/collections',
+      endpoint: 'https://store.example.com/fr/products.json?limit=50',
+      type: 'feed',
+      feedType: 'catalog',
+    },
+  ])('selects the correct Shopify endpoint for a $name route', async ({ target, endpoint, type, feedType }) => {
+    const fetcherMock = vi.fn(async (input: RequestInfo | URL) => {
+      if (input.toString() === endpoint) {
+        const product = {
+          id: 123,
+          title: 'Black shirt',
+          handle: 'black-shirt',
+          vendor: 'Example Store',
+          body_html: '<p>A durable shirt.</p>',
+          variants: [{ id: 456, title: 'Medium', price: type === 'product' ? 2499 : '24.99', available: true }],
+        };
+        return new Response(JSON.stringify(type === 'product' ? product : { products: [product] }), {
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      return new Response('<html><body><main><h1>Shop</h1></main><script>Shopify.theme = { id: 1 };</script></body></html>', {
+        headers: { 'Content-Type': 'text/html' },
+      });
+    });
+    const fetcher = fetcherMock as unknown as typeof fetch;
+
+    const result = await extractUrl(target, { fetcher });
+    const publicResult = toPublicExtractionResult(result);
+
+    expect(fetcherMock).toHaveBeenCalledTimes(2);
+    expect(fetcherMock.mock.calls[1][0].toString()).toBe(endpoint);
+    expect(result).toMatchObject({ source: 'shopify', type, method: 'shopify-json' });
+    if (feedType) expect(result.attributes.feedType).toBe(feedType);
+    expect(publicResult).toMatchObject({ schemaVersion: 1, source: 'shopify', type });
+    expect(publicResult).not.toHaveProperty('method');
+    expect(renderPageHtmlMock).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    '/blogs/news',
+    '/pages/about-us',
+    '/policies/privacy-policy',
+    '/search?q=shirt',
+  ])('keeps Shopify content route %s as an ordinary web document', async (path) => {
+    const fetcher = vi.fn(async () => new Response(`
+      <html><body><main><h1>Store information</h1>
+      <p>This useful Shopify content page should remain a document instead of becoming a product catalog.</p>
+      </main><script>Shopify.theme = { id: 1 };</script></body></html>
+    `, { headers: { 'Content-Type': 'text/html' } })) as unknown as typeof fetch;
+
+    const result = await extractUrl(`https://store.example.com${path}`, { fetcher });
+    const publicResult = toPublicExtractionResult(result);
+
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(result).toMatchObject({ source: 'web', type: 'article', method: 'linkedom' });
+    expect(result.content).toContain('Store information');
+    expect(publicResult).toMatchObject({ schemaVersion: 1, source: 'web', type: 'article' });
+    expect(publicResult).not.toHaveProperty('method');
+    expect(renderPageHtmlMock).not.toHaveBeenCalled();
+  });
+
+  it('recognizes a myshopify.com storefront without requiring theme fingerprints', async () => {
+    const fetcher = vi.fn(async (input: RequestInfo | URL) => {
+      if (input.toString() === 'https://example-store.myshopify.com/products.json?limit=50') {
+        return new Response(JSON.stringify({ products: [{
+          title: 'Store product',
+          handle: 'store-product',
+          variants: [{ title: 'Default', price: '10.00' }],
+        }] }), { headers: { 'Content-Type': 'application/json' } });
+      }
+      return new Response('<html><body><main><h1>Minimal storefront</h1></main></body></html>', {
+        headers: { 'Content-Type': 'text/html' },
+      });
+    }) as unknown as typeof fetch;
+
+    const result = await extractUrl('https://example-store.myshopify.com/', { fetcher });
+    const publicResult = toPublicExtractionResult(result);
+
+    expect(result).toMatchObject({ source: 'shopify', type: 'feed', method: 'shopify-json' });
+    expect(publicResult).toMatchObject({ schemaVersion: 1, source: 'shopify', type: 'feed' });
+    expect(publicResult).not.toHaveProperty('method');
+    expect(renderPageHtmlMock).not.toHaveBeenCalled();
+  });
+
+  it('falls back to the submitted Shopify HTML when its structured endpoint is unavailable', async () => {
+    const fetcher = vi.fn(async (input: RequestInfo | URL) => new Response(
+      input.toString().endsWith('/products/unavailable.js')
+        ? 'Too many requests'
+        : '<html><body><main><h1>Theme product</h1><p>This product description remains useful when the public Shopify JSON route is unavailable.</p></main><script>Shopify.theme = { id: 1 };</script></body></html>',
+      input.toString().endsWith('/products/unavailable.js')
+        ? { status: 429, headers: { 'Content-Type': 'text/plain' } }
+        : { headers: { 'Content-Type': 'text/html' } },
+    )) as unknown as typeof fetch;
+
+    const result = await extractUrl('https://store.example.com/products/unavailable', { fetcher });
+    const publicResult = toPublicExtractionResult(result);
+
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    expect(result).toMatchObject({ source: 'web', type: 'article', method: 'linkedom' });
+    expect(result.content).toContain('Theme product');
+    expect(publicResult).toMatchObject({ schemaVersion: 1, source: 'web', type: 'article' });
+    expect(publicResult).not.toHaveProperty('method');
+    expect(renderPageHtmlMock).not.toHaveBeenCalled();
+  });
+
   it('extracts a normal Amazon product URL through its compact product page', async () => {
     const fetcher = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       expect(input.toString()).toBe('https://www.amazon.de/gp/aw/d/B012345678');

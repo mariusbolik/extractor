@@ -25,7 +25,7 @@
 - Use official public oEmbed metadata for recognized Vimeo, SoundCloud, and Spotify URLs. Strip active embed markup and do not launch Browser Run for these sources.
 - Treat status-shaped URLs on arbitrary domains as possible Mastodon posts. Validate them through the instance's public oEmbed endpoint, enrich confirmed statuses through public status data, and otherwise return the URL to normal webpage extraction. Confirmed Mastodon posts must not launch Browser Run.
 - Try publisher-advertised WordPress JSON, oEmbed, and feed links only after ordinary HTML extraction fails and before Browser Run.
-- For confirmed Shopify storefront HTML, prefer its public product JSON before theme parsing. Exact product pages are documents; storefront and collection pages are feeds capped at 50 products.
+- For confirmed Shopify storefront HTML, prefer its public product JSON before theme parsing. Exact product pages are products; storefront roots and collection pages are feeds capped at 50 products. Keep blogs, pages, policies, searches, and other Shopify content routes in ordinary webpage extraction.
 - Keep public JSON output on schema version 1. Treat `src/features/extraction/schema.ts` as the runtime and generated JSON Schema source of truth and keep TypeScript types in `src/features/extraction/types.ts` aligned with it.
 - Use semantic entity types: `document`, `article`, `product`, `post`, `profile`, `video`, `audio`, and `feed`. Keep shared nullable fields present; omit unavailable optional type-specific attributes. Only profiles and feeds contain `items`.
 - Represent product and variant `price` values as non-negative integers in the currency's minor unit. Keep display text separate in `priceDisplay`.

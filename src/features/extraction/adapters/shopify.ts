@@ -23,46 +23,78 @@ function isShopifyStorefront(html: string, url: URL): boolean {
     || /(?:cdn\.shopify\.com|\/cdn\/shop\/|\bShopify\.theme\b|\bshopify-section\b|\bshopify-features\b)/i.test(html);
 }
 
-function productPath(url: URL): { root: string; handle: string } | null {
+interface ShopifyEndpoint {
+  endpoint: URL;
+  kind: 'product' | 'collection' | 'catalog';
+  handle: string | null;
+}
+
+function routeSegments(url: URL): { segments: string[]; offset: number; root: string } {
   const segments = url.pathname.split('/').filter(Boolean);
-  const productIndex = segments.lastIndexOf('products');
-  if (productIndex < 0 || productIndex !== segments.length - 2) return null;
-  const locale = productIndex === 1 && /^[a-z]{2}(?:-[a-z]{2})?$/i.test(segments[0]) ? segments[0] : '';
+  const locale = segments[0] && /^[a-z]{2}(?:-[a-z]{2})?$/i.test(segments[0])
+    ? segments[0]
+    : '';
+  return {
+    segments,
+    offset: locale ? 1 : 0,
+    root: locale ? `/${locale}/` : '/',
+  };
+}
+
+function decodedHandle(value: string | undefined): string | null {
+  if (!value) return null;
   try {
-    return { root: locale ? `/${locale}/` : '/', handle: decodeURIComponent(segments[productIndex + 1]) };
+    return decodeURIComponent(value);
   } catch {
     return null;
   }
 }
 
-function collectionPath(url: URL): { root: string; handle: string } | null {
-  const segments = url.pathname.split('/').filter(Boolean);
-  const collectionIndex = segments.lastIndexOf('collections');
-  if (collectionIndex < 0 || collectionIndex !== segments.length - 2) return null;
-  const locale = collectionIndex === 1 && /^[a-z]{2}(?:-[a-z]{2})?$/i.test(segments[0]) ? segments[0] : '';
-  try {
-    return { root: locale ? `/${locale}/` : '/', handle: decodeURIComponent(segments[collectionIndex + 1]) };
-  } catch {
-    return null;
-  }
-}
+function endpointFor(url: URL): ShopifyEndpoint | null {
+  const { segments, offset, root } = routeSegments(url);
+  const route = segments.slice(offset);
 
-function endpointFor(url: URL): { endpoint: URL; exactProduct: boolean } {
-  const product = productPath(url);
-  if (product) {
-    // Shopify documents this locale-aware Ajax endpoint for an exact product.
+  // Shopify product pages can be canonical or nested below the collection the
+  // visitor came from. Both use the same locale-aware Ajax Product endpoint.
+  const productHandle = route.length === 2 && route[0] === 'products'
+    ? decodedHandle(route[1])
+    : route.length === 4 && route[0] === 'collections' && route[2] === 'products'
+      ? decodedHandle(route[3])
+      : null;
+  if (productHandle) {
     return {
-      endpoint: new URL(`${product.root}products/${encodeURIComponent(product.handle)}.js`, url.origin),
-      exactProduct: true,
+      endpoint: new URL(`${root}products/${encodeURIComponent(productHandle)}.js`, url.origin),
+      kind: 'product',
+      handle: productHandle,
     };
   }
 
-  const collection = collectionPath(url);
-  const endpoint = collection
-    ? new URL(`${collection.root}collections/${encodeURIComponent(collection.handle)}/products.json`, url.origin)
-    : new URL('/products.json', url.origin);
-  endpoint.searchParams.set('limit', '50');
-  return { endpoint, exactProduct: false };
+  // Legacy Shopify collection URLs may append one tag segment. The public
+  // collection JSON does not apply that tag, but it still preserves collection
+  // scope instead of silently returning the store's entire catalog.
+  const collectionHandle = route.length >= 2 && route.length <= 3 && route[0] === 'collections'
+    ? decodedHandle(route[1])
+    : null;
+  if (collectionHandle) {
+    const endpoint = new URL(`${root}collections/${encodeURIComponent(collectionHandle)}/products.json`, url.origin);
+    endpoint.searchParams.set('limit', '50');
+    return {
+      endpoint,
+      kind: 'collection',
+      handle: collectionHandle,
+    };
+  }
+
+  // Only the storefront root and collection index represent a whole catalog.
+  // About pages, blogs, policies, and other Shopify routes must stay ordinary
+  // web documents rather than unexpectedly turning into product feeds.
+  if (route.length === 0 || (route.length === 1 && route[0] === 'collections')) {
+    const endpoint = new URL(`${root}products.json`, url.origin);
+    endpoint.searchParams.set('limit', '50');
+    return { endpoint, kind: 'catalog', handle: null };
+  }
+
+  return null;
 }
 
 function date(value: unknown): string | null {
@@ -221,13 +253,15 @@ export async function extractShopifyStorefront(
   dependencies: ExtractionDependencies,
 ): Promise<ExtractionResult | null> {
   if (!isShopifyStorefront(html, url)) return null;
-  const { endpoint, exactProduct } = endpointFor(url);
+  const route = endpointFor(url);
+  if (!route) return null;
+  const { endpoint, kind } = route;
   const currency = storefrontCurrency(html);
 
   try {
     const response = await fetchPublicPage(endpoint, dependencies.fetcher ?? fetch, 'application/json');
     const payload = JSON.parse(response.body) as ShopifyProduct | { products?: ShopifyProduct[] };
-    const products = exactProduct
+    const products = kind === 'product'
       ? [payload as ShopifyProduct]
       : Array.isArray((payload as { products?: ShopifyProduct[] }).products)
         ? (payload as { products: ShopifyProduct[] }).products
@@ -235,7 +269,7 @@ export async function extractShopifyStorefront(
     const items = products.map((product) => productItem(product, url, currency)).filter((item): item is ExtractedItem => item !== null);
     if (!items.length) return null;
 
-    if (exactProduct) {
+    if (kind === 'product') {
       const item = items[0];
       return {
         ...item,
@@ -243,18 +277,18 @@ export async function extractShopifyStorefront(
       };
     }
 
-    const title = collectionPath(url) ? 'Shopify collection products' : 'Shopify products';
+    const title = kind === 'collection' ? 'Shopify collection products' : 'Shopify products';
     return {
       type: 'feed',
       url: url.toString(),
       source: 'shopify',
-      id: collectionPath(url)?.handle ?? null,
+      id: route.handle,
       title,
       author: null,
       publishedAt: items[0]?.publishedAt ?? null,
       content: [`# ${title}`, ...items.map((item) => item.content)].join('\n\n---\n\n'),
       media: [],
-      attributes: { feedType: collectionPath(url) ? 'collection' : 'catalog' },
+      attributes: { feedType: kind },
       items,
       method: 'shopify-json',
     };

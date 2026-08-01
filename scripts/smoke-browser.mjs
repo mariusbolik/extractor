@@ -282,6 +282,27 @@ try {
     text: /"source": "shopify"/,
   });
   await submitExtraction({
+    url: 'https://www.goodamerican.com/en-de/products/always-fits-good-classic-bootcut-jeans-indigo316?extractor_adapter=shopify-routes-v2',
+    format: 'json',
+    source: 'shopify',
+    type: 'product',
+    text: /ALWAYS FITS GOOD CLASSIC BOOTCUT JEANS/i,
+  });
+  await submitExtraction({
+    url: 'https://www.goodamerican.com/collections/sweat-sets?extractor_adapter=shopify-routes-v2',
+    format: 'json',
+    source: 'shopify',
+    type: 'feed',
+    text: /"feedType": "collection"/,
+  });
+  await submitExtraction({
+    url: 'https://www.goodamerican.com/blogs/good-times?extractor_adapter=shopify-routes-v2',
+    format: 'json',
+    source: 'web',
+    type: 'article',
+    text: /Good Times/i,
+  });
+  await submitExtraction({
     url: 'https://www.amazon.de/echo-dot-2022/dp/B09B8X9RGM',
     format: 'json',
     source: 'amazon',
