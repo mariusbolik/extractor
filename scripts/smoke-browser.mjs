@@ -110,6 +110,11 @@ try {
   const home = await page.goto(homeUrl.toString(), { waitUntil: 'networkidle' });
   assert.equal(home?.status(), 200);
   await page.locator('#extract-form').waitFor();
+  const heroBadge = page.locator('[data-hero-badge]');
+  assert.equal(await heroBadge.count(), 1, 'Hero badge is missing');
+  assert.equal(await heroBadge.getByText('Free', { exact: true }).count(), 1, 'Hero badge does not show the free offer');
+  assert.equal(await heroBadge.getByText('No account needed', { exact: true }).count(), 1, 'Hero badge does not explain that no account is needed');
+  assert.notEqual(await heroBadge.locator('svg').evaluate((element) => getComputedStyle(element).animationName), 'none', 'Hero badge is not animated');
   const formatRadios = page.locator('input[name="format"]');
   assert.equal(await page.locator('input[name="format"][value="json"]').isChecked(), true, 'JSON is not the default website output');
   for (const radio of await formatRadios.all()) {
@@ -117,27 +122,49 @@ try {
     assert.equal(borderRadius, '0px', 'A format radio is not square');
   }
   const supportedSection = page.locator('[aria-labelledby="supported-heading"]');
-  assert.equal(await supportedSection.locator(':scope > ul').count(), 1, 'Supported platforms are not contained in one list card');
-  assert.equal(await supportedSection.locator(':scope > ul > li').count(), 15, 'Supported platform list does not contain every platform');
+  const extractorCardBox = await page.locator('[aria-label="URL extractor"]').boundingBox();
+  const supportedSectionBox = await supportedSection.boundingBox();
+  assert.ok(extractorCardBox && supportedSectionBox, 'Extraction or supported-platform card geometry is unavailable');
+  assert.ok(Math.abs(supportedSectionBox.y - (extractorCardBox.y + extractorCardBox.height) - 48) <= 1, 'Extraction and supported-platform cards do not have a 48px gap');
+  const platformGrid = supportedSection.locator('#supported-platforms-grid');
+  assert.equal(await page.locator('[aria-label="URL extractor"] > #works-with').count(), 0, 'Works with icons are still inside the extraction card');
+  assert.equal(await platformGrid.locator(':scope > li').count(), 16, 'Supported platform tile grid is incomplete');
+  assert.equal(await platformGrid.locator(':scope > li').first().getByText('Works with').count(), 1, 'Works with lead tile is missing');
+  assert.equal(await platformGrid.evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(' ').length), 8, 'Supported platforms do not use an eight-column desktop tile grid');
   assert.equal(await page.locator('.method-card').count(), 15);
-  const platformRows = supportedSection.locator(':scope > ul > li');
-  const platformDividers = await platformRows.evaluateAll((rows) => rows.map((row) => getComputedStyle(row).borderBottomWidth));
-  assert.deepEqual(platformDividers, [...Array(14).fill('2px'), '0px'], 'Supported platform list dividers are incorrect');
+  for (const card of await page.locator('.method-card').all()) {
+    assert.equal(await card.locator(':scope > svg').count(), 1, 'A platform tile does not show exactly one logo');
+    assert.ok(await card.locator('[role="tooltip"] ul > li').count() > 0, 'A platform tile is missing its capability tooltip');
+  }
+  assert.deepEqual(
+    await page.locator('.method-card[href="/amazon/"] [role="tooltip"] ul > li').allTextContents(),
+    ['Product Search', 'Product Details'],
+    'Amazon card capabilities are incorrect',
+  );
   assert.equal(await page.locator('footer a[href="/alternatives/"]').count(), 1, 'Alternatives footer link is missing');
   assert.equal(await page.locator('footer a[href="/blog/"]').count(), 1, 'Blog footer link is missing');
-  const footerLinks = page.locator('footer nav a');
-  const dlvrLink = footerLinks.last();
-  assert.equal(await dlvrLink.getAttribute('href'), 'https://dlvr.sh', 'dlvr.sh is not the final footer link');
-  assert.equal(await dlvrLink.getAttribute('target'), '_blank', 'dlvr.sh is not marked as an external link');
-  assert.equal(await dlvrLink.locator('svg').count(), 1, 'dlvr.sh external-link icon is missing');
-  assert.equal(await dlvrLink.evaluate((element) => getComputedStyle(element).backgroundColor), 'rgb(0, 0, 0)', 'dlvr.sh footer link does not have a black background');
+  assert.equal((await page.locator('footer > span').textContent())?.trim(), '© extractor.sh', 'Footer copyright label is incorrect');
+  assert.equal(await page.locator('footer a[href="https://dlvr.sh"]').count(), 0, 'dlvr.sh is still in the footer');
+  const dlvrBanner = page.locator('main > [data-dlvr-banner]');
+  assert.equal(await dlvrBanner.count(), 1, 'dlvr.sh homepage banner is missing');
+  assert.equal(await dlvrBanner.getAttribute('href'), 'https://dlvr.sh', 'dlvr.sh homepage banner has the wrong URL');
+  assert.equal(await dlvrBanner.getAttribute('target'), '_blank', 'dlvr.sh homepage banner is not marked as external');
+  assert.equal(await dlvrBanner.locator('svg').count(), 1, 'dlvr.sh homepage banner external-link icon is missing');
+  assert.equal(await dlvrBanner.evaluate((element) => getComputedStyle(element).backgroundColor), 'rgb(0, 0, 0)', 'dlvr.sh homepage banner is not black');
+  assert.equal(await dlvrBanner.evaluate((element) => getComputedStyle(element).color), 'rgb(255, 255, 255)', 'dlvr.sh homepage banner text is not white');
   assert.equal(await page.locator('a[href="/docs/mcp/"]').count() > 0, true, 'Hosted MCP documentation link is missing');
-  assert.equal(await page.locator('#mcp pre code').textContent(), `${origin}/mcp`);
-  for (const card of await page.locator('.method-card').all()) {
-    assert.equal(await card.locator('svg').count(), 2, 'A source card is missing its platform or arrow icon');
-    const arrowBox = await card.locator('svg').last().boundingBox();
-    assert.ok(arrowBox && arrowBox.width >= 20 && arrowBox.height >= 20, 'A source card arrow is not visible');
-  }
+  assert.equal(await page.locator('#mcp pre code').textContent(), 'https://extractor.sh/mcp');
+  const [supportedCardBox, apiCardBox, mcpCardBox, dlvrBannerBox] = await Promise.all([
+    supportedSection.boundingBox(),
+    page.locator('#api').boundingBox(),
+    page.locator('#mcp').boundingBox(),
+    dlvrBanner.boundingBox(),
+  ]);
+  assert.ok(apiCardBox && mcpCardBox && Math.abs(apiCardBox.y - mcpCardBox.y) <= 1 && mcpCardBox.x > apiCardBox.x, 'API and MCP cards are not side by side on desktop');
+  assert.ok(supportedCardBox && apiCardBox && dlvrBannerBox, 'Homepage card geometry is unavailable');
+  assert.ok(Math.abs(apiCardBox.y - (supportedCardBox.y + supportedCardBox.height) - 32) <= 1, 'Supported platforms and API/MCP cards do not have a 32px gap');
+  assert.ok(Math.abs(dlvrBannerBox.y - (apiCardBox.y + apiCardBox.height) - 32) <= 1, 'API/MCP cards and dlvr.sh banner do not have a 32px gap');
+  for (const card of await page.locator('.method-card').all()) assert.equal(await card.locator('svg').count(), 1, 'A platform tile contains more than its logo');
   const amazonIcon = page.locator('.method-card[href="/amazon/"] svg').first();
   assert.equal(await amazonIcon.getAttribute('data-brand-icon'), 'amazon', 'Amazon card does not use its inline SVG brand logo');
   assert.deepEqual(await amazonIcon.locator('path').evaluateAll((paths) => paths.map((path) => path.getAttribute('fill'))), ['#f90', '#000'], 'Amazon logo does not use its black and orange artwork');
@@ -145,35 +172,6 @@ try {
   const instagramIcon = page.locator('.method-card[href="/instagram/"] svg').first();
   assert.equal(await instagramIcon.getAttribute('data-brand-icon'), 'instagram', 'Instagram card does not use its inline SVG brand logo');
   assert.equal(await instagramIcon.locator('defs stop').count(), 3, 'Instagram logo gradient is missing');
-  const worksWith = page.locator('[aria-labelledby="extract-heading"] > #works-with');
-  assert.equal(await worksWith.getByText('Works with:').count(), 1, 'Works with label is missing from the extraction card');
-  assert.equal(await worksWith.locator('a').count(), 15, 'Works with row does not list every supported platform');
-  assert.equal(await worksWith.locator('a svg').count(), 15, 'A Works with platform is missing its SVG icon');
-  assert.equal(await worksWith.locator('a[href="/amazon/"] [data-brand-icon="amazon"]').count(), 1, 'Works with row has the wrong Amazon artwork');
-  assert.equal(await worksWith.locator('a[href="/instagram/"] [data-brand-icon="instagram"]').count(), 1, 'Works with row has the wrong Instagram artwork');
-  const worksWithLinks = worksWith.locator('a');
-  const firstWorksWithLink = worksWithLinks.first();
-  const worksWithStyle = await firstWorksWithLink.evaluate((element) => {
-    const style = getComputedStyle(element);
-    return {
-      backgroundColor: style.backgroundColor,
-      borderColor: style.borderColor,
-      borderRadius: style.borderRadius,
-    };
-  });
-  const worksWithRadius = worksWithStyle.borderRadius;
-  assert.notEqual(worksWithRadius, '0px', 'Works with icons are not circular');
-  assert.match(worksWithStyle.backgroundColor, /^(?:rgb\(229, 229, 229\)|oklch\(0\.922 0 none\))$/, 'Works with circles do not have the expected light-gray background');
-  assert.match(worksWithStyle.borderColor, /^(?:rgb\(255, 255, 255\)|oklch\(1 0 none\))$/, 'Works with circles do not have white borders');
-  const [firstWorksWithBox, secondWorksWithBox] = await Promise.all([
-    firstWorksWithLink.boundingBox(),
-    worksWithLinks.nth(1).boundingBox(),
-  ]);
-  assert.ok(firstWorksWithBox && secondWorksWithBox && secondWorksWithBox.x < firstWorksWithBox.x + firstWorksWithBox.width, 'Works with icon circles do not overlap');
-  const worksWithOverlap = firstWorksWithBox && secondWorksWithBox
-    ? firstWorksWithBox.x + firstWorksWithBox.width - secondWorksWithBox.x
-    : Number.POSITIVE_INFINITY;
-  assert.ok(worksWithOverlap <= 6, `Works with icon circles overlap too much: ${worksWithOverlap}px`);
   await assertNoHorizontalOverflow('desktop homepage');
 
   const serverCardResponse = await page.request.get(`${origin}/.well-known/mcp/server-card.json`);
@@ -342,6 +340,14 @@ try {
     const response = await page.goto(`${origin}${route}`, { waitUntil: 'networkidle' });
     assert.equal(response?.status(), 200, `${route} returned HTTP ${response?.status()}`);
     await page.locator('h1').waitFor();
+    if (route.startsWith('/alternatives/') && route !== '/alternatives/') {
+      const provider = alternativePages.find((item) => route === `/alternatives/${item.slug}/`)?.provider;
+      assert.ok(provider && (await page.locator('h1').textContent())?.includes(provider), `${route} does not name the competitor in its H1`);
+      assert.equal(await page.locator('main a[href^="http"]').count(), 0, `${route} links to a competitor`);
+      assert.equal(await page.locator('[data-extractor-choice]').count(), 1, `${route} is missing the extractor.sh value card`);
+      assert.equal(await page.locator('[data-provider-choice]').count(), 1, `${route} is missing the provider-fit card`);
+      assert.equal(await page.locator('#advantages-heading').count(), 1, `${route} is missing extractor.sh advantages`);
+    }
     await assertNoHorizontalOverflow(route);
   }
 
@@ -363,12 +369,11 @@ try {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(`${origin}/`, { waitUntil: 'networkidle' });
   await assertNoHorizontalOverflow('mobile homepage');
-  const sourceRail = page.locator('.method-card').first().locator('..');
-  const railDimensions = await sourceRail.evaluate((element) => ({
-    viewport: element.clientWidth,
-    content: element.scrollWidth,
-  }));
-  assert.ok(railDimensions.content > railDimensions.viewport, 'Mobile source cards are not horizontally scrollable');
+  assert.equal(
+    await page.locator('#supported-platforms-grid').evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(' ').length),
+    4,
+    'Supported platforms do not use a four-column mobile grid',
+  );
   const submitWidth = await page.locator('#extract-form button[type="submit"]').evaluate((element) => element.getBoundingClientRect().width);
   const formWidth = await page.locator('#extract-form').evaluate((element) => element.getBoundingClientRect().width);
   assert.ok(submitWidth >= formWidth - 2, 'Mobile submit button does not span the form width');

@@ -199,7 +199,6 @@ export const platformArticles: PlatformArticle[] = [
 export interface AlternativePage {
   slug: string;
   provider: string;
-  officialUrl: string;
   description: string;
   providerStrength: string;
   chooseProvider: string[];
@@ -211,7 +210,6 @@ export const alternativePages: AlternativePage[] = [
   {
     slug: 'scrapingbee',
     provider: 'ScrapingBee',
-    officialUrl: 'https://www.scrapingbee.com/',
     description: 'Compare extractor.sh with ScrapingBee for public URL extraction, Markdown, JSON, AI agents, and RAG ingestion.',
     providerStrength: 'ScrapingBee is a broad scraping API with JavaScript rendering, proxy options, screenshots, selectors, and AI extraction controls.',
     chooseProvider: ['You need proxy selection or geotargeting.', 'You need browser interactions, screenshots, or selector-level controls.', 'You need a broad scraping infrastructure product.'],
@@ -221,7 +219,6 @@ export const alternativePages: AlternativePage[] = [
   {
     slug: 'firecrawl',
     provider: 'Firecrawl',
-    officialUrl: 'https://www.firecrawl.dev/',
     description: 'Compare extractor.sh with Firecrawl for single-page extraction, AI-ready Markdown, crawling, and RAG workflows.',
     providerStrength: 'Firecrawl combines single-page scraping with crawling, mapping, screenshots, structured extraction, and other website-scale workflows.',
     chooseProvider: ['You need to crawl or map an entire website.', 'You need screenshots, actions, change tracking, or schema-driven extraction.', 'You want a broader ingestion platform.'],
@@ -231,7 +228,6 @@ export const alternativePages: AlternativePage[] = [
   {
     slug: 'apify',
     provider: 'Apify',
-    officialUrl: 'https://apify.com/',
     description: 'Compare extractor.sh with Apify for AI agents, public URL extraction, Actors, automation, and web data workflows.',
     providerStrength: 'Apify is a general automation platform built around Actors, datasets, schedules, integrations, and a large marketplace of specialized tools.',
     chooseProvider: ['You need scheduled jobs, datasets, or multi-step automation.', 'You want a marketplace of specialized scrapers.', 'You need to build and deploy custom scraping programs.'],
@@ -241,7 +237,6 @@ export const alternativePages: AlternativePage[] = [
   {
     slug: 'scraperapi',
     provider: 'ScraperAPI',
-    officialUrl: 'https://www.scraperapi.com/',
     description: 'Compare extractor.sh with ScraperAPI for proxy-backed scraping, JavaScript rendering, AI agents, and Markdown extraction.',
     providerStrength: 'ScraperAPI focuses on proxy-backed web requests and offers JavaScript rendering, geotargeting, sessions, and synchronous or asynchronous workflows.',
     chooseProvider: ['You need proxy rotation, sessions, or geotargeting.', 'You want raw target HTML for your own parser.', 'You need rendering controls for arbitrary websites.'],
@@ -251,7 +246,6 @@ export const alternativePages: AlternativePage[] = [
   {
     slug: 'browserless',
     provider: 'Browserless',
-    officialUrl: 'https://www.browserless.io/',
     description: 'Compare extractor.sh with Browserless for browser automation, rendered HTML, AI extraction, and lightweight URL processing.',
     providerStrength: 'Browserless provides managed browser infrastructure and REST endpoints for rendered HTML, screenshots, selectors, unblocking, and browser functions.',
     chooseProvider: ['You need direct browser automation or CDP access.', 'You need screenshots, scripted actions, or CSS selector extraction.', 'Rendering is the core of your workload.'],
@@ -261,7 +255,6 @@ export const alternativePages: AlternativePage[] = [
   {
     slug: 'zyte',
     provider: 'Zyte',
-    officialUrl: 'https://www.zyte.com/zyte-api/',
     description: 'Compare extractor.sh with Zyte API for automatic extraction, browser rendering, AI data workflows, and simple public URLs.',
     providerStrength: 'Zyte API offers managed HTTP and browser requests plus automatic extraction models for pages such as products, articles, jobs, and search results.',
     chooseProvider: ['You need managed proxies, geolocation, sessions, or browser actions.', 'You need specialized automatic extraction schemas.', 'You are building a larger enterprise scraping operation.'],

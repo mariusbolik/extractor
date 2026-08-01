@@ -2,6 +2,8 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ExtractorForm from '../components/ExtractorForm.astro';
 import MethodCards from '../components/MethodCards.astro';
+import HeroBadge from '../components/HeroBadge.astro';
+import { Icon } from 'astro-icon/components';
 
 export const prerender = true;
 
@@ -12,44 +14,59 @@ const description = 'A simple, cache-first GET API that extracts public webpages
 <BaseLayout {title} {description}>
   <section class="pb-[22px]">
     <p class="mb-4 font-mono text-[0.8rem] font-extrabold uppercase tracking-[0.14em]">URL → useful content</p>
-    <h1 class="mb-5 max-w-[900px] font-heading text-[clamp(2.5rem,6vw,5.4rem)] font-normal leading-[1.02] tracking-[-0.045em]">The web,<br />minus the noise.</h1>
+    <div class="mb-5 flex items-center justify-between gap-4 sm:gap-8">
+      <h1 class="min-w-0 max-w-[900px] font-heading text-[clamp(2.5rem,6vw,5.4rem)] font-normal leading-[1.02] tracking-[-0.045em]">The web,<br />minus the noise.</h1>
+      <HeroBadge class="size-[clamp(96px,14vw,154px)]" />
+    </div>
     <p class="mb-[42px] max-w-[720px] text-[clamp(1.1rem,2vw,1.35rem)] leading-[1.55]">Paste a public URL. Get clean Markdown or structured JSON through one aggressively cached GET request.</p>
   </section>
 
   <ExtractorForm />
   <MethodCards />
 
-  <section id="api" class="mt-20 grid grid-cols-1 items-center gap-10 border-2 border-black bg-white p-[clamp(24px,5vw,52px)] [&_li]:max-w-[760px] [&_li]:leading-[1.7] [&_p]:max-w-[760px] [&_p]:leading-[1.7] lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
-    <div>
-      <p class="mb-4 font-mono text-[0.8rem] font-extrabold uppercase tracking-[0.14em]">Public GET API</p>
-      <h2 class="mb-5 font-heading text-[clamp(1.55rem,3vw,2.4rem)] font-normal leading-[1.02] tracking-[-0.045em]">Nothing to sign up for.</h2>
-      <p>Use the same endpoint as the form. JSON is normalized across sources; Markdown is returned as a raw <code>text/markdown</code> response.</p>
-    </div>
-    <pre class="m-0 max-w-full overflow-auto rounded-[3px] border-2 border-black bg-white p-5 font-mono text-[0.82rem] leading-[1.55] text-black"><code>curl --get \
-  'https://extractor.mcb-software.workers.dev/api/extract' \
-  --data-urlencode 'url=https://example.com/article' \
+  <div class="mt-8 grid items-stretch gap-8 lg:grid-cols-2">
+    <section id="api" class="flex min-w-0 flex-col border-2 border-black bg-white p-[clamp(24px,4vw,42px)] shadow-[8px_8px_0_#000] max-[660px]:shadow-[5px_5px_0_#000] [&_p]:leading-[1.7]">
+      <div>
+        <p class="mb-4 font-mono text-[0.8rem] font-extrabold uppercase tracking-[0.14em]">Public GET API</p>
+        <h2 class="mb-5 font-heading text-[clamp(1.55rem,3vw,2.4rem)] font-normal leading-[1.02] tracking-[-0.045em]">Clean web data in one GET request.</h2>
+        <p>Use the same endpoint as the form. JSON is normalized across sources; Markdown is returned as a raw <code>text/markdown</code> response.</p>
+      </div>
+      <pre class="mt-10 mb-0 max-w-full overflow-auto rounded-[3px] border-2 border-black bg-white p-5 font-mono text-[0.82rem] leading-[1.55] text-black"><code>curl --get \
+  'https://extractor.sh/api/extract' \
+  --data-urlencode 'url=https://www.amazon.de/dp/B09B8X9RGM' \
   --data-urlencode 'format=json'</code></pre>
-  </section>
+    </section>
 
-  <section id="mcp" class="mt-8 grid grid-cols-1 items-center gap-10 border-2 border-black bg-white p-[clamp(24px,5vw,52px)] [&_p]:max-w-[760px] [&_p]:leading-[1.7] lg:grid-cols-2">
+    <section id="mcp" class="flex min-w-0 flex-col border-2 border-black bg-white p-[clamp(24px,4vw,42px)] shadow-[8px_8px_0_#000] max-[660px]:shadow-[5px_5px_0_#000] [&_p]:leading-[1.7]">
+      <div>
+        <p class="mb-4 font-mono text-[0.8rem] font-extrabold uppercase tracking-[0.14em]">Hosted MCP server</p>
+        <h2 class="mb-5 font-heading text-[clamp(1.55rem,3vw,2.4rem)] font-normal leading-[1.02] tracking-[-0.045em]">The MCP server for clean web data.</h2>
+        <p>Connect an MCP client and call <code>extract_public_url</code>. It returns clean Markdown by default or the same normalized JSON as the public API.</p>
+      </div>
+      <pre class="mt-10 mb-0 max-w-full overflow-auto rounded-[3px] border-2 border-black bg-white p-5 font-mono text-[0.82rem] leading-[1.55] text-black"><code>https://extractor.sh/mcp</code></pre>
+      <a class="mt-6 inline-flex self-start border-b-2 border-black pb-1 font-bold no-underline" href="/docs/mcp/">Read the MCP docs →</a>
+    </section>
+  </div>
+
+  <a
+    id="dlvr"
+    class="group mt-8 grid items-center gap-5 border-2 border-black bg-black px-[clamp(20px,3vw,30px)] py-[clamp(18px,2.5vw,24px)] !text-white no-underline shadow-[8px_8px_0_#000] hover:!text-white max-[660px]:shadow-[5px_5px_0_#000] sm:grid-cols-[minmax(0,1fr)_auto]"
+    href="https://dlvr.sh"
+    target="_blank"
+    rel="noopener noreferrer"
+    data-dlvr-banner
+  >
     <div>
-      <p class="mb-4 font-mono text-[0.8rem] font-extrabold uppercase tracking-[0.14em]">Hosted MCP server</p>
-      <h2 class="mb-5 font-heading text-[clamp(1.55rem,3vw,2.4rem)] font-normal leading-[1.02] tracking-[-0.045em]">One tool for your agents.</h2>
-      <p>Connect an MCP client and call <code>extract_public_url</code>. It returns clean Markdown by default or the same normalized JSON as the public API.</p>
-      <a class="mt-6 inline-flex border-b-2 border-black pb-1 font-bold no-underline" href="/docs/mcp/">Read the MCP docs →</a>
+      <p class="mb-2 font-mono text-[0.72rem] font-extrabold uppercase tracking-[0.14em]">File delivery for agents</p>
+      <h2 class="mb-2 font-heading text-[clamp(1.3rem,2.4vw,1.85rem)] font-normal leading-[1.02] tracking-[-0.045em]">Move files with dlvr.sh.</h2>
+      <p class="max-w-[720px] text-[0.9rem] leading-[1.5] opacity-75">Fast, secure, programmable file transfer for AI agents, scripts, and browsers.</p>
     </div>
-    <pre class="m-0 max-w-full overflow-auto rounded-[3px] border-2 border-black bg-white p-5 font-mono text-[0.82rem] leading-[1.55] text-black"><code>https://extractor.mcb-software.workers.dev/mcp</code></pre>
-  </section>
+    <span class="inline-flex items-center justify-center gap-2.5 border-2 border-white px-4 py-3 text-[0.9rem] font-bold">
+      Visit dlvr.sh
+      <Icon class="size-5 shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" name="heroicons:arrow-top-right-on-square" aria-hidden="true" />
+    </span>
+  </a>
 
-  <section class="mt-8 border-2 border-black bg-white p-[clamp(24px,5vw,52px)] [&_li]:max-w-[760px] [&_li]:leading-[1.7] [&_p]:max-w-[760px] [&_p]:leading-[1.7]">
-    <p class="mb-4 font-mono text-[0.8rem] font-extrabold uppercase tracking-[0.14em]">One simple workflow</p>
-    <h2 class="mb-5 font-heading text-[clamp(1.55rem,3vw,2.4rem)] font-normal leading-[1.02] tracking-[-0.045em]">From URL to useful content.</h2>
-    <ol class="grid list-none grid-cols-3 gap-6 p-0 max-[760px]:grid-cols-1">
-      <li class="border-t-2 border-black pt-4"><span class="mb-[10px] block font-mono font-black" aria-hidden="true">01</span>Paste any supported public URL.</li>
-      <li class="border-t-2 border-black pt-4"><span class="mb-[10px] block font-mono font-black" aria-hidden="true">02</span>Choose readable Markdown or structured JSON.</li>
-      <li class="border-t-2 border-black pt-4"><span class="mb-[10px] block font-mono font-black" aria-hidden="true">03</span>Reuse the same cacheable GET URL anywhere.</li>
-    </ol>
-  </section>
 </BaseLayout>
 
 <script>

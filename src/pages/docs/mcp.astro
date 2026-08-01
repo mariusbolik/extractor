@@ -12,12 +12,12 @@ const description = 'Connect an MCP client to extractor.sh and extract public UR
   <p class="text-[1.08rem]">Connect an MCP-compatible client directly to extractor.sh. The hosted server is public, stateless, and requires no API key.</p>
 
   <h2>Endpoint</h2>
-  <pre><code>https://extractor.mcb-software.workers.dev/mcp</code></pre>
+  <pre><code>https://extractor.sh/mcp</code></pre>
   <p>The endpoint uses Streamable HTTP. Add it as a remote HTTP MCP server in your client. A common configuration shape is:</p>
   <pre><code>{`{
   "mcpServers": {
     "extractor": {
-      "url": "https://extractor.mcb-software.workers.dev/mcp"
+      "url": "https://extractor.sh/mcp"
     }
   }
 }`}</code></pre>

@@ -1,2 +1,4 @@
+.assetsignore
+txt
 _worker.js
 _routes.json

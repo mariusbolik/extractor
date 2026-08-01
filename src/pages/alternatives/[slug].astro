@@ -12,46 +12,78 @@ export function getStaticPaths() {
 interface Props { alternative: AlternativePage }
 const { alternative } = Astro.props;
 const path = `/alternatives/${alternative.slug}/`;
-const title = `${alternative.provider} alternative for AI-ready extraction — extractor.sh`;
+const title = `${alternative.provider} alternative for AI and RAG — extractor.sh`;
 const description = alternative.description;
+const buildDate = new Date().toISOString().slice(0, 10);
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: `A simpler ${alternative.provider} alternative`,
+  description,
+  dateModified: buildDate,
+  author: { '@type': 'Organization', name: 'extractor.sh' },
+  publisher: { '@type': 'Organization', name: 'extractor.sh' },
+  mainEntityOfPage: new URL(path, Astro.site).toString(),
+  about: [
+    { '@type': 'SoftwareApplication', name: 'extractor.sh' },
+    { '@type': 'SoftwareApplication', name: alternative.provider },
+  ],
+  keywords: alternative.keywords.join(', '),
+};
 ---
 
-<BaseLayout {title} {description} keywords={alternative.keywords} {path}>
-  <section class="pb-8">
-    <a class="mb-5 inline-flex items-center gap-2 font-mono text-[0.76rem] font-extrabold uppercase tracking-[0.12em]" href="/alternatives/"><Icon class="size-4" name="heroicons:arrow-left" /> All alternatives</a>
-    <p class="mb-4 font-mono text-[0.8rem] font-extrabold uppercase tracking-[0.14em]">{alternative.provider} alternative</p>
-    <h1 class="mb-6 max-w-[950px] font-heading text-[clamp(2.2rem,5.2vw,4.5rem)] font-normal leading-[1.03] tracking-[-0.045em]">extractor.sh vs. {alternative.provider}</h1>
-    <p class="mb-0 max-w-[760px] text-[clamp(1.05rem,2vw,1.28rem)] leading-[1.65]">{alternative.providerStrength}</p>
-  </section>
+<BaseLayout {title} {description} keywords={alternative.keywords} {path} pageType="article" {schema}>
+  <article>
+    <header class="pb-8">
+      <a class="mb-6 inline-flex items-center gap-2 font-mono text-[0.76rem] font-extrabold uppercase tracking-[0.12em]" href="/alternatives/"><Icon class="size-4" name="heroicons:arrow-left" /> All Alternatives</a>
+      <p class="mb-4 font-mono text-[0.8rem] font-extrabold uppercase tracking-[0.14em]">{alternative.provider} alternative for AI and RAG</p>
+      <h1 class="mb-6 max-w-[900px] font-heading text-[clamp(2.1rem,4.8vw,3.9rem)] font-normal leading-[1.02] tracking-[-0.045em]">A simpler {alternative.provider} alternative.</h1>
+      <p class="mb-0 max-w-[820px] text-[clamp(1.02rem,1.8vw,1.2rem)] leading-[1.65]">Looking for a {alternative.provider} alternative? extractor.sh turns public URLs into clean Markdown or normalized JSON through one cacheable GET request. It is built for AI agents, RAG pipelines, search, and applications that already know which URL they need.</p>
+    </header>
 
-  <section class="mt-8 border-2 border-black bg-white p-[clamp(24px,5vw,52px)]">
-    <p class="mb-4 font-mono text-[0.78rem] font-extrabold uppercase tracking-[0.13em]">The practical difference</p>
-    <h2 class="mb-6 font-heading text-[clamp(1.5rem,3vw,2.2rem)] font-normal leading-[1.08] tracking-[-0.035em]">Infrastructure platform or focused extraction endpoint?</h2>
-    <p class="max-w-[790px] leading-[1.75]">extractor.sh accepts an ordinary public page URL through one GET request and returns clean Markdown or normalized JSON. It does not provide caller-selected proxies, browser sessions, screenshots, crawling, storage, or workflow automation. That smaller surface is useful for AI agents and RAG systems that already know which public URL they need.</p>
-  </section>
+    <section class="mt-8 border-2 border-black bg-white p-[clamp(24px,4vw,42px)] shadow-[8px_8px_0_#000] max-[660px]:shadow-[5px_5px_0_#000]" aria-labelledby="comparison-heading">
+      <p class="mb-4 font-mono text-[0.76rem] font-extrabold uppercase tracking-[0.13em]">{alternative.provider} vs. extractor.sh</p>
+      <h2 class="mb-5 font-heading text-[clamp(1.5rem,2.8vw,2.1rem)] font-normal leading-[1.06] tracking-[-0.04em]" id="comparison-heading">What is the difference?</h2>
+      <p class="mb-8 max-w-[820px] leading-[1.7]">{alternative.providerStrength} extractor.sh solves a narrower problem: submit one public URL and receive content that is immediately useful to software and AI.</p>
 
-  <div class="grid grid-cols-2 gap-6 max-[760px]:grid-cols-1">
-    <section class="mt-6 border-2 border-black bg-white p-[clamp(24px,4vw,42px)]">
-      <p class="mb-4 font-mono text-[0.76rem] font-extrabold uppercase tracking-[0.12em]">Choose {alternative.provider}</p>
-      <h2 class="mb-5 font-heading text-[1.45rem] font-normal leading-[1.08] tracking-[-0.035em]">When you need more control</h2>
-      <ul class="list-[square] space-y-3 pl-5 leading-[1.7]">{alternative.chooseProvider.map((item) => <li>{item}</li>)}</ul>
+      <div class="grid gap-[2px] bg-black p-[2px] lg:grid-cols-2">
+        <section class="bg-black p-[clamp(22px,3vw,32px)] text-white" data-extractor-choice>
+          <h3 class="mb-5 font-heading text-[clamp(1.3rem,2.2vw,1.7rem)] font-normal leading-[1.08]">Choose extractor.sh when</h3>
+          <ul class="list-[square] space-y-3 pl-5 leading-[1.65]">
+            {alternative.chooseExtractor.map((item) => <li>{item}</li>)}
+          </ul>
+        </section>
+        <section class="bg-white p-[clamp(22px,3vw,32px)]" data-provider-choice>
+          <h3 class="mb-5 font-heading text-[clamp(1.3rem,2.2vw,1.7rem)] font-normal leading-[1.08]">Choose {alternative.provider} when</h3>
+          <ul class="list-[square] space-y-3 pl-5 leading-[1.65]">
+            {alternative.chooseProvider.map((item) => <li>{item}</li>)}
+          </ul>
+        </section>
+      </div>
+
+      <h2 class="mt-10 mb-6 font-heading text-[clamp(1.4rem,2.5vw,1.85rem)] font-normal leading-[1.08] tracking-[-0.035em]" id="advantages-heading">Why is extractor.sh a strong {alternative.provider} alternative?</h2>
+      <div class="grid gap-6 sm:grid-cols-3">
+        <div class="border-t-2 border-black pt-4">
+          <h3 class="mb-2 font-heading text-[1.05rem] font-normal">Simple GET API</h3>
+          <p class="text-[0.9rem] leading-[1.6]">No SDK, POST body, job queue, or polling loop.</p>
+        </div>
+        <div class="border-t-2 border-black pt-4">
+          <h3 class="mb-2 font-heading text-[1.05rem] font-normal">AI-ready output</h3>
+          <p class="text-[0.9rem] leading-[1.6]">Raw Markdown or consistent, typed JSON across supported sources.</p>
+        </div>
+        <div class="border-t-2 border-black pt-4">
+          <h3 class="mb-2 font-heading text-[1.05rem] font-normal">Cache-first</h3>
+          <p class="text-[0.9rem] leading-[1.6]">Successful responses are cached at the edge. Cache hits are not billed.</p>
+        </div>
+      </div>
     </section>
-    <section class="mt-6 border-2 border-black bg-white p-[clamp(24px,4vw,42px)]">
-      <p class="mb-4 font-mono text-[0.76rem] font-extrabold uppercase tracking-[0.12em]">Choose extractor.sh</p>
-      <h2 class="mb-5 font-heading text-[1.45rem] font-normal leading-[1.08] tracking-[-0.035em]">When simplicity is the feature</h2>
-      <ul class="list-[square] space-y-3 pl-5 leading-[1.7]">{alternative.chooseExtractor.map((item) => <li>{item}</li>)}</ul>
-    </section>
-  </div>
 
-  <section class="mt-8 flex flex-wrap items-center justify-between gap-6 border-2 border-black bg-white p-[clamp(24px,4vw,42px)]">
-    <div class="max-w-[620px]">
-      <p class="mb-3 font-mono text-[0.76rem] font-extrabold uppercase tracking-[0.12em]">Try the focused option</p>
-      <h2 class="mb-3 font-heading text-[1.45rem] font-normal leading-[1.08] tracking-[-0.035em]">One URL. One GET request.</h2>
-      <p class="mb-0 leading-[1.7]">The public extractor preview requires no account or API key.</p>
-    </div>
-    <div class="flex flex-wrap gap-4">
-      <a class="inline-flex items-center gap-2 border-[2px_5px_5px_2px] border-black bg-white px-5 py-3 font-extrabold no-underline hover:translate-x-[2px] hover:translate-y-[2px] hover:border-[4px_3px_3px_4px]" href="/">Try extractor.sh <Icon class="size-5" name="heroicons:arrow-right" /></a>
-      <a class="inline-flex items-center px-2 py-3" href={alternative.officialUrl} rel="external">Visit {alternative.provider}</a>
-    </div>
-  </section>
+    <section class="mt-8 flex flex-wrap items-center justify-between gap-6 border-2 border-black bg-white p-[clamp(22px,3vw,32px)]">
+      <div>
+        <p class="mb-2 font-mono text-[0.74rem] font-extrabold uppercase tracking-[0.12em]">Try this {alternative.provider} alternative</p>
+        <h2 class="font-heading text-[clamp(1.3rem,2.3vw,1.7rem)] font-normal leading-[1.08]">Start with a public URL. No account needed.</h2>
+      </div>
+      <a class="inline-flex items-center gap-3 border-[2px_5px_5px_2px] border-black bg-white px-5 py-3 font-extrabold no-underline hover:translate-x-[2px] hover:translate-y-[2px] hover:border-[4px_3px_3px_4px]" href="/">Try extractor.sh <Icon class="size-5" name="heroicons:arrow-right" /></a>
+    </section>
+  </article>
 </BaseLayout>

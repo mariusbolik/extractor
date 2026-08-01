@@ -1,0 +1,22 @@
+---
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+const points = Array.from({ length: 48 }, (_, index) => {
+  const angle = (index * Math.PI) / 24 - Math.PI / 2;
+  const radius = index % 2 === 0 ? 49 : 41;
+  return `${50 + Math.cos(angle) * radius},${50 + Math.sin(angle) * radius}`;
+}).join(' ');
+---
+
+<div class:list={['relative isolate shrink-0', className]} data-hero-badge>
+  <svg class="absolute inset-0 size-full animate-[spin_16s_linear_infinite] text-black motion-reduce:animate-none" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+    <polygon points={points} fill="currentColor" />
+  </svg>
+  <p class="absolute inset-[17%] z-10 m-0 flex rotate-6 flex-col items-center justify-center text-center font-mono font-black uppercase leading-[1.05] tracking-[-0.04em] text-white" aria-label="Free. No account needed.">
+    <span class="text-[clamp(1.05rem,2.2vw,1.55rem)]">Free</span>
+    <span class="mt-2 text-[clamp(0.5rem,1vw,0.68rem)] leading-[1.12] tracking-[0.02em]">No account needed</span>
+  </p>
+</div>

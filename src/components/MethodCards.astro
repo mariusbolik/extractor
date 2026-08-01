@@ -1,24 +1,41 @@
 ---
-import { Icon } from 'astro-icon/components';
 import { supportedPlatforms } from '../features/marketing/platforms';
 import PlatformIcon from './PlatformIcon.astro';
 ---
 
-<section aria-labelledby="supported-heading">
-  <p class="mb-4 font-mono text-[0.8rem] font-extrabold uppercase tracking-[0.14em]">Supported sources</p>
-  <h2 class="font-heading text-[clamp(1.55rem,3vw,2.4rem)] font-normal leading-[1.02] tracking-[-0.045em]" id="supported-heading">Supported platforms, handled properly.</h2>
-  <ul class="mt-6 list-none border-2 border-black bg-white p-0 shadow-[8px_8px_0_#000] max-[660px]:shadow-[5px_5px_0_#000]">
+<section class="relative" aria-labelledby="supported-heading">
+  <h2 class="sr-only" id="supported-heading">Works with these supported platforms</h2>
+  <ul id="supported-platforms-grid" class="grid list-none grid-cols-4 gap-[2px] bg-black p-[2px] shadow-[8px_8px_0_#000] sm:grid-cols-8 max-[660px]:shadow-[5px_5px_0_#000]" aria-label="Supported platforms">
+    <li>
+      <div class="flex aspect-square items-center justify-center bg-black p-3 text-center text-white">
+        <span class="font-heading text-[clamp(1rem,2vw,1.3rem)] font-normal leading-[1.05] tracking-[-0.04em]">Works<br />with</span>
+      </div>
+    </li>
     {supportedPlatforms.map((platform, index) => (
-      <li class="border-b-2 border-black last:border-b-0">
-        <a class="method-card group grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-5 bg-white px-[clamp(18px,3vw,30px)] py-5 no-underline transition-colors duration-100 hover:bg-neutral-100 hover:no-underline md:grid-cols-[auto_minmax(170px,0.42fr)_minmax(0,1fr)_auto] md:gap-x-7" href={platform.href}>
-          <PlatformIcon {...platform} class="size-7 shrink-0" idSuffix="list" />
-          <div>
-            <p class="mb-2 font-mono text-[0.7rem] font-extrabold uppercase leading-[1.4] tracking-[0.12em]">{String(index + 1).padStart(2, '0')} / {platform.detail}</p>
-            <h3 class="font-heading text-[1.08rem] font-normal leading-[1.05] tracking-[-0.04em]">{platform.name}</h3>
-          </div>
-          <p class="col-start-2 col-end-4 row-start-2 mt-3 leading-relaxed md:col-start-3 md:col-end-4 md:row-start-1 md:mt-0">{platform.description}</p>
-          <span class="col-start-3 row-start-1 justify-self-end md:col-start-4" aria-hidden="true">
-            <Icon class="size-6 transition-transform duration-100 group-hover:translate-x-1" name="heroicons:arrow-right" />
+      <li class="relative">
+        <a
+          class="method-card group relative flex aspect-square items-center justify-center bg-white p-4 no-underline transition-colors duration-100 hover:z-20 hover:bg-neutral-100 hover:no-underline focus-visible:z-20 focus-visible:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-black"
+          href={platform.href}
+          aria-label={platform.name}
+          aria-describedby={`platform-capabilities-${index}`}
+          title={`${platform.name}: ${platform.capabilities.join(', ')}`}
+        >
+          <PlatformIcon {...platform} class="size-8 shrink-0 sm:size-9" idSuffix="tiles" />
+          <span
+            id={`platform-capabilities-${index}`}
+            role="tooltip"
+            class:list={[
+              'invisible pointer-events-none absolute top-[calc(100%+8px)] left-1/2 z-30 w-[min(230px,calc(100vw-40px))] -translate-x-1/2 border-2 border-black bg-white p-4 text-left text-black opacity-0 shadow-[5px_5px_0_#000] transition-opacity duration-100 group-hover:visible group-hover:opacity-100 group-focus-visible:visible group-focus-visible:opacity-100',
+              (index === 3 || index === 7 || index === 11) && 'max-sm:left-0 max-sm:translate-x-0',
+              (index === 2 || index === 6 || index === 10 || index === 14) && 'max-sm:right-0 max-sm:left-auto max-sm:translate-x-0',
+              index === 7 && 'sm:left-0 sm:translate-x-0',
+              (index === 6 || index === 14) && 'sm:right-0 sm:left-auto sm:translate-x-0',
+            ]}
+          >
+            <strong class="font-heading text-[0.95rem] font-normal leading-none tracking-[-0.035em]">{platform.name}</strong>
+            <ul class="mt-3 ml-4 space-y-1 [list-style-type:square]">
+              {platform.capabilities.map((capability) => <li class="pl-1 text-[0.78rem] leading-[1.4]">{capability}</li>)}
+            </ul>
           </span>
         </a>
       </li>

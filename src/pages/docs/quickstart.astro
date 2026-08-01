@@ -5,7 +5,7 @@ export const prerender = true;
 const title = 'API quickstart — extractor.sh docs';
 const description = 'Make your first extractor.sh GET request and receive public page content as Markdown or JSON.';
 const javascriptExample = `const endpoint = new URL(
-  'https://extractor.mcb-software.workers.dev/api/extract'
+  'https://extractor.sh/api/extract'
 );
 
 endpoint.searchParams.set('url', 'https://example.com/article');
@@ -23,13 +23,13 @@ const result = await response.json();`;
   <p class="text-[1.08rem]">Call <code>GET /api/extract</code> with a public page URL and your preferred output format.</p>
 
   <h2>Markdown</h2>
-  <pre><code>curl --get 'https://extractor.mcb-software.workers.dev/api/extract' \
+  <pre><code>curl --get 'https://extractor.sh/api/extract' \
   --data-urlencode 'url=https://example.com/article' \
   --data-urlencode 'format=markdown'</code></pre>
   <p>A successful request returns a raw <code>text/markdown; charset=utf-8</code> body.</p>
 
   <h2>JSON</h2>
-  <pre><code>curl --get 'https://extractor.mcb-software.workers.dev/api/extract' \
+  <pre><code>curl --get 'https://extractor.sh/api/extract' \
   --data-urlencode 'url=https://example.com/article' \
   --data-urlencode 'format=json'</code></pre>
   <p>JSON is the default, so <code>format=json</code> may be omitted.</p>

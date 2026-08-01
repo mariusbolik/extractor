@@ -14,7 +14,7 @@ interface Props {
 }
 
 const { platform, eyebrow, headline, description, outcome, supported, limitations, capabilities, exampleUrl } = Astro.props;
-const apiExample = `curl --get 'https://extractor.mcb-software.workers.dev/api/extract' \\
+const apiExample = `curl --get 'https://extractor.sh/api/extract' \\
   --data-urlencode 'url=${exampleUrl}' \\
   --data-urlencode 'format=markdown'`;
 ---

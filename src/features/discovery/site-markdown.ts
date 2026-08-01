@@ -322,21 +322,30 @@ Try the public \`GET ${ORIGIN}/api/extract\` endpoint without an account or API 
 `;
 
 for (const alternative of alternativePages) {
-  pages[`/alternatives/${alternative.slug}/`] = `# extractor.sh vs. ${alternative.provider}
+  pages[`/alternatives/${alternative.slug}/`] = `# A focused ${alternative.provider} alternative
 
-> ${alternative.description}
+> Skip the scraping stack when you already have a public URL and need clean Markdown or normalized JSON.
 
-${alternative.providerStrength}
+extractor.sh gives applications and AI agents a direct, cacheable GET endpoint without proxy configuration, browser-session management, crawl jobs, or result polling.
 
-## Choose ${alternative.provider} when
-
-${alternative.chooseProvider.map((item) => `- ${item}`).join('\n')}
-
-## Choose extractor.sh when
+## Where extractor.sh wins
 
 ${alternative.chooseExtractor.map((item) => `- ${item}`).join('\n')}
 
-extractor.sh uses one cacheable \`GET ${ORIGIN}/api/extract\` request and returns clean Markdown or normalized JSON.
+## Where ${alternative.provider} fits
+
+${alternative.providerStrength}
+
+${alternative.chooseProvider.map((item) => `- ${item}`).join('\n')}
+
+## What stays simple
+
+- One GET endpoint
+- Raw Markdown or consistent, typed JSON
+- Platform-aware extraction across supported sources
+- Edge caching; cache hits are not billed
+
+Try the public \`GET ${ORIGIN}/api/extract\` endpoint without an account, API key, SDK, or POST body.
 `;
 }
 

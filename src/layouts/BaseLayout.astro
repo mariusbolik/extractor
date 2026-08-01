@@ -1,6 +1,5 @@
 ---
 import '../styles/global.css';
-import { Icon } from 'astro-icon/components';
 
 interface Props {
   title: string;
@@ -60,9 +59,6 @@ const structuredData = schema ?? {
     <header class="mx-auto flex w-[calc(100%-2rem)] max-w-[1120px] items-center justify-between gap-6 border-b-2 border-black py-6 max-[760px]:flex-col max-[760px]:items-start">
       <a class="font-mono text-[1.15rem] font-extrabold no-underline" href="/" aria-label="extractor.sh home">extractor.sh<span class="animate-[blink_1.1s_steps(1)_infinite]" aria-hidden="true">_</span></a>
       <nav class="flex flex-wrap justify-end gap-4 text-[0.92rem] font-bold max-[760px]:justify-start" aria-label="Primary navigation">
-        <a href="/reddit/">Reddit</a>
-        <a href="/x/">X</a>
-        <a href="/youtube/">YouTube</a>
         <a href="/docs/">Docs</a>
         <a href="/pricing/">Pricing</a>
       </nav>
@@ -71,14 +67,13 @@ const structuredData = schema ?? {
       <slot />
     </main>
     <footer class="mx-auto flex w-[calc(100%-2rem)] max-w-[1120px] justify-between gap-6 border-t-2 border-black py-6 pb-10 font-mono text-[0.8rem] max-[760px]:flex-col max-[760px]:items-start">
-      <span>extractor.sh</span>
+      <span>&copy; extractor.sh</span>
       <nav class="flex flex-wrap gap-4" aria-label="Footer navigation">
         <a href="/alternatives/">Alternatives</a>
         <a href="/blog/">Blog</a>
-        <a href="/docs/">Developer docs</a>
-        <a href="/docs/mcp/">MCP server</a>
+        <a href="/docs/">Developer Docs</a>
+        <a href="/docs/mcp/">MCP Server</a>
         <a href="/pricing/">Pricing</a>
-        <a class="inline-flex items-center gap-1.5 bg-black px-2.5 py-1 text-white no-underline" href="https://dlvr.sh" target="_blank" rel="noopener noreferrer">dlvr.sh <Icon class="size-4 shrink-0" name="heroicons:arrow-top-right-on-square" aria-hidden="true" /></a>
       </nav>
     </footer>
   </body>
