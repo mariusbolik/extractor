@@ -453,6 +453,66 @@ describe('extractUrl', () => {
     expect(renderPageHtmlMock).not.toHaveBeenCalled();
   });
 
+  it('extracts an Amazon search URL as a product feed without launching a browser', async () => {
+    const fetcher = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      expect(input.toString()).toBe('https://www.amazon.de/gp/aw/s?k=mechanical+keyboard');
+      expect(init).toMatchObject({ method: 'GET' });
+      return new Response(`<!doctype html><html><body>
+        <div data-component-type="s-search-result" data-asin="B012345678">
+          <h2><span>Compact mechanical keyboard</span></h2>
+          <span class="a-price"><span class="a-offscreen">€49.99</span></span>
+          <span class="a-icon-alt">4.6 out of 5 stars</span>
+          <div data-cy="reviews-block"><span class="s-underline-text">231</span></div>
+          <img class="s-image" src="https://images.example.com/keyboard.jpg">
+        </div>
+        <div data-component-type="s-search-result" data-asin="B087654321">
+          <h2><span>Full-size mechanical keyboard</span></h2>
+          <span class="a-price"><span class="a-offscreen">€79.00</span></span>
+        </div>
+      </body></html>`, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+    }) as unknown as typeof fetch;
+
+    const result = await extractUrl('https://www.amazon.de/keyboards/s?k=mechanical+keyboard&ref=tracked', {
+      fetcher,
+      browser: { fetch: vi.fn() } as unknown as BrowserRun,
+      allowBrowser: async () => true,
+    });
+
+    expect(result).toMatchObject({
+      url: 'https://www.amazon.de/s?k=mechanical+keyboard',
+      source: 'amazon',
+      kind: 'feed',
+      title: 'Amazon search: mechanical keyboard',
+      method: 'amazon-search-html',
+    });
+    expect(result.items).toHaveLength(2);
+    expect(result.items[0]).toMatchObject({
+      url: 'https://www.amazon.de/dp/B012345678',
+      title: 'Compact mechanical keyboard',
+    });
+    expect(result.content).toContain('Price: €49.99');
+    expect(result.content).toContain('Rating: 4.6 out of 5 stars');
+    expect(result.content).toContain('Review count: 231');
+    expect(result.content).toContain('https://images.example.com/keyboard.jpg');
+    expect(renderPageHtmlMock).not.toHaveBeenCalled();
+  });
+
+  it('reports an Amazon search verification page precisely without launching a browser', async () => {
+    await expect(extractUrl('https://www.amazon.com/s?k=headphones', {
+      fetcher: mockFetch(
+        '<html><body>Sorry, we just need to make sure you are not a robot.</body></html>',
+        'text/html',
+      ),
+      browser: { fetch: vi.fn() } as unknown as BrowserRun,
+      allowBrowser: async () => true,
+    })).rejects.toMatchObject({
+      code: 'source_blocked',
+      status: 502,
+      message: 'Amazon returned a verification page instead of search results.',
+    });
+    expect(renderPageHtmlMock).not.toHaveBeenCalled();
+  });
+
   it('does not expose the internal extraction method publicly', async () => {
     const result = await extractUrl('https://example.com/post', {
       fetcher: mockFetch('# Public page\n\nUseful content that is long enough for native extraction.', 'text/markdown'),

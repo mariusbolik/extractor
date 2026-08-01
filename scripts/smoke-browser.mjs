@@ -171,6 +171,13 @@ try {
     kind: 'document',
     text: /Echo Dot/i,
   });
+  await submitExtraction({
+    url: 'https://www.amazon.de/s?k=mechanical+keyboard&extractor_adapter=browser-1',
+    format: 'json',
+    source: 'amazon',
+    kind: 'feed',
+    text: /Amazon search: mechanical keyboard/i,
+  });
 
   const contentRoutes = [
     '/amazon/', '/bluesky/', '/instagram/', '/mastodon/', '/shopify/', '/soundcloud/', '/spotify/', '/tiktok/', '/vimeo/',

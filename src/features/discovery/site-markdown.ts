@@ -21,7 +21,7 @@ ${apiExample}
 
 ## Supported sources
 
-- [Amazon](${ORIGIN}/amazon/): Public product detail pages from supported country stores.
+- [Amazon](${ORIGIN}/amazon/): Public product detail and search results pages from supported country stores.
 - [Bluesky](${ORIGIN}/bluesky/): Public profile feeds and individual posts.
 - [Instagram](${ORIGIN}/instagram/): Public posts, reels, profiles, and recent profile posts.
 - [Mastodon](${ORIGIN}/mastodon/): Public statuses from compatible federated instances.
@@ -43,13 +43,13 @@ ${apiExample}
 - [Full agent documentation](${ORIGIN}/llms-full.txt)
 - [Pricing](${ORIGIN}/pricing/)
 `,
-  '/amazon/': `# Amazon product extraction with extractor.sh
+  '/amazon/': `# Amazon product and search extraction with extractor.sh
 
-> Turn a public Amazon product detail page into clean Markdown or normalized JSON.
+> Turn a public Amazon product detail or search results page into clean Markdown or normalized JSON.
 
-Submit an ordinary product URL containing an ASIN, such as \`https://www.amazon.de/echo-dot-2022/dp/B09B8X9RGM\`. Search results, carts, accounts, and personalized offers are not specialized sources. Price and availability can vary, and results may be cached for up to one hour.
+Submit an ordinary product URL containing an ASIN, such as \`https://www.amazon.de/echo-dot-2022/dp/B09B8X9RGM\`, or a search URL such as \`https://www.amazon.de/s?k=mechanical+keyboard\`. Searches return up to 20 normalized product items. Categories, pagination, carts, accounts, reviews, and personalized offers are unavailable. Results may be cached for up to one hour.
 
-Call \`GET ${ORIGIN}/api/extract\` with the product page in the \`url\` parameter.
+Call \`GET ${ORIGIN}/api/extract\` with the product or search page in the \`url\` parameter.
 `,
   '/bluesky/': `# Bluesky extraction with extractor.sh
 
@@ -177,7 +177,7 @@ See the [OpenAPI 3.1 document](${ORIGIN}/openapi.json) for the machine-readable 
 Submit normal public browser URLs to \`GET ${ORIGIN}/api/extract\`.
 
 - Web: public HTTP and HTTPS content pages.
-- Amazon: public product detail pages. Submit the ordinary product URL; results may be cached for up to one hour.
+- Amazon: public product detail pages and search results pages. Search feeds contain up to 20 products; results may be cached for up to one hour.
 - Bluesky: public profile feeds and individual public post pages.
 - Instagram: public post, reel, and profile pages. Profile results include recent public posts when available.
 - Mastodon: public status pages on compatible instances.
@@ -197,7 +197,7 @@ Private sources, credentials, stories, transcripts, media downloads, Bluesky rep
 The \`GET ${ORIGIN}/api/extract\` endpoint allows 30 extraction requests per client per 60 seconds and 5 browser-heavy fallbacks per client per 60 seconds.
 
 - Documents may be cached at the edge for up to 30 days.
-- Amazon products may be cached for up to 1 hour.
+- Amazon products and searches may be cached for up to 1 hour.
 - Collections may be cached for up to 1 hour.
 - Errors are not cached.
 - URLs may contain up to 2,048 characters.

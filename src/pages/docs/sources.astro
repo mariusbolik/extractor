@@ -17,9 +17,10 @@ const description = 'Supported public webpage, commerce, social, audio, podcast,
   <p>If a page cannot be read directly, extractor.sh can use a structured post, embed, or feed URL that the publisher advertises in that page. You still submit the normal HTML page URL.</p>
 
   <h2>Amazon</h2>
-  <p>Public product detail pages from supported Amazon country stores return one product document with the useful details available on the page.</p>
-  <pre><code>https://www.amazon.de/product-name/dp/B09B8X9RGM</code></pre>
-  <p>Submit the ordinary product URL. Search results, category pages, carts, accounts, reviews, and personalized offers use regular webpage extraction or may be unavailable. Price and availability can vary and Amazon product results may be cached for up to one hour.</p>
+  <p>Public product detail pages return one product document. Public search results pages return a feed containing up to 20 products.</p>
+  <pre><code>https://www.amazon.de/product-name/dp/B09B8X9RGM
+https://www.amazon.de/s?k=mechanical+keyboard</code></pre>
+  <p>Submit the ordinary product or search URL. Search feeds include titles, canonical product URLs, prices, ratings, review counts, and images when present. Category browsing, pagination, carts, accounts, reviews, and personalized offers are unavailable. Results may be cached for up to one hour.</p>
 
   <h2>Bluesky</h2>
   <p>Public Bluesky profile pages return recent public posts as a feed. Individual post pages return one normalized document.</p>

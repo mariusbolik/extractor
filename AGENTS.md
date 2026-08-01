@@ -14,8 +14,8 @@
 
 - Use only public GET requests for extraction.
 - Preserve the generic fallback order: native `text/markdown`, LinkeDOM/readability, then Browser Run.
-- Route recognized Amazon products, Bluesky profiles/posts, Instagram posts/profiles, Reddit, Shopify, SoundCloud, Spotify, TikTok posts/profiles, Vimeo, X, and YouTube URLs through their dedicated adapters first.
-- For an exact Amazon product URL, extract the ASIN and fetch Amazon's compact product page. Do not send recognized Amazon products to Browser Run.
+- Route recognized Amazon products/searches, Bluesky profiles/posts, Instagram posts/profiles, Reddit, Shopify, SoundCloud, Spotify, TikTok posts/profiles, Vimeo, X, and YouTube URLs through their dedicated adapters first.
+- For an exact Amazon product URL, extract the ASIN and fetch Amazon's compact product page. For an Amazon search URL containing `k`, fetch its compact search representation and return up to 20 product items. Do not send recognized Amazon products or searches to Browser Run.
 - Use Bluesky's public profile RSS for exact profile pages and its public AppView for exact post pages. Post requests must use zero reply and parent depth.
 - Prefer X's public oEmbed response before the existing server-side fallback.
 - For recognized TikTok pages, prefer public page data and fall back to TikTok's public oEmbed response. Resolve supported short links, but do not launch Browser Run for TikTok.

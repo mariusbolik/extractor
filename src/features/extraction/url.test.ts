@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ExtractionError } from './errors';
-import { amazonProductAsin, isBlueskyProfileUrl, isInstagramUrl, isPossibleMastodonStatusUrl, isRedditUrl, isSoundCloudUrl, isSpotifyUrl, isTikTokUrl, isVimeoUrl, isXUrl, isYouTubeUrl, validateTargetUrl } from './url';
+import { amazonProductAsin, amazonSearchQuery, isBlueskyProfileUrl, isInstagramUrl, isPossibleMastodonStatusUrl, isRedditUrl, isSoundCloudUrl, isSpotifyUrl, isTikTokUrl, isVimeoUrl, isXUrl, isYouTubeUrl, validateTargetUrl } from './url';
 
 describe('validateTargetUrl', () => {
   it('accepts and normalizes public HTTP URLs', () => {
@@ -91,5 +91,21 @@ describe('source URL detection', () => {
     'https://example.com/dp/B012345678',
   ])('does not treat %s as an exact Amazon product', (target) => {
     expect(amazonProductAsin(new URL(target))).toBeNull();
+  });
+
+  it.each([
+    ['https://www.amazon.de/s?k=mechanical+keyboard', 'mechanical keyboard'],
+    ['https://www.amazon.com/headphones/s?k=noise+cancelling', 'noise cancelling'],
+    ['https://www.amazon.co.uk/-/en/s?k=coffee%20grinder', 'coffee grinder'],
+  ])('finds the query in an Amazon search URL %s', (target, query) => {
+    expect(amazonSearchQuery(new URL(target))).toBe(query);
+  });
+
+  it.each([
+    'https://www.amazon.de/s',
+    'https://www.amazon.de/dp/B012345678',
+    'https://amazon.com.example.org/s?k=headphones',
+  ])('does not treat %s as an Amazon search', (target) => {
+    expect(amazonSearchQuery(new URL(target))).toBeNull();
   });
 });

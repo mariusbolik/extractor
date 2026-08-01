@@ -18,7 +18,7 @@ The public preview requires no account or API key. Call `GET /api/extract` with 
 ## Supported sources
 
 - [Web extraction](https://extractor.mcb-software.workers.dev/): Homepage and interactive extractor.
-- [Amazon extraction](https://extractor.mcb-software.workers.dev/amazon/): Public product detail pages from supported country stores.
+- [Amazon extraction](https://extractor.mcb-software.workers.dev/amazon/): Public product detail and search results pages from supported country stores.
 - [Bluesky extraction](https://extractor.mcb-software.workers.dev/bluesky/): Public profile feeds and individual public posts, without replies or parent threads.
 - [Instagram extraction](https://extractor.mcb-software.workers.dev/instagram/): Public posts, reels, profiles, and recent profile posts.
 - [Mastodon extraction](https://extractor.mcb-software.workers.dev/mastodon/): Public statuses from compatible federated instances.

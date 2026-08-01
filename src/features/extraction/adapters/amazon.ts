@@ -2,12 +2,12 @@ import { parseHTML } from 'linkedom';
 import { ExtractionError } from '../errors';
 import { fetchPublicPage } from '../fetch';
 import { escapeMarkdown } from '../markdown';
-import type { ExtractionDependencies, ExtractionResult } from '../types';
-import { amazonProductAsin } from '../url';
+import type { ExtractedItem, ExtractionDependencies, ExtractionResult } from '../types';
+import { amazonProductAsin, amazonSearchQuery } from '../url';
 
 const AMAZON_VERIFICATION_PATTERNS = [
   /enter the characters you see below/i,
-  /sorry, we just need to make sure you're not a robot/i,
+  /sorry, we just need to make sure (?:you're|you are) not a robot/i,
   /to discuss automated access to amazon data/i,
 ];
 
@@ -15,12 +15,26 @@ function normalizedText(value: string | null | undefined): string {
   return (value || '').replace(/\s+/g, ' ').trim();
 }
 
-function firstText(document: Document, selectors: string[]): string | null {
+interface QueryRoot {
+  querySelector(selector: string): { textContent: string | null } | null;
+}
+
+function firstText(document: QueryRoot, selectors: string[]): string | null {
   for (const selector of selectors) {
     const value = normalizedText(document.querySelector(selector)?.textContent);
     if (value) return value;
   }
   return null;
+}
+
+function publicImageUrl(value: string | null | undefined): string | null {
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'http:' || url.protocol === 'https:' ? url.toString() : null;
+  } catch {
+    return null;
+  }
 }
 
 function productBrand(document: Document): string | null {
@@ -56,15 +70,55 @@ function productImage(document: Document): string | null {
   }
 
   for (const candidate of candidates) {
-    if (!candidate) continue;
-    try {
-      const url = new URL(candidate);
-      if (url.protocol === 'http:' || url.protocol === 'https:') return url.toString();
-    } catch {
-      // Ignore non-URL image placeholders.
-    }
+    const url = publicImageUrl(candidate);
+    if (url) return url;
   }
   return null;
+}
+
+function amazonVerificationPage(document: Document): boolean {
+  const pageText = normalizedText(document.body?.textContent).slice(0, 30_000);
+  return AMAZON_VERIFICATION_PATTERNS.some((pattern) => pattern.test(pageText));
+}
+
+function amazonSearchItems(document: ParentNode, origin: string): ExtractedItem[] {
+  const seen = new Set<string>();
+  const items: ExtractedItem[] = [];
+
+  for (const element of document.querySelectorAll('[data-component-type="s-search-result"][data-asin]')) {
+    const asin = normalizedText(element.getAttribute('data-asin')).toUpperCase();
+    if (!/^[A-Z0-9]{10}$/.test(asin) || seen.has(asin)) continue;
+
+    const title = firstText(element, ['h2', '[data-cy="title-recipe"]']);
+    if (!title) continue;
+
+    const price = firstText(element, ['.a-price .a-offscreen']);
+    const rating = firstText(element, ['.a-icon-alt', '[aria-label*="stars"]']);
+    const reviewCount = firstText(element, [
+      '[data-cy="reviews-block"] .s-underline-text',
+      '.s-link-style .s-underline-text',
+    ]);
+    const image = publicImageUrl(element.querySelector('img.s-image')?.getAttribute('src'));
+    const productUrl = new URL(`/dp/${asin}`, origin).toString();
+    const details = [
+      price ? `Price: ${escapeMarkdown(price)}` : '',
+      rating ? `Rating: ${escapeMarkdown(rating)}` : '',
+      reviewCount ? `Review count: ${escapeMarkdown(reviewCount)}` : '',
+      image ? `![${escapeMarkdown(title)}](${image})` : '',
+    ].filter(Boolean).join('\n\n');
+
+    seen.add(asin);
+    items.push({
+      url: productUrl,
+      title,
+      author: null,
+      publishedAt: null,
+      content: details,
+    });
+    if (items.length === 20) break;
+  }
+
+  return items;
 }
 
 function cleanAvailability(document: Document): string | null {
@@ -95,9 +149,8 @@ export async function extractAmazonProduct(
     'text/html, application/xhtml+xml;q=0.9',
   );
   const { document } = parseHTML(response.body);
-  const pageText = normalizedText(document.body?.textContent).slice(0, 30_000);
 
-  if (AMAZON_VERIFICATION_PATTERNS.some((pattern) => pattern.test(pageText))) {
+  if (amazonVerificationPage(document)) {
     throw new ExtractionError(
       'source_blocked',
       'Amazon returned a verification page instead of the requested product.',
@@ -165,5 +218,67 @@ export async function extractAmazonProduct(
     content,
     items: [],
     method: 'amazon-html',
+  };
+}
+
+export async function extractAmazonSearch(
+  url: URL,
+  dependencies: ExtractionDependencies,
+): Promise<ExtractionResult> {
+  const query = amazonSearchQuery(url);
+  if (!query) {
+    throw new ExtractionError('invalid_url', 'Enter an Amazon search results URL containing a search query.', 400);
+  }
+
+  // The compact Amazon-owned search route provides the same public result
+  // cards with less storefront navigation. Search stays server-rendered and
+  // never escalates to Browser Rendering when Amazon declines automated access.
+  const endpoint = new URL('/gp/aw/s', url.origin);
+  endpoint.searchParams.set('k', query);
+  const response = await fetchPublicPage(
+    endpoint,
+    dependencies.fetcher ?? fetch,
+    'text/html, application/xhtml+xml;q=0.9',
+  );
+  const { document } = parseHTML(response.body);
+
+  if (amazonVerificationPage(document)) {
+    throw new ExtractionError(
+      'source_blocked',
+      'Amazon returned a verification page instead of search results.',
+      502,
+    );
+  }
+
+  const items = amazonSearchItems(document, url.origin);
+  if (!items.length) {
+    throw new ExtractionError(
+      'extraction_failed',
+      'Amazon returned the search page, but no usable product results were found.',
+      422,
+    );
+  }
+
+  const canonicalUrl = new URL('/s', url.origin);
+  canonicalUrl.searchParams.set('k', query);
+  const title = `Amazon search: ${query}`;
+  const content = [
+    `# ${escapeMarkdown(title)}`,
+    ...items.map((item, index) => [
+      `## ${index + 1}. [${escapeMarkdown(item.title || 'Amazon product')}](${item.url})`,
+      item.content,
+    ].filter(Boolean).join('\n\n')),
+  ].join('\n\n');
+
+  return {
+    url: canonicalUrl.toString(),
+    source: 'amazon',
+    kind: 'feed',
+    title,
+    author: null,
+    publishedAt: null,
+    content,
+    items,
+    method: 'amazon-search-html',
   };
 }

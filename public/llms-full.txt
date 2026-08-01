@@ -60,9 +60,11 @@ Public HTTP and HTTPS articles, documentation, blogs, and other content pages. I
 
 ### Amazon
 
-Public product detail pages from supported Amazon country stores return one normalized product document. Submit the ordinary product URL. Search results, categories, carts, accounts, reviews, and personalized offers are not specialized sources. Price and availability can vary, and Amazon product results may be cached for up to one hour.
+Public product detail pages from supported Amazon country stores return one normalized product document. Public search results URLs containing a `k` query return up to 20 normalized product items. Submit the ordinary product or search URL. Categories, pagination, carts, accounts, reviews, and personalized offers are not supported. Results may be cached for up to one hour.
 
 Example: `https://www.amazon.de/product-name/dp/B09B8X9RGM`
+
+Search example: `https://www.amazon.de/s?k=mechanical+keyboard`
 
 ### Bluesky
 
@@ -135,7 +137,7 @@ Example: `https://www.youtube.com/@Cloudflare`
 - General limit: 30 extraction requests per client per 60 seconds.
 - Browser-rendering fallback: 5 requests per client per 60 seconds.
 - Feed results may be cached for 1 hour.
-- Amazon product results may be cached for 1 hour.
+- Amazon product and search results may be cached for 1 hour.
 - Document results may be cached for 30 days.
 - Maximum extracted result size: 2 MB.
 

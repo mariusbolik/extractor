@@ -1,4 +1,4 @@
-import { extractAmazonProduct } from './adapters/amazon';
+import { extractAmazonProduct, extractAmazonSearch } from './adapters/amazon';
 import { extractBlueskyPost, extractBlueskyProfile } from './adapters/bluesky';
 import { extractInstagram } from './adapters/instagram';
 import { extractMastodon } from './adapters/mastodon';
@@ -12,7 +12,7 @@ import { extractTweet } from './adapters/x';
 import { extractYouTube } from './adapters/youtube';
 import { ExtractionError } from './errors';
 import type { ExtractionDependencies, ExtractionResult } from './types';
-import { amazonProductAsin, isBlueskyPostUrl, isBlueskyProfileUrl, isInstagramUrl, isPossibleMastodonStatusUrl, isRedditUrl, isSoundCloudUrl, isSpotifyUrl, isTikTokUrl, isVimeoUrl, isXUrl, isYouTubeUrl, validateTargetUrl } from './url';
+import { amazonProductAsin, amazonSearchQuery, isBlueskyPostUrl, isBlueskyProfileUrl, isInstagramUrl, isPossibleMastodonStatusUrl, isRedditUrl, isSoundCloudUrl, isSpotifyUrl, isTikTokUrl, isVimeoUrl, isXUrl, isYouTubeUrl, validateTargetUrl } from './url';
 
 const MAX_OUTPUT_BYTES = 2 * 1024 * 1024;
 
@@ -24,6 +24,7 @@ export async function extractUrl(
   let result: ExtractionResult;
 
   if (amazonProductAsin(url)) result = await extractAmazonProduct(url, dependencies);
+  else if (amazonSearchQuery(url)) result = await extractAmazonSearch(url, dependencies);
   else if (isBlueskyPostUrl(url)) result = await extractBlueskyPost(url, dependencies);
   else if (isBlueskyProfileUrl(url)) result = await extractBlueskyProfile(url, dependencies);
   else if (isInstagramUrl(url)) result = await extractInstagram(url, dependencies);

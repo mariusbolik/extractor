@@ -7,7 +7,7 @@ const DISCOVERY_LINKS = [
   '</.well-known/api-catalog>; rel="api-catalog"; type="application/linkset+json"',
   '</openapi.json>; rel="service-desc"; type="application/vnd.oai.openapi+json"',
 ].join(', ');
-const API_CACHE_VERSION = '2026-08-oembed-1';
+const API_CACHE_VERSION = '2026-08-amazon-search-1';
 
 function acceptsMarkdown(header: string | null): boolean {
   if (!header) return false;

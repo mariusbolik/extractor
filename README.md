@@ -5,7 +5,7 @@ A public, cache-first GET API and small web interface that turns public URLs int
 ## Supported sources
 
 - Generic public webpages and articles.
-- Public Amazon product detail pages from supported country stores.
+- Public Amazon product detail pages and search results from supported country stores.
 - Public Bluesky profile feeds and individual posts.
 - Public Instagram posts, reels, profiles, and recent profile posts.
 - Public Mastodon statuses from compatible instances.
@@ -91,7 +91,7 @@ The Worker name is `extractor`, producing `https://extractor.mcb-software.worker
 ## Cache and limits
 
 - Feeds: 1 hour at Cloudflare’s edge.
-- Amazon products: 1 hour at Cloudflare’s edge.
+- Amazon products and searches: 1 hour at Cloudflare’s edge.
 - Documents, posts, tweets, and videos: 30 days at the edge.
 - Cache misses: 30 extractions per IP per minute.
 - Rendered-page fallback: 5 launches per IP per minute.

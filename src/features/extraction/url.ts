@@ -161,6 +161,17 @@ export function amazonProductAsin(url: URL): string | null {
   return match?.[1]?.toUpperCase() || null;
 }
 
+export function amazonSearchQuery(url: URL): string | null {
+  const hostname = url.hostname.toLowerCase().replace(/^www\./, '');
+  if (!AMAZON_RETAIL_HOSTS.has(hostname) || !/(?:^|\/)s\/?$/i.test(url.pathname)) return null;
+
+  // Amazon search pages use the `k` parameter for the human-entered query.
+  // Ignore tracking and presentation parameters so equivalent searches share
+  // one stable canonical result and cache key.
+  const query = url.searchParams.get('k')?.replace(/\s+/g, ' ').trim() ?? '';
+  return query && query.length <= 200 ? query : null;
+}
+
 export function isBlueskyProfileUrl(url: URL): boolean {
   const hostname = url.hostname.toLowerCase();
   return (hostname === 'bsky.app' || hostname === 'www.bsky.app')

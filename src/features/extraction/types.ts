@@ -5,6 +5,7 @@ export type ExtractionMethod =
   | 'linkedom'
   | 'browser'
   | 'amazon-html'
+  | 'amazon-search-html'
   | 'bluesky-api'
   | 'bluesky-rss'
   | 'discovered-feed'

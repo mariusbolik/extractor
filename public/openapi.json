@@ -28,7 +28,7 @@
             "name": "url",
             "in": "query",
             "required": true,
-            "description": "Absolute public HTTP or HTTPS URL to extract.",
+            "description": "Absolute public HTTP or HTTPS URL to extract, including supported Amazon product and search URLs.",
             "schema": {
               "type": "string",
               "format": "uri",
