@@ -116,7 +116,13 @@ try {
     const borderRadius = await radio.evaluate((element) => getComputedStyle(element).borderRadius);
     assert.equal(borderRadius, '0px', 'A format radio is not square');
   }
+  const supportedSection = page.locator('[aria-labelledby="supported-heading"]');
+  assert.equal(await supportedSection.locator(':scope > ul').count(), 1, 'Supported platforms are not contained in one list card');
+  assert.equal(await supportedSection.locator(':scope > ul > li').count(), 15, 'Supported platform list does not contain every platform');
   assert.equal(await page.locator('.method-card').count(), 15);
+  const platformRows = supportedSection.locator(':scope > ul > li');
+  const platformDividers = await platformRows.evaluateAll((rows) => rows.map((row) => getComputedStyle(row).borderBottomWidth));
+  assert.deepEqual(platformDividers, [...Array(14).fill('2px'), '0px'], 'Supported platform list dividers are incorrect');
   assert.equal(await page.locator('footer a[href="/alternatives/"]').count(), 1, 'Alternatives footer link is missing');
   assert.equal(await page.locator('footer a[href="/blog/"]').count(), 1, 'Blog footer link is missing');
   const footerLinks = page.locator('footer nav a');

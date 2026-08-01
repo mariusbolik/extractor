@@ -7,20 +7,21 @@ import PlatformIcon from './PlatformIcon.astro';
 <section aria-labelledby="supported-heading">
   <p class="mb-4 font-mono text-[0.8rem] font-extrabold uppercase tracking-[0.14em]">Supported sources</p>
   <h2 class="font-heading text-[clamp(1.55rem,3vw,2.4rem)] font-normal leading-[1.02] tracking-[-0.045em]" id="supported-heading">Supported platforms, handled properly.</h2>
-  <p class="mt-3 mb-0 text-[0.82rem] font-bold uppercase tracking-[0.1em] md:hidden">Swipe to explore →</p>
-  <div class="mt-6 grid snap-x snap-mandatory grid-flow-col auto-cols-[minmax(270px,82vw)] gap-[18px] overflow-x-auto overscroll-x-contain pb-3 lg:grid-flow-row lg:grid-cols-3 lg:overflow-visible lg:pb-0">
+  <ul class="mt-6 list-none border-2 border-black bg-white p-0 shadow-[8px_8px_0_#000] max-[660px]:shadow-[5px_5px_0_#000]">
     {supportedPlatforms.map((platform, index) => (
-      <a class="method-card group flex min-h-[240px] snap-start flex-col border-2 border-black bg-white p-6 no-underline transition duration-100 hover:-translate-x-[3px] hover:-translate-y-[3px] hover:shadow-[6px_6px_0_#000] hover:no-underline" href={platform.href}>
-        <div class="flex items-start justify-between gap-6">
-          <PlatformIcon {...platform} class="size-7 shrink-0" idSuffix="cards" />
-          <p class="mb-0 text-right font-mono text-[0.74rem] font-extrabold uppercase leading-[1.45] tracking-[0.12em]">{String(index + 1).padStart(2, '0')} / {platform.detail}</p>
-        </div>
-        <h3 class="mt-8 mb-4 font-heading text-[1.15rem] font-normal leading-[1.02] tracking-[-0.045em]">{platform.name}</h3>
-        <p class="leading-relaxed">{platform.description}</p>
-        <span class="mt-5 block" aria-hidden="true">
-          <Icon class="size-6 transition-transform duration-100 group-hover:translate-x-1" name="heroicons:arrow-right" />
-        </span>
-      </a>
+      <li class="border-b-2 border-black last:border-b-0">
+        <a class="method-card group grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-5 bg-white px-[clamp(18px,3vw,30px)] py-5 no-underline transition-colors duration-100 hover:bg-neutral-100 hover:no-underline md:grid-cols-[auto_minmax(170px,0.42fr)_minmax(0,1fr)_auto] md:gap-x-7" href={platform.href}>
+          <PlatformIcon {...platform} class="size-7 shrink-0" idSuffix="list" />
+          <div>
+            <p class="mb-2 font-mono text-[0.7rem] font-extrabold uppercase leading-[1.4] tracking-[0.12em]">{String(index + 1).padStart(2, '0')} / {platform.detail}</p>
+            <h3 class="font-heading text-[1.08rem] font-normal leading-[1.05] tracking-[-0.04em]">{platform.name}</h3>
+          </div>
+          <p class="col-start-2 col-end-4 row-start-2 mt-3 leading-relaxed md:col-start-3 md:col-end-4 md:row-start-1 md:mt-0">{platform.description}</p>
+          <span class="col-start-3 row-start-1 justify-self-end md:col-start-4" aria-hidden="true">
+            <Icon class="size-6 transition-transform duration-100 group-hover:translate-x-1" name="heroicons:arrow-right" />
+          </span>
+        </a>
+      </li>
     ))}
-  </div>
+  </ul>
 </section>
