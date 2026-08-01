@@ -157,13 +157,17 @@ try {
   });
   const worksWithRadius = worksWithStyle.borderRadius;
   assert.notEqual(worksWithRadius, '0px', 'Works with icons are not circular');
-  assert.match(worksWithStyle.backgroundColor, /^(?:rgb\(245, 245, 245\)|oklch\(0\.97 0 none\))$/, 'Works with circles do not have a light-gray background');
+  assert.match(worksWithStyle.backgroundColor, /^(?:rgb\(229, 229, 229\)|oklch\(0\.922 0 none\))$/, 'Works with circles do not have the expected light-gray background');
   assert.match(worksWithStyle.borderColor, /^(?:rgb\(255, 255, 255\)|oklch\(1 0 none\))$/, 'Works with circles do not have white borders');
   const [firstWorksWithBox, secondWorksWithBox] = await Promise.all([
     firstWorksWithLink.boundingBox(),
     worksWithLinks.nth(1).boundingBox(),
   ]);
   assert.ok(firstWorksWithBox && secondWorksWithBox && secondWorksWithBox.x < firstWorksWithBox.x + firstWorksWithBox.width, 'Works with icon circles do not overlap');
+  const worksWithOverlap = firstWorksWithBox && secondWorksWithBox
+    ? firstWorksWithBox.x + firstWorksWithBox.width - secondWorksWithBox.x
+    : Number.POSITIVE_INFINITY;
+  assert.ok(worksWithOverlap <= 6, `Works with icon circles overlap too much: ${worksWithOverlap}px`);
   await assertNoHorizontalOverflow('desktop homepage');
 
   const serverCardResponse = await page.request.get(`${origin}/.well-known/mcp/server-card.json`);

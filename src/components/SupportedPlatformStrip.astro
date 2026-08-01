@@ -5,10 +5,10 @@ import PlatformIcon from './PlatformIcon.astro';
 
 <div id="works-with" class="mt-8 flex flex-wrap items-center gap-x-5 gap-y-4 border-t-2 border-black pt-5">
   <p class="m-0 shrink-0 font-mono text-[0.76rem] font-extrabold uppercase tracking-[0.12em]">Works with:</p>
-  <div class="flex items-center -space-x-2" aria-label="Supported platforms">
+  <div class="flex flex-wrap items-center -space-x-1 gap-y-1" aria-label="Supported platforms">
     {supportedPlatforms.map((platform) => (
-      <a class="relative inline-flex size-7 shrink-0 items-center justify-center rounded-full border-2 border-white bg-neutral-100 text-black transition-transform duration-100 hover:z-10 hover:-translate-y-1 focus-visible:z-10 focus-visible:-translate-y-1" href={platform.href} aria-label={platform.name} title={platform.name}>
-        <PlatformIcon {...platform} class="size-4 shrink-0" idSuffix="works" />
+      <a class="relative inline-flex size-8 shrink-0 items-center justify-center rounded-full border-2 border-white bg-neutral-200 text-black transition-transform duration-100 hover:z-10 hover:-translate-y-1 focus-visible:z-10 focus-visible:-translate-y-1" href={platform.href} aria-label={platform.name} title={platform.name}>
+        <PlatformIcon {...platform} class="size-5 shrink-0" idSuffix="works" />
       </a>
     ))}
   </div>
