@@ -61,6 +61,59 @@ describe('app marketplace adapters', () => {
     expect(allowBrowser).not.toHaveBeenCalled();
   });
 
+  it('falls back to Apple search when lookup is blocked for a localized App Store URL', async () => {
+    const fetcher = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      expect(new Headers(init?.headers).get('user-agent')).toContain('Safari/605.1.15');
+
+      if (input.toString() === 'https://itunes.apple.com/lookup?id=1600917142&country=at&entity=software') {
+        return new Response('Forbidden', { status: 403, statusText: 'Forbidden' });
+      }
+
+      expect(input.toString()).toBe('https://itunes.apple.com/search?term=btc+echo+bitcoin+krypto+news&entity=software&country=at&limit=25');
+      return new Response(JSON.stringify({
+        resultCount: 1,
+        results: [{
+          trackId: 1600917142,
+          trackName: 'BTC-ECHO Bitcoin & Krypto News',
+          trackViewUrl: 'https://apps.apple.com/at/app/btc-echo-bitcoin-krypto-news/id1600917142?uo=4',
+          artistName: 'BTC-ECHO GmbH',
+          bundleId: 'de.btcecho.app',
+          description: 'Bitcoin and crypto news.',
+          artworkUrl512: 'https://is1-ssl.mzstatic.com/image/icon.png',
+          price: 0,
+          formattedPrice: 'Gratis',
+          currency: 'EUR',
+          version: '3.0.0',
+          primaryGenreName: 'News',
+        }],
+      }), { headers: { 'Content-Type': 'application/json' } });
+    }) as unknown as typeof fetch;
+    const allowBrowser = vi.fn(async () => true);
+
+    const result = await extractUrl(
+      'https://apps.apple.com/at/app/btc-echo-bitcoin-krypto-news/id1600917142',
+      { fetcher, allowBrowser },
+    );
+
+    expect(result).toMatchObject({
+      source: 'app-store',
+      type: 'product',
+      id: '1600917142',
+      title: 'BTC-ECHO Bitcoin & Krypto News',
+      author: 'BTC-ECHO GmbH',
+      method: 'app-store-lookup',
+      attributes: {
+        productType: 'software',
+        price: 0,
+        currency: 'EUR',
+        priceDisplay: 'Gratis',
+      },
+    });
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    expect(ExtractionResponseSchema.safeParse(toPublicExtractionResult(result)).success).toBe(true);
+    expect(allowBrowser).not.toHaveBeenCalled();
+  });
+
   it('extracts a Google Play app from public structured metadata', async () => {
     const fetcher = vi.fn(async (input: RequestInfo | URL) => {
       expect(input.toString()).toBe('https://play.google.com/store/apps/details?id=com.openai.chatgpt&hl=en&gl=US');

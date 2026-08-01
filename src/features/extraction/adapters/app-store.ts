@@ -30,6 +30,14 @@ interface AppStoreLookupResult {
   releaseDate?: string;
 }
 
+const APPLE_API_HEADERS = {
+  'Accept-Encoding': 'gzip, deflate, br',
+  'Accept-Language': 'en-US,en;q=0.9',
+  // Apple intermittently rejects Cloudflare Worker requests that identify as a
+  // bot. This is the same browser-compatible API identity used by ClickYourApp.
+  'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.3 Safari/605.1.15',
+};
+
 function publicUrl(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   try {
@@ -63,6 +71,52 @@ function appStoreCountry(url: URL): string {
   return segment && /^[a-z]{2}$/.test(segment) ? segment : 'us';
 }
 
+function appStoreSearchTerms(url: URL): string[] {
+  const segments = url.pathname.split('/').filter(Boolean);
+  const idIndex = segments.findIndex((segment) => /^id\d{5,20}$/i.test(segment));
+  if (idIndex < 1) return [];
+
+  let slug = segments[idIndex - 1];
+  try {
+    slug = decodeURIComponent(slug);
+  } catch {
+    // Keep the encoded slug; normalization below will still make it safe.
+  }
+
+  const fullTerm = slug
+    .replace(/[-_.+]+/g, ' ')
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 120);
+  if (!fullTerm) return [];
+
+  // A shorter title-shaped query helps when Apple's search ranking treats a
+  // long SEO slug as too specific. Results still must match the numeric ID.
+  const shortTerm = fullTerm.split(' ').slice(0, 3).join(' ');
+  return [...new Set([fullTerm, shortTerm].filter((term) => term.length > 0))];
+}
+
+async function fetchAppleResults(
+  endpoint: URL,
+  dependencies: ExtractionDependencies,
+): Promise<AppStoreLookupResult[]> {
+  const response = await fetchPublicPage(
+    endpoint,
+    dependencies.fetcher ?? fetch,
+    'application/json',
+    APPLE_API_HEADERS,
+  );
+
+  try {
+    const payload = JSON.parse(response.body) as { results?: AppStoreLookupResult[] };
+    if (!Array.isArray(payload.results)) throw new Error('Missing results');
+    return payload.results;
+  } catch {
+    throw new ExtractionError('extraction_failed', 'Apple returned an invalid app API response.', 502);
+  }
+}
+
 function canonicalAppUrl(value: unknown, fallback: URL): string {
   const publicValue = publicUrl(value);
   const canonical = new URL(publicValue ?? fallback.toString());
@@ -84,22 +138,43 @@ export async function extractAppStoreApp(
   endpoint.searchParams.set('id', trackId);
   endpoint.searchParams.set('country', appStoreCountry(url));
   endpoint.searchParams.set('entity', 'software');
-  const response = await fetchPublicPage(
-    endpoint,
-    dependencies.fetcher ?? fetch,
-    'application/json',
-  );
-
   let result: AppStoreLookupResult | undefined;
+  let lookupError: unknown;
+  let receivedAppleResponse = false;
   try {
-    const payload = JSON.parse(response.body) as { results?: AppStoreLookupResult[] };
-    result = payload.results?.find((item) => String(item.trackId) === trackId);
-  } catch {
-    throw new ExtractionError('extraction_failed', 'Apple returned an invalid app lookup response.', 502);
+    const results = await fetchAppleResults(endpoint, dependencies);
+    receivedAppleResponse = true;
+    result = results.find((item) => String(item.trackId) === trackId);
+  } catch (error) {
+    lookupError = error;
+  }
+
+  // Apple sometimes returns 403 to Lookup API calls from Cloudflare Workers.
+  // Its public Search API remains available, so use the human-readable app slug
+  // and accept only an exact numeric ID match. Users always submit the normal
+  // apps.apple.com page; this fallback stays entirely internal.
+  if (!result) {
+    for (const term of appStoreSearchTerms(url)) {
+      const searchEndpoint = new URL('https://itunes.apple.com/search');
+      searchEndpoint.searchParams.set('term', term);
+      searchEndpoint.searchParams.set('entity', 'software');
+      searchEndpoint.searchParams.set('country', appStoreCountry(url));
+      searchEndpoint.searchParams.set('limit', '25');
+
+      try {
+        const results = await fetchAppleResults(searchEndpoint, dependencies);
+        receivedAppleResponse = true;
+        result = results.find((item) => String(item.trackId) === trackId);
+        if (result) break;
+      } catch (error) {
+        lookupError = error;
+      }
+    }
   }
 
   const title = result?.trackName?.trim();
   if (!result || !title) {
+    if (!receivedAppleResponse && lookupError instanceof ExtractionError) throw lookupError;
     throw new ExtractionError('not_found', 'Apple did not return an app for this App Store URL.', 404);
   }
 
