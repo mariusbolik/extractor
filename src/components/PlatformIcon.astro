@@ -1,0 +1,16 @@
+---
+import { Icon } from 'astro-icon/components';
+import type { SupportedPlatform } from '../features/marketing/platforms';
+import PlatformBrandIcon from './PlatformBrandIcon.astro';
+
+interface Props extends Pick<SupportedPlatform, 'name' | 'icon' | 'brandIcon'> {
+  class?: string;
+  idSuffix?: string;
+}
+
+const { name, icon, brandIcon, class: className, idSuffix } = Astro.props;
+---
+
+{brandIcon
+  ? <PlatformBrandIcon brand={brandIcon} class={className} idSuffix={idSuffix} />
+  : icon && <Icon class:list={[className, name === 'X' && 'text-black']} name={icon} aria-hidden="true" />}

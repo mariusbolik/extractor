@@ -102,7 +102,12 @@ async function submitExtraction({ url, format, source, type, text }) {
 }
 
 try {
-  const home = await page.goto(`${origin}/`, { waitUntil: 'networkidle' });
+  // Static asset caches can briefly retain the previous homepage immediately
+  // after a Worker deployment. A unique query verifies the newly deployed
+  // production asset instead of accidentally testing the preceding version.
+  const homeUrl = new URL('/', origin);
+  homeUrl.searchParams.set('smoke', Date.now().toString());
+  const home = await page.goto(homeUrl.toString(), { waitUntil: 'networkidle' });
   assert.equal(home?.status(), 200);
   await page.locator('#extract-form').waitFor();
   assert.equal(await page.locator('input[name="format"][value="json"]').isChecked(), true, 'JSON is not the default website output');
@@ -123,11 +128,17 @@ try {
     assert.ok(arrowBox && arrowBox.width >= 20 && arrowBox.height >= 20, 'A source card arrow is not visible');
   }
   const amazonIcon = page.locator('.method-card[href="/amazon/"] svg').first();
-  assert.equal(await amazonIcon.getAttribute('data-icon'), 'simple-icons:amazon', 'Amazon card does not use its SVG brand logo');
-  assert.equal(await amazonIcon.evaluate((element) => getComputedStyle(element).color), 'rgb(255, 153, 0)', 'Amazon logo does not use its brand color');
+  assert.equal(await amazonIcon.getAttribute('data-brand-icon'), 'amazon', 'Amazon card does not use its inline SVG brand logo');
+  assert.deepEqual(await amazonIcon.locator('path').evaluateAll((paths) => paths.map((path) => path.getAttribute('fill'))), ['#f90', '#000'], 'Amazon logo does not use its black and orange artwork');
   const instagramIcon = page.locator('.method-card[href="/instagram/"] svg').first();
-  assert.equal(await instagramIcon.getAttribute('data-icon'), 'simple-icons:instagram', 'Instagram card does not use its SVG brand logo');
-  assert.equal(await instagramIcon.evaluate((element) => getComputedStyle(element).color), 'rgb(228, 64, 95)', 'Instagram logo is not colored');
+  assert.equal(await instagramIcon.getAttribute('data-brand-icon'), 'instagram', 'Instagram card does not use its inline SVG brand logo');
+  assert.equal(await instagramIcon.locator('defs stop').count(), 3, 'Instagram logo gradient is missing');
+  const worksWith = page.locator('[aria-labelledby="extract-heading"] > #works-with');
+  assert.equal(await worksWith.getByText('Works with:').count(), 1, 'Works with label is missing from the extraction card');
+  assert.equal(await worksWith.locator('a').count(), 15, 'Works with row does not list every supported platform');
+  assert.equal(await worksWith.locator('a svg').count(), 15, 'A Works with platform is missing its SVG icon');
+  assert.equal(await worksWith.locator('a[href="/amazon/"] [data-brand-icon="amazon"]').count(), 1, 'Works with row has the wrong Amazon artwork');
+  assert.equal(await worksWith.locator('a[href="/instagram/"] [data-brand-icon="instagram"]').count(), 1, 'Works with row has the wrong Instagram artwork');
   await assertNoHorizontalOverflow('desktop homepage');
 
   const serverCardResponse = await page.request.get(`${origin}/.well-known/mcp/server-card.json`);

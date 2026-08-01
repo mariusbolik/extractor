@@ -1,5 +1,6 @@
 ---
 import { Icon } from 'astro-icon/components';
+import SupportedPlatformStrip from './SupportedPlatformStrip.astro';
 ---
 
 <section class="mb-20 border-2 border-black bg-white p-[clamp(22px,4vw,44px)] shadow-[10px_10px_0_#000] max-[660px]:shadow-[6px_6px_0_#000]" aria-labelledby="extract-heading">
@@ -34,6 +35,8 @@ import { Icon } from 'astro-icon/components';
     </div>
     <div id="result-content" class="result-content mt-3 max-h-[620px] overflow-auto border-2 border-black bg-white p-[clamp(18px,3vw,30px)] font-mono text-[0.84rem] leading-[1.65] [&_.shiki]:!bg-white [&_pre]:m-0 [&_pre]:min-w-max [&_pre]:rounded-[3px] [&_pre]:bg-white [&_pre]:whitespace-pre"></div>
   </div>
+
+  <SupportedPlatformStrip />
 </section>
 
 <script>
