@@ -140,6 +140,15 @@ try {
   assert.equal(await worksWith.locator('a svg').count(), 15, 'A Works with platform is missing its SVG icon');
   assert.equal(await worksWith.locator('a[href="/amazon/"] [data-brand-icon="amazon"]').count(), 1, 'Works with row has the wrong Amazon artwork');
   assert.equal(await worksWith.locator('a[href="/instagram/"] [data-brand-icon="instagram"]').count(), 1, 'Works with row has the wrong Instagram artwork');
+  const worksWithLinks = worksWith.locator('a');
+  const firstWorksWithLink = worksWithLinks.first();
+  const worksWithRadius = await firstWorksWithLink.evaluate((element) => getComputedStyle(element).borderRadius);
+  assert.notEqual(worksWithRadius, '0px', 'Works with icons are not circular');
+  const [firstWorksWithBox, secondWorksWithBox] = await Promise.all([
+    firstWorksWithLink.boundingBox(),
+    worksWithLinks.nth(1).boundingBox(),
+  ]);
+  assert.ok(firstWorksWithBox && secondWorksWithBox && secondWorksWithBox.x < firstWorksWithBox.x + firstWorksWithBox.width, 'Works with icon circles do not overlap');
   await assertNoHorizontalOverflow('desktop homepage');
 
   const serverCardResponse = await page.request.get(`${origin}/.well-known/mcp/server-card.json`);
