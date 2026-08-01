@@ -116,8 +116,8 @@ try {
   assert.equal(await heroBadge.getByText('No account needed', { exact: true }).count(), 1, 'Hero badge does not explain that no account is needed');
   assert.notEqual(await heroBadge.locator('svg').evaluate((element) => getComputedStyle(element).animationName), 'none', 'Hero badge is not animated');
   const formatRadios = page.locator('input[name="format"]');
-  assert.equal(await page.locator('#url').getAttribute('placeholder'), 'https://www.amazon.com/dp/B09B8X9RGM', 'Homepage form does not use the Amazon.com placeholder');
-  assert.match(await page.locator('#api pre code').textContent() || '', /https:\/\/www\.amazon\.com\/dp\/B09B8X9RGM/, 'Homepage API example does not use Amazon.com');
+  assert.equal(await page.locator('#url').getAttribute('placeholder'), 'https://www.amazon.com/dp/B09B8V1LZ3', 'Homepage form does not use the verified Amazon.com placeholder');
+  assert.match(await page.locator('#api pre code').textContent() || '', /https:\/\/www\.amazon\.com\/dp\/B09B8V1LZ3/, 'Homepage API example does not use the verified Amazon.com product');
   assert.equal(await page.locator('input[name="format"][value="json"]').isChecked(), true, 'JSON is not the default website output');
   for (const radio of await formatRadios.all()) {
     const borderRadius = await radio.evaluate((element) => getComputedStyle(element).borderRadius);
