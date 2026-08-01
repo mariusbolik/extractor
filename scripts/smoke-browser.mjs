@@ -131,7 +131,7 @@ try {
   const platformGrid = supportedSection.locator('#supported-platforms-grid');
   assert.equal(await page.locator('[aria-label="URL extractor"] > #works-with').count(), 0, 'Works with icons are still inside the extraction card');
   assert.equal(await platformGrid.locator(':scope > li').count(), 16, 'Supported platform tile grid is incomplete');
-  assert.equal(await platformGrid.locator(':scope > li').first().getByText('Works with').count(), 1, 'Works with lead tile is missing');
+  assert.match(await platformGrid.locator(':scope > li').first().innerText(), /^Works\s+with$/, 'Works with lead tile is missing');
   assert.equal(await platformGrid.evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(' ').length), 8, 'Supported platforms do not use an eight-column desktop tile grid');
   assert.equal(await page.locator('.method-card').count(), 15);
   for (const card of await page.locator('.method-card').all()) {
