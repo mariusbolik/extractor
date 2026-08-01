@@ -1,0 +1,36 @@
+# extractor.sh
+
+> extractor.sh is a public, cache-first GET API that turns public webpages and supported platform pages into clean Markdown or normalized JSON.
+
+The public preview requires no account or API key. Call `GET /api/extract` with an absolute public `url` and choose `format=markdown` or `format=json`. Requests are rate-limited to 30 per minute per client. Only public HTTP and HTTPS resources are supported.
+
+## API
+
+- [OpenAPI 3.1 specification](https://extractor.mcb-software.workers.dev/openapi.json): Complete machine-readable contract for the extraction endpoint.
+- [API catalog](https://extractor.mcb-software.workers.dev/.well-known/api-catalog): RFC 9727 Linkset for API discovery.
+- [Full agent documentation](https://extractor.mcb-software.workers.dev/llms-full.txt): Inputs, outputs, supported sources, limits, and examples in one Markdown document.
+- [Developer documentation](https://extractor.mcb-software.workers.dev/docs/): Human-readable quickstart, API reference, sources, limits, and caching.
+- [Limitations](https://extractor.mcb-software.workers.dev/docs/limitations/): CAPTCHAs, access controls, request regions, and source-specific boundaries.
+- [Authentication](https://extractor.mcb-software.workers.dev/auth.md): The public API currently requires no authentication.
+- [Agent skill](https://extractor.mcb-software.workers.dev/.well-known/agent-skills/extract-public-url/SKILL.md): Instructions for extracting one public URL.
+- [Extraction endpoint](https://extractor.mcb-software.workers.dev/api/extract?url=https%3A%2F%2Fexample.com%2F&format=json): Example JSON request.
+
+## Supported sources
+
+- [Web extraction](https://extractor.mcb-software.workers.dev/): Homepage and interactive extractor.
+- [Amazon extraction](https://extractor.mcb-software.workers.dev/amazon/): Public product detail pages from supported country stores.
+- [Bluesky extraction](https://extractor.mcb-software.workers.dev/bluesky/): Public profile feeds and individual public posts, without replies or parent threads.
+- [Instagram extraction](https://extractor.mcb-software.workers.dev/instagram/): Public posts, reels, profiles, and recent profile posts.
+- [Shopify extraction](https://extractor.mcb-software.workers.dev/shopify/): Public product pages, collection pages, and storefront catalogs.
+- [TikTok extraction](https://extractor.mcb-software.workers.dev/tiktok/): Public video and photo posts, short links, and creator profiles.
+- [Reddit extraction](https://extractor.mcb-software.workers.dev/reddit/): Public posts, communities, and user profiles.
+- [X extraction](https://extractor.mcb-software.workers.dev/x/): Public X and Twitter status URLs.
+- [YouTube extraction](https://extractor.mcb-software.workers.dev/youtube/): Public video metadata, channels, and playlists.
+- [Pricing](https://extractor.mcb-software.workers.dev/pricing/): Pay-as-you-go pricing planned at €0.99 / 10,000 extractions.
+- [Alternatives](https://extractor.mcb-software.workers.dev/alternatives/): Compare extractor.sh with broader scraping and browser providers.
+- [Blog](https://extractor.mcb-software.workers.dev/blog/): Platform extraction guides for AI agents and RAG pipelines.
+
+## Optional
+
+- [XML sitemap](https://extractor.mcb-software.workers.dev/sitemap.xml): All public human-readable pages.
+- [Agent guidance](https://extractor.mcb-software.workers.dev/AGENTS.md): Concise instructions for agents using the service.

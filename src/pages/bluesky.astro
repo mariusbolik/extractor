@@ -1,0 +1,29 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SocialLanding from '../components/SocialLanding.astro';
+
+export const prerender = true;
+const title = 'Bluesky profiles and posts to Markdown or JSON — extractor.sh';
+const description = 'Convert public Bluesky profiles and individual posts into clean Markdown or normalized JSON.';
+---
+
+<BaseLayout {title} {description} path="/bluesky/">
+  <SocialLanding
+    platform="Bluesky"
+    eyebrow="Bluesky extractor"
+    headline="Public Bluesky content, made reusable."
+    {description}
+    outcome="Profiles and posts in one consistent format."
+    supported={[
+      'Public Bluesky profile pages',
+      'Individual public Bluesky post pages',
+      'Recent profile posts as a normalized feed',
+    ]}
+    limitations={[
+      'No private or deleted content',
+      'Replies and parent threads are not included',
+      'Profile feeds may omit complete quoted or embedded content',
+    ]}
+    exampleUrl="https://bsky.app/profile/bsky.app"
+  />
+</BaseLayout>

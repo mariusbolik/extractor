@@ -1,0 +1,99 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ExtractorForm from '../components/ExtractorForm.astro';
+import MethodCards from '../components/MethodCards.astro';
+
+export const prerender = true;
+
+const title = 'extractor.sh — Turn any public URL into clean Markdown or JSON';
+const description = 'A simple, cache-first GET API that extracts public webpages and supported platforms into clean Markdown or normalized JSON.';
+---
+
+<BaseLayout {title} {description}>
+  <section class="pb-[22px]">
+    <p class="mb-4 font-mono text-[0.8rem] font-extrabold uppercase tracking-[0.14em]">URL → useful content</p>
+    <h1 class="mb-5 max-w-[900px] font-heading text-[clamp(2.5rem,6vw,5.4rem)] font-normal leading-[1.02] tracking-[-0.045em]">The web,<br />minus the noise.</h1>
+    <p class="mb-[42px] max-w-[720px] text-[clamp(1.1rem,2vw,1.35rem)] leading-[1.55]">Paste a public URL. Get clean Markdown or structured JSON through one aggressively cached GET request.</p>
+  </section>
+
+  <ExtractorForm />
+  <MethodCards />
+
+  <section id="api" class="mt-20 grid grid-cols-1 items-center gap-10 border-2 border-black bg-white p-[clamp(24px,5vw,52px)] [&_li]:max-w-[760px] [&_li]:leading-[1.7] [&_p]:max-w-[760px] [&_p]:leading-[1.7] lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+    <div>
+      <p class="mb-4 font-mono text-[0.8rem] font-extrabold uppercase tracking-[0.14em]">Public GET API</p>
+      <h2 class="mb-5 font-heading text-[clamp(1.55rem,3vw,2.4rem)] font-normal leading-[1.02] tracking-[-0.045em]">Nothing to sign up for.</h2>
+      <p>Use the same endpoint as the form. JSON is normalized across sources; Markdown is returned as a raw <code>text/markdown</code> response.</p>
+    </div>
+    <pre class="m-0 max-w-full overflow-auto rounded-[3px] border-2 border-black bg-black p-5 font-mono text-[0.82rem] leading-[1.55] text-white"><code>curl --get \
+  'https://extractor.mcb-software.workers.dev/api/extract' \
+  --data-urlencode 'url=https://example.com/article' \
+  --data-urlencode 'format=markdown'</code></pre>
+  </section>
+
+  <section class="mt-8 border-2 border-black bg-white p-[clamp(24px,5vw,52px)] [&_li]:max-w-[760px] [&_li]:leading-[1.7] [&_p]:max-w-[760px] [&_p]:leading-[1.7]">
+    <p class="mb-4 font-mono text-[0.8rem] font-extrabold uppercase tracking-[0.14em]">One simple workflow</p>
+    <h2 class="mb-5 font-heading text-[clamp(1.55rem,3vw,2.4rem)] font-normal leading-[1.02] tracking-[-0.045em]">From URL to useful content.</h2>
+    <ol class="grid list-none grid-cols-3 gap-6 p-0 max-[760px]:grid-cols-1">
+      <li class="border-t-2 border-black pt-4"><span class="mb-[10px] block font-mono font-black" aria-hidden="true">01</span>Paste any supported public URL.</li>
+      <li class="border-t-2 border-black pt-4"><span class="mb-[10px] block font-mono font-black" aria-hidden="true">02</span>Choose readable Markdown or structured JSON.</li>
+      <li class="border-t-2 border-black pt-4"><span class="mb-[10px] block font-mono font-black" aria-hidden="true">03</span>Reuse the same cacheable GET URL anywhere.</li>
+    </ol>
+  </section>
+</BaseLayout>
+
+<script>
+  const example = new URLSearchParams(window.location.search).get('example');
+  const input = document.querySelector<HTMLInputElement>('#url');
+  if (example && input) {
+    input.value = example;
+    input.focus();
+  }
+</script>
+
+<script>
+  interface WebMcpTool {
+    name: string;
+    description: string;
+    inputSchema: Record<string, unknown>;
+    execute: (input: { url: string; format?: 'json' | 'markdown' }) => Promise<unknown>;
+    annotations: { readOnlyHint: boolean };
+  }
+
+  type AgentNavigator = Navigator & {
+    modelContext?: { registerTool: (tool: WebMcpTool) => void };
+  };
+
+  const modelContext = (navigator as AgentNavigator).modelContext;
+  if (modelContext) {
+    modelContext.registerTool({
+      name: 'extract_public_url',
+      description: 'Extract one supported public URL as clean Markdown or normalized JSON.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          url: {
+            type: 'string',
+            format: 'uri',
+            description: 'An absolute public HTTP or HTTPS page URL.',
+          },
+          format: {
+            type: 'string',
+            enum: ['json', 'markdown'],
+            default: 'json',
+          },
+        },
+        required: ['url'],
+      },
+      execute: async ({ url, format = 'json' }) => {
+        const endpoint = new URL('/api/extract', window.location.origin);
+        endpoint.searchParams.set('url', url);
+        endpoint.searchParams.set('format', format);
+        const response = await fetch(endpoint);
+        if (!response.ok) return response.json();
+        return format === 'markdown' ? response.text() : response.json();
+      },
+      annotations: { readOnlyHint: true },
+    });
+  }
+</script>

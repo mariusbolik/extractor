@@ -1,0 +1,12 @@
+{
+  "$schema": "https://schemas.agentskills.io/discovery/0.2.0/schema.json",
+  "skills": [
+    {
+      "name": "extract-public-url",
+      "type": "skill-md",
+      "description": "Extract a public webpage or supported platform page as clean Markdown or normalized JSON using extractor.sh.",
+      "url": "/.well-known/agent-skills/extract-public-url/SKILL.md",
+      "digest": "sha256:f0cf217d09ebb5017db8dab070521af104b982d6d39da6b754ba02868ed11a4f"
+    }
+  ]
+}

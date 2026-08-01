@@ -1,0 +1,60 @@
+---
+import { Icon } from 'astro-icon/components';
+
+interface Props {
+  platform: string;
+  eyebrow: string;
+  headline: string;
+  description: string;
+  outcome: string;
+  supported: string[];
+  limitations: string[];
+  exampleUrl: string;
+}
+
+const { platform, eyebrow, headline, description, outcome, supported, limitations, exampleUrl } = Astro.props;
+const apiExample = `curl --get 'https://extractor.mcb-software.workers.dev/api/extract' \\
+  --data-urlencode 'url=${exampleUrl}' \\
+  --data-urlencode 'format=markdown'`;
+---
+
+<section class="pb-8">
+  <p class="mb-4 font-mono text-[0.8rem] font-extrabold uppercase tracking-[0.14em]">{eyebrow}</p>
+  <h1 class="mb-5 max-w-[900px] font-heading text-[clamp(2.3rem,5.5vw,4.8rem)] font-normal leading-[1.02] tracking-[-0.045em]">{headline}</h1>
+  <p class="mb-[42px] max-w-[720px] text-[clamp(1.1rem,2vw,1.35rem)] leading-[1.55]">{description}</p>
+  <a class="inline-flex items-center gap-[9px] border-[2px_5px_5px_2px] border-black bg-white px-[22px] py-[13px] font-[850] no-underline transition-[transform,border-width] duration-100 hover:translate-x-[2px] hover:translate-y-[2px] hover:border-[4px_3px_3px_4px]" href={`/?example=${encodeURIComponent(exampleUrl)}`}>Try {platform} extraction <Icon class="size-[19px] shrink-0" name="heroicons:arrow-right" aria-hidden="true" /></a>
+</section>
+
+<section class="mt-8 border-2 border-black bg-white p-[clamp(24px,5vw,52px)] [&_li]:max-w-[760px] [&_li]:leading-[1.7] [&_p]:max-w-[760px] [&_p]:leading-[1.7]">
+  <p class="mb-4 font-mono text-[0.8rem] font-extrabold uppercase tracking-[0.14em]">What you get</p>
+  <h2 class="mb-6 font-heading text-[clamp(1.55rem,3vw,2.4rem)] font-normal leading-[1.02] tracking-[-0.045em]">{outcome}</h2>
+  <ol class="grid list-none grid-cols-3 gap-6 p-0 max-[760px]:grid-cols-1">
+    <li class="border-t-2 border-black pt-4"><span class="mb-[10px] block font-mono font-black" aria-hidden="true">01</span>Paste a supported public URL.</li>
+    <li class="border-t-2 border-black pt-4"><span class="mb-[10px] block font-mono font-black" aria-hidden="true">02</span>Choose readable Markdown or structured JSON.</li>
+    <li class="border-t-2 border-black pt-4"><span class="mb-[10px] block font-mono font-black" aria-hidden="true">03</span>Get clean content through one cacheable GET request.</li>
+  </ol>
+</section>
+
+<div class="grid grid-cols-2 gap-6 max-[760px]:grid-cols-1 max-[760px]:gap-0">
+  <section class="mt-6 border-2 border-black bg-white p-[clamp(24px,5vw,52px)] [&_li]:max-w-[760px] [&_li]:leading-[1.7] [&_p]:max-w-[760px] [&_p]:leading-[1.7]">
+    <p class="mb-4 font-mono text-[0.8rem] font-extrabold uppercase tracking-[0.14em]">Supported</p>
+    <h2 class="mb-5 font-heading text-[clamp(1.55rem,3vw,2.4rem)] font-normal leading-[1.02] tracking-[-0.045em]">URLs you can use</h2>
+    <ul class="list-[square] space-y-2.5 pl-5">
+      {supported.map((item) => <li>{item}</li>)}
+    </ul>
+  </section>
+  <section class="mt-6 border-2 border-black bg-white p-[clamp(24px,5vw,52px)] [&_li]:max-w-[760px] [&_li]:leading-[1.7] [&_p]:max-w-[760px] [&_p]:leading-[1.7]">
+    <p class="mb-4 font-mono text-[0.8rem] font-extrabold uppercase tracking-[0.14em]">Boundaries</p>
+    <h2 class="mb-5 font-heading text-[clamp(1.55rem,3vw,2.4rem)] font-normal leading-[1.02] tracking-[-0.045em]">Kept deliberately simple</h2>
+    <ul class="list-[square] space-y-2.5 pl-5">
+      {limitations.map((item) => <li>{item}</li>)}
+    </ul>
+  </section>
+</div>
+
+<section class="mt-8 border-2 border-black bg-white p-[clamp(24px,5vw,52px)] [&_li]:max-w-[760px] [&_li]:leading-[1.7] [&_p]:max-w-[760px] [&_p]:leading-[1.7]">
+  <p class="mb-4 font-mono text-[0.8rem] font-extrabold uppercase tracking-[0.14em]">GET API</p>
+  <h2 class="mb-5 font-heading text-[clamp(1.55rem,3vw,2.4rem)] font-normal leading-[1.02] tracking-[-0.045em]">Use it from anywhere.</h2>
+  <p class="mb-0">Choose <code>format=markdown</code> for a raw Markdown body or <code>format=json</code> for normalized fields.</p>
+  <pre class="mt-6 max-w-full overflow-auto rounded-[3px] border-2 border-black bg-black p-5 font-mono leading-[1.55] text-white"><code>{apiExample}</code></pre>
+</section>

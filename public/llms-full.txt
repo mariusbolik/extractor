@@ -1,0 +1,137 @@
+# extractor.sh agent documentation
+
+> extractor.sh converts public URLs into reusable Markdown or normalized JSON through one cacheable HTTP GET endpoint.
+
+Base URL: `https://extractor.mcb-software.workers.dev`
+
+The public preview requires no account, API key, OAuth flow, or payment. Do not send credentials, cookies, private URLs, or non-public data.
+
+## Endpoint
+
+`GET /api/extract`
+
+Query parameters:
+
+- `url` — Required absolute public HTTP or HTTPS URL. Maximum length: 2048 characters.
+- `format` — Optional. Use `json` (default) or `markdown`.
+
+Example Markdown request:
+
+```sh
+curl --get 'https://extractor.mcb-software.workers.dev/api/extract' \
+  --data-urlencode 'url=https://example.com/article' \
+  --data-urlencode 'format=markdown'
+```
+
+Example JSON request:
+
+```sh
+curl --get 'https://extractor.mcb-software.workers.dev/api/extract' \
+  --data-urlencode 'url=https://example.com/article' \
+  --data-urlencode 'format=json'
+```
+
+## JSON response
+
+Successful JSON responses contain:
+
+- `url` — Canonical source URL.
+- `source` — One of `web`, `amazon`, `bluesky`, `instagram`, `reddit`, `shopify`, `tiktok`, `x`, or `youtube`.
+- `kind` — `document` or `feed`.
+- `title` — Extracted title or `null`.
+- `author` — Extracted author or `null`.
+- `publishedAt` — ISO timestamp when available, otherwise `null`.
+- `content` — Clean Markdown content.
+- `items` — Feed items; empty for a single document.
+
+Each feed item contains `url`, `title`, `author`, `publishedAt`, and `content`.
+
+## Markdown response
+
+With `format=markdown`, the response body is raw Markdown with `Content-Type: text/markdown; charset=utf-8`.
+
+The public website pages also support HTTP content negotiation. Send `Accept: text/markdown` to `/`, `/amazon/`, `/bluesky/`, `/instagram/`, `/reddit/`, `/shopify/`, `/tiktok/`, `/x/`, or `/youtube/` to receive an agent-readable Markdown representation.
+
+## Supported sources
+
+### Web
+
+Public HTTP and HTTPS articles, documentation, blogs, and other content pages. If direct page extraction fails, extractor.sh may follow structured post, embed, or feed endpoints advertised by the publisher in the page HTML. Clients still submit the ordinary page URL.
+
+### Amazon
+
+Public product detail pages from supported Amazon country stores return one normalized product document. Submit the ordinary product URL. Search results, categories, carts, accounts, reviews, and personalized offers are not specialized sources. Price and availability can vary, and Amazon product results may be cached for up to one hour.
+
+Example: `https://www.amazon.de/product-name/dp/B09B8X9RGM`
+
+### Bluesky
+
+Public Bluesky profile pages return recent public posts as a feed. Exact public post pages return one normalized document. Replies and parent threads are excluded. Profile feeds may omit complete embedded and quoted content.
+
+Example: `https://bsky.app/profile/bsky.app`
+
+Post example: `https://bsky.app/profile/bsky.app/post/3mqcp5qjdfs26`
+
+### Instagram
+
+Public Instagram post and reel pages return one normalized document. Public profile pages return profile details and recent public posts as a feed. Private or login-only content, stories, comments, transcripts, and media downloads are unsupported.
+
+Profile example: `https://www.instagram.com/instagram/`
+
+### Reddit
+
+Public Reddit post pages, subreddit and community pages, and public user profile pages. Private and quarantined communities are unsupported. Post extraction does not include the complete comment tree.
+
+Example: `https://www.reddit.com/r/CloudFlare/`
+
+### Shopify
+
+Public Shopify product pages return one normalized document. Public storefront and collection pages return up to 50 listed products as a feed. Submit the ordinary HTML page URL rather than a JSON endpoint. Stores may disable or protect their public product data; those pages continue through regular webpage extraction.
+
+Example: `https://store.example/products/black-shirt`
+
+### TikTok
+
+Public TikTok video and photo post pages return one normalized document. Public creator profile pages return profile details. Short links are supported when they resolve to one of these public pages. Private, deleted, or age-restricted content, comments, transcripts, and media downloads are unsupported.
+
+Example: `https://www.tiktok.com/@scout2015/video/6718335390845095173`
+
+### X
+
+Public `x.com` and legacy `twitter.com` status URLs. Private, deleted, and age-gated posts are unsupported.
+
+### YouTube
+
+Public watch, Shorts, and `youtu.be` video pages, plus public channel, handle, legacy user, and playlist pages. Transcripts, captions, and media downloads are not provided.
+
+Example: `https://www.youtube.com/@Cloudflare`
+
+## Limits and caching
+
+- General limit: 30 extraction requests per client per 60 seconds.
+- Browser-rendering fallback: 5 requests per client per 60 seconds.
+- Feed results may be cached for 1 hour.
+- Amazon product results may be cached for 1 hour.
+- Document results may be cached for 30 days.
+- Maximum extracted result size: 2 MB.
+
+Rate-limited responses use HTTP `429` and include `Retry-After` when available. Errors use a JSON object with `error.code` and `error.message`.
+
+When a source blocks extraction or returns an upstream failure, the error message includes the upstream HTTP status when available. A `source_blocked` code means the source required authentication or denied access, commonly because of bot protection or access rules.
+
+## Discovery
+
+- OpenAPI: `https://extractor.mcb-software.workers.dev/openapi.json`
+- API catalog: `https://extractor.mcb-software.workers.dev/.well-known/api-catalog`
+- llms.txt: `https://extractor.mcb-software.workers.dev/llms.txt`
+- Developer docs: `https://extractor.mcb-software.workers.dev/docs/`
+- Authentication: `https://extractor.mcb-software.workers.dev/auth.md`
+- Agent Skills index: `https://extractor.mcb-software.workers.dev/.well-known/agent-skills/index.json`
+- Limitations: `https://extractor.mcb-software.workers.dev/docs/limitations/`
+- Sitemap: `https://extractor.mcb-software.workers.dev/sitemap.xml`
+- Alternatives: `https://extractor.mcb-software.workers.dev/alternatives/`
+- Blog: `https://extractor.mcb-software.workers.dev/blog/`
+
+## Pricing
+
+Pay-as-you-go billing is planned at €0.99 / 10,000 extractions. Checkout is not yet available.

@@ -1,0 +1,37 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+export const prerender = true;
+const title = 'Simple pay-as-you-go pricing — extractor.sh';
+const description = 'Get 10,000 extractions for €0.99 with simple pay-as-you-go pricing. Billing is coming soon.';
+---
+
+<BaseLayout {title} {description} path="/pricing/">
+  <section class="pb-10 text-center">
+    <p class="mb-4 font-mono text-[0.8rem] font-extrabold uppercase tracking-[0.14em]">Simple pricing</p>
+    <h1 class="mx-auto mb-6 max-w-[860px] font-heading text-[clamp(2.4rem,6vw,5rem)] font-normal leading-[1.02] tracking-[-0.045em]">Pay only for what you extract.</h1>
+    <p class="mx-auto max-w-[650px] text-[clamp(1.05rem,2vw,1.25rem)] leading-[1.6]">No subscription. No tiers. One price for clean Markdown or JSON.</p>
+  </section>
+
+  <section class="mx-auto mt-8 flex max-w-[920px] flex-col border-2 border-black bg-white p-[clamp(26px,5vw,52px)] shadow-[10px_10px_0_#000] max-[660px]:shadow-[6px_6px_0_#000]" aria-labelledby="pricing-heading">
+    <div class="grid items-stretch gap-8 md:grid-cols-2 md:gap-10">
+      <div class="flex min-w-0 flex-col justify-between">
+        <div>
+          <p class="mb-5 font-mono text-[0.78rem] font-extrabold uppercase tracking-[0.14em]">Pay as you go</p>
+          <p class="mt-8 font-heading text-[clamp(3.4rem,8vw,5.8rem)] font-normal leading-none tracking-[-0.05em]">€0.99</p>
+          <h2 class="mt-4 font-heading text-[clamp(1.15rem,2vw,1.5rem)] font-normal leading-tight" id="pricing-heading">/ 10,000 extractions</h2>
+        </div>
+      </div>
+      <div class="border-t-2 border-black pt-7 md:border-t-0 md:border-l-2 md:pt-0 md:pl-10">
+        <p class="mb-5 font-mono text-[0.78rem] font-extrabold uppercase tracking-[0.14em]">Included</p>
+        <ul class="list-[square] space-y-4 pl-5 leading-relaxed">
+          <li>Markdown or normalized JSON</li>
+          <li>Web, Reddit, X, and YouTube URLs</li>
+          <li>Cache hits are not billed</li>
+          <li>No monthly commitment</li>
+        </ul>
+      </div>
+    </div>
+    <button class="mt-10 inline-flex min-h-[52px] w-full cursor-not-allowed items-center justify-center border-[2px_5px_5px_2px] border-black bg-white px-6 py-3 font-extrabold opacity-55" type="button" disabled aria-disabled="true">Coming soon</button>
+  </section>
+</BaseLayout>

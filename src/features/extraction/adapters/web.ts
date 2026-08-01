@@ -1,0 +1,159 @@
+import { ExtractionError } from '../errors';
+import { fetchPublicPage } from '../fetch';
+import { extractMarkdownFromHtml } from '../markdown';
+import type { ExtractionDependencies, ExtractionResult } from '../types';
+import { renderPageHtml } from './browser';
+import { extractDiscoveredAlternative } from './discovery';
+import { extractShopifyStorefront } from './shopify';
+
+const MIN_MARKDOWN_LENGTH = 40;
+
+function mediaType(contentType: string): string {
+  return contentType.split(';', 1)[0]?.trim().toLowerCase() || '';
+}
+
+function isHtmlType(type: string): boolean {
+  return type === 'text/html' || type === 'application/xhtml+xml';
+}
+
+function isPlainTextType(type: string): boolean {
+  return type === 'text/markdown' || type === 'text/x-markdown' || type === 'text/plain';
+}
+
+function looksLikeHtml(body: string): boolean {
+  return /^\s*(?:<!doctype\s+html|<html|<head|<body)/i.test(body);
+}
+
+function hasClientRenderingSignals(body: string): boolean {
+  // Browser Rendering is the expensive fallback. Only a JavaScript entrypoint
+  // plus a recognizable application mount/custom element makes another load
+  // likely to reveal content that is absent from the server response.
+  return /<script\b/i.test(body)
+    && /(?:<script\b[^>]*\bsrc\s*=|\bid\s*=\s*["'](?:app|root|__next|__nuxt)["']|\bdata-(?:reactroot|server-rendered)\b|<[^>]+-[^>]+>)/i.test(body);
+}
+
+function titleFromMarkdown(markdown: string): string | null {
+  return markdown.match(/^#\s+(.+)$/m)?.[1]?.trim() || null;
+}
+
+export async function extractWebPage(
+  url: URL,
+  dependencies: ExtractionDependencies,
+): Promise<ExtractionResult> {
+  const fetcher = dependencies.fetcher ?? fetch;
+  let fetchedUrl = url.toString();
+  let directError: unknown;
+  let shouldUseBrowser = false;
+  let sourceHtml = '';
+
+  try {
+    const page = await fetchPublicPage(url, fetcher);
+    fetchedUrl = page.url;
+    sourceHtml = page.body;
+    const type = mediaType(page.contentType);
+
+    if (isPlainTextType(type)) {
+      const content = page.body.trim();
+      // Rendering cannot add content to a text response, so short text fails
+      // here without consuming Browser Rendering quota.
+      if (content.length < MIN_MARKDOWN_LENGTH) {
+        throw new ExtractionError(
+          'extraction_failed',
+          'The plain-text source did not contain enough useful content.',
+          422,
+        );
+      }
+      return {
+        url: fetchedUrl,
+        source: 'web',
+        kind: 'document',
+        title: titleFromMarkdown(content),
+        author: null,
+        publishedAt: null,
+        content,
+        items: [],
+        method: 'native-markdown',
+      };
+    }
+
+    if (type && !isHtmlType(type) && !looksLikeHtml(page.body)) {
+      throw new ExtractionError(
+        'unsupported_content_type',
+        `The source returned ${type}, but only HTML, Markdown, and plain-text pages can be extracted.`,
+        415,
+      );
+    }
+
+    // Set eligibility before parsing: a parser failure may be recoverable only
+    // when the original HTML indicates that client-side rendering is expected.
+    shouldUseBrowser = hasClientRenderingSignals(page.body);
+    // Shopify storefront JSON is structured, public, and substantially cheaper
+    // than rendering a theme. Only confirmed Shopify HTML activates this call.
+    const shopify = await extractShopifyStorefront(page.body, new URL(fetchedUrl), dependencies);
+    if (shopify) return shopify;
+    const extracted = extractMarkdownFromHtml(page.body, fetchedUrl);
+    return {
+      url: fetchedUrl,
+      source: 'web',
+      kind: 'document',
+      ...extracted,
+      publishedAt: null,
+      items: [],
+      method: 'linkedom',
+    };
+  } catch (error) {
+    if (error instanceof ExtractionError && ['invalid_url', 'unsafe_url', 'not_found', 'unsupported_content_type', 'content_too_large', 'timeout'].includes(error.code)) {
+      throw error;
+    }
+    directError = error;
+  }
+
+  if (sourceHtml) {
+    // Publisher-advertised structured endpoints can rescue an otherwise empty
+    // page without paying for Browser Rendering. Normal readable HTML never
+    // reaches this branch, so ordinary pages retain their single-request path.
+    const discovered = await extractDiscoveredAlternative(sourceHtml, fetchedUrl, dependencies);
+    if (discovered) return discovered;
+  }
+
+  if (!shouldUseBrowser) {
+    // Network errors, HTTP blocks, static empty pages, and non-HTML responses
+    // are not improved by opening a browser. Preserve their precise error and
+    // avoid the most expensive extraction path.
+    if (directError instanceof ExtractionError) throw directError;
+    throw new ExtractionError('extraction_failed', 'The HTML source could not be parsed.', 422);
+  }
+
+  if (!dependencies.browser) {
+    throw new ExtractionError('extraction_failed', 'No useful content was found and browser rendering is unavailable.', 422);
+  }
+
+  if (dependencies.allowBrowser && !(await dependencies.allowBrowser())) {
+    throw new ExtractionError('rate_limited', 'Browser fallback rate limit exceeded.', 429, 60);
+  }
+
+  try {
+    const html = await renderPageHtml(url, dependencies.browser);
+    const extracted = extractMarkdownFromHtml(html, fetchedUrl);
+    return {
+      url: fetchedUrl,
+      source: 'web',
+      kind: 'document',
+      ...extracted,
+      publishedAt: null,
+      items: [],
+      method: 'browser',
+    };
+  } catch (browserError) {
+    // If the browser only reports a generic parsing failure, the direct request
+    // may still contain a more useful status or connectivity explanation.
+    if (
+      browserError instanceof ExtractionError
+      && browserError.code === 'extraction_failed'
+      && directError instanceof ExtractionError
+    ) {
+      throw directError;
+    }
+    throw browserError;
+  }
+}

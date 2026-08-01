@@ -1,0 +1,57 @@
+---
+import { Icon } from 'astro-icon/components';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { alternativePages, type AlternativePage } from '../../features/marketing/content';
+
+export const prerender = true;
+
+export function getStaticPaths() {
+  return alternativePages.map((alternative) => ({ params: { slug: alternative.slug }, props: { alternative } }));
+}
+
+interface Props { alternative: AlternativePage }
+const { alternative } = Astro.props;
+const path = `/alternatives/${alternative.slug}/`;
+const title = `${alternative.provider} alternative for AI-ready extraction — extractor.sh`;
+const description = alternative.description;
+---
+
+<BaseLayout {title} {description} keywords={alternative.keywords} {path}>
+  <section class="pb-8">
+    <a class="mb-5 inline-flex items-center gap-2 font-mono text-[0.76rem] font-extrabold uppercase tracking-[0.12em]" href="/alternatives/"><Icon class="size-4" name="heroicons:arrow-left" /> All alternatives</a>
+    <p class="mb-4 font-mono text-[0.8rem] font-extrabold uppercase tracking-[0.14em]">{alternative.provider} alternative</p>
+    <h1 class="mb-6 max-w-[950px] font-heading text-[clamp(2.2rem,5.2vw,4.5rem)] font-normal leading-[1.03] tracking-[-0.045em]">extractor.sh vs. {alternative.provider}</h1>
+    <p class="mb-0 max-w-[760px] text-[clamp(1.05rem,2vw,1.28rem)] leading-[1.65]">{alternative.providerStrength}</p>
+  </section>
+
+  <section class="mt-8 border-2 border-black bg-white p-[clamp(24px,5vw,52px)]">
+    <p class="mb-4 font-mono text-[0.78rem] font-extrabold uppercase tracking-[0.13em]">The practical difference</p>
+    <h2 class="mb-6 font-heading text-[clamp(1.5rem,3vw,2.2rem)] font-normal leading-[1.08] tracking-[-0.035em]">Infrastructure platform or focused extraction endpoint?</h2>
+    <p class="max-w-[790px] leading-[1.75]">extractor.sh accepts an ordinary public page URL through one GET request and returns clean Markdown or normalized JSON. It does not provide caller-selected proxies, browser sessions, screenshots, crawling, storage, or workflow automation. That smaller surface is useful for AI agents and RAG systems that already know which public URL they need.</p>
+  </section>
+
+  <div class="grid grid-cols-2 gap-6 max-[760px]:grid-cols-1">
+    <section class="mt-6 border-2 border-black bg-white p-[clamp(24px,4vw,42px)]">
+      <p class="mb-4 font-mono text-[0.76rem] font-extrabold uppercase tracking-[0.12em]">Choose {alternative.provider}</p>
+      <h2 class="mb-5 font-heading text-[1.45rem] font-normal leading-[1.08] tracking-[-0.035em]">When you need more control</h2>
+      <ul class="list-[square] space-y-3 pl-5 leading-[1.7]">{alternative.chooseProvider.map((item) => <li>{item}</li>)}</ul>
+    </section>
+    <section class="mt-6 border-2 border-black bg-white p-[clamp(24px,4vw,42px)]">
+      <p class="mb-4 font-mono text-[0.76rem] font-extrabold uppercase tracking-[0.12em]">Choose extractor.sh</p>
+      <h2 class="mb-5 font-heading text-[1.45rem] font-normal leading-[1.08] tracking-[-0.035em]">When simplicity is the feature</h2>
+      <ul class="list-[square] space-y-3 pl-5 leading-[1.7]">{alternative.chooseExtractor.map((item) => <li>{item}</li>)}</ul>
+    </section>
+  </div>
+
+  <section class="mt-8 flex flex-wrap items-center justify-between gap-6 border-2 border-black bg-white p-[clamp(24px,4vw,42px)]">
+    <div class="max-w-[620px]">
+      <p class="mb-3 font-mono text-[0.76rem] font-extrabold uppercase tracking-[0.12em]">Try the focused option</p>
+      <h2 class="mb-3 font-heading text-[1.45rem] font-normal leading-[1.08] tracking-[-0.035em]">One URL. One GET request.</h2>
+      <p class="mb-0 leading-[1.7]">The public extractor preview requires no account or API key.</p>
+    </div>
+    <div class="flex flex-wrap gap-4">
+      <a class="inline-flex items-center gap-2 border-[2px_5px_5px_2px] border-black bg-white px-5 py-3 font-extrabold no-underline hover:translate-x-[2px] hover:translate-y-[2px] hover:border-[4px_3px_3px_4px]" href="/">Try extractor.sh <Icon class="size-5" name="heroicons:arrow-right" /></a>
+      <a class="inline-flex items-center px-2 py-3" href={alternative.officialUrl} rel="external">Visit {alternative.provider}</a>
+    </div>
+  </section>
+</BaseLayout>

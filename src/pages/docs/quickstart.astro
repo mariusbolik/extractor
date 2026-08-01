@@ -1,0 +1,52 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+
+export const prerender = true;
+const title = 'API quickstart — extractor.sh docs';
+const description = 'Make your first extractor.sh GET request and receive public page content as Markdown or JSON.';
+const javascriptExample = `const endpoint = new URL(
+  'https://extractor.mcb-software.workers.dev/api/extract'
+);
+
+endpoint.searchParams.set('url', 'https://example.com/article');
+endpoint.searchParams.set('format', 'json');
+
+const response = await fetch(endpoint);
+if (!response.ok) throw new Error(\`Request failed: \${response.status}\`);
+
+const result = await response.json();`;
+---
+
+<DocsLayout {title} {description} path="/docs/quickstart/">
+  <p class="!mt-0 font-mono text-[0.78rem] font-extrabold uppercase tracking-[0.14em]">Quickstart</p>
+  <h1>Extract your first URL.</h1>
+  <p class="text-[1.08rem]">Call <code>GET /api/extract</code> with a public page URL and your preferred output format.</p>
+
+  <h2>Markdown</h2>
+  <pre><code>curl --get 'https://extractor.mcb-software.workers.dev/api/extract' \
+  --data-urlencode 'url=https://example.com/article' \
+  --data-urlencode 'format=markdown'</code></pre>
+  <p>A successful request returns a raw <code>text/markdown; charset=utf-8</code> body.</p>
+
+  <h2>JSON</h2>
+  <pre><code>curl --get 'https://extractor.mcb-software.workers.dev/api/extract' \
+  --data-urlencode 'url=https://example.com/article' \
+  --data-urlencode 'format=json'</code></pre>
+  <p>JSON is the default, so <code>format=json</code> may be omitted.</p>
+
+  <h2>JavaScript</h2>
+  <pre><code>{javascriptExample}</code></pre>
+
+  <h2>What to submit</h2>
+  <p>Always submit the ordinary public page a person would open in a browser. For example:</p>
+  <ul>
+    <li><code>https://bsky.app/profile/bsky.app</code></li>
+    <li><code>https://bsky.app/profile/bsky.app/post/3mqcp5qjdfs26</code></li>
+    <li><code>https://www.instagram.com/instagram/</code></li>
+    <li><code>https://store.example/products/black-shirt</code></li>
+    <li><code>https://www.reddit.com/r/CloudFlare/</code></li>
+    <li><code>https://www.tiktok.com/@scout2015/video/6718335390845095173</code></li>
+    <li><code>https://x.com/jack/status/20</code></li>
+    <li><code>https://www.youtube.com/@Cloudflare</code></li>
+  </ul>
+</DocsLayout>

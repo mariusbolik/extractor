@@ -1,0 +1,80 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+  path?: string;
+  keywords?: string[];
+  pageType?: 'website' | 'article';
+  schema?: Record<string, unknown>;
+}
+
+const {
+  title,
+  description,
+  path = Astro.url.pathname,
+  keywords = [],
+  pageType = 'website',
+  schema,
+} = Astro.props;
+const canonical = new URL(path, Astro.site);
+const structuredData = schema ?? {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'extractor.sh',
+  applicationCategory: 'DeveloperApplication',
+  operatingSystem: 'Web',
+  url: canonical.toString(),
+  description,
+};
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={description} />
+    {keywords.length > 0 && <meta name="keywords" content={keywords.join(', ')} />}
+    <meta name="theme-color" content="#ffffff" />
+    <meta property="og:type" content={pageType} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary" />
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" type="text/markdown" href={canonical} />
+    <link rel="describedby" type="text/markdown" href="/llms.txt" />
+    <link rel="api-catalog" type="application/linkset+json" href="/.well-known/api-catalog" />
+    <link rel="service-desc" type="application/vnd.oai.openapi+json" href="/openapi.json" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>{title}</title>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+  </head>
+  <body>
+    <header class="mx-auto flex w-[calc(100%-2rem)] max-w-[1120px] items-center justify-between gap-6 border-b-2 border-black py-6 max-[760px]:flex-col max-[760px]:items-start">
+      <a class="font-mono text-[1.15rem] font-extrabold no-underline" href="/" aria-label="extractor.sh home">extractor.sh<span class="animate-[blink_1.1s_steps(1)_infinite]" aria-hidden="true">_</span></a>
+      <nav class="flex flex-wrap justify-end gap-4 text-[0.92rem] font-bold max-[760px]:justify-start" aria-label="Primary navigation">
+        <a href="/reddit/">Reddit</a>
+        <a href="/x/">X</a>
+        <a href="/youtube/">YouTube</a>
+        <a href="/docs/">Docs</a>
+        <a href="/pricing/">Pricing</a>
+      </nav>
+    </header>
+    <main class="mx-auto w-[calc(100%-2rem)] max-w-[1120px] py-[72px] pb-24 max-[760px]:py-12 max-[760px]:pb-[72px]">
+      <slot />
+    </main>
+    <footer class="mx-auto flex w-[calc(100%-2rem)] max-w-[1120px] justify-between gap-6 border-t-2 border-black py-6 pb-10 font-mono text-[0.8rem] max-[760px]:flex-col max-[760px]:items-start">
+      <span>extractor.sh</span>
+      <nav class="flex flex-wrap gap-4" aria-label="Footer navigation">
+        <a href="/alternatives/">Alternatives</a>
+        <a href="/blog/">Blog</a>
+        <a href="/docs/">Developer docs</a>
+        <a href="/pricing/">Pricing</a>
+      </nav>
+    </footer>
+  </body>
+</html>

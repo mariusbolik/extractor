@@ -1,0 +1,83 @@
+---
+import { Icon } from 'astro-icon/components';
+
+const sources = [
+  {
+    name: 'Amazon',
+    detail: 'Products',
+    description: 'Extract useful public product details without returning the surrounding storefront noise.',
+    href: '/amazon/',
+    icon: 'heroicons:shopping-bag',
+  },
+  {
+    name: 'Bluesky',
+    detail: 'Profiles + posts',
+    description: 'Turn public profiles and individual posts into normalized feeds and documents.',
+    href: '/bluesky/',
+    icon: 'logos:bluesky',
+  },
+  {
+    name: 'Instagram',
+    detail: 'Posts + profiles',
+    description: 'Extract public posts, reels, profiles, and recent profile posts into reusable content.',
+    href: '/instagram/',
+    icon: 'logos:instagram-icon',
+  },
+  {
+    name: 'Reddit',
+    detail: 'Posts + communities',
+    description: 'Turn public posts, communities, and profiles into clean, reusable content.',
+    href: '/reddit/',
+    icon: 'logos:reddit-icon',
+  },
+  {
+    name: 'Shopify',
+    detail: 'Products + catalogs',
+    description: 'Extract public products, collections, and storefront catalogs in one consistent format.',
+    href: '/shopify/',
+    icon: 'logos:shopify',
+  },
+  {
+    name: 'TikTok',
+    detail: 'Posts + profiles',
+    description: 'Turn public videos, photo posts, and creator profiles into clean Markdown and JSON.',
+    href: '/tiktok/',
+    icon: 'logos:tiktok-icon',
+  },
+  {
+    name: 'X',
+    detail: 'Public posts',
+    description: 'Turn a public X or Twitter status URL into stable Markdown and JSON.',
+    href: '/x/',
+    icon: 'logos:x',
+  },
+  {
+    name: 'YouTube',
+    detail: 'Videos + channels',
+    description: 'Extract public video metadata, channels, and playlists into a consistent format.',
+    href: '/youtube/',
+    icon: 'logos:youtube-icon',
+  },
+];
+---
+
+<section aria-labelledby="supported-heading">
+  <p class="mb-4 font-mono text-[0.8rem] font-extrabold uppercase tracking-[0.14em]">Supported sources</p>
+  <h2 class="font-heading text-[clamp(1.55rem,3vw,2.4rem)] font-normal leading-[1.02] tracking-[-0.045em]" id="supported-heading">Supported platforms, handled properly.</h2>
+  <p class="mt-3 mb-0 text-[0.82rem] font-bold uppercase tracking-[0.1em] md:hidden">Swipe to explore →</p>
+  <div class="mt-6 grid snap-x snap-mandatory grid-flow-col auto-cols-[minmax(270px,82vw)] gap-[18px] overflow-x-auto overscroll-x-contain pb-3 lg:grid-flow-row lg:grid-cols-3 lg:overflow-visible lg:pb-0">
+    {sources.map((source, index) => (
+      <a class="method-card group flex min-h-[240px] snap-start flex-col border-2 border-black bg-white p-6 no-underline transition duration-100 hover:-translate-x-[3px] hover:-translate-y-[3px] hover:shadow-[6px_6px_0_#000] hover:no-underline" href={source.href}>
+        <div class="flex items-start justify-between gap-6">
+          <Icon class:list={['size-7 shrink-0', source.name === 'X' && 'text-black']} name={source.icon} aria-hidden="true" />
+          <p class="mb-0 text-right font-mono text-[0.74rem] font-extrabold uppercase leading-[1.45] tracking-[0.12em]">{String(index + 1).padStart(2, '0')} / {source.detail}</p>
+        </div>
+        <h3 class="mt-8 mb-4 font-heading text-[1.15rem] font-normal leading-[1.02] tracking-[-0.045em]">{source.name}</h3>
+        <p class="leading-relaxed">{source.description}</p>
+        <span class="mt-auto block pt-9" aria-hidden="true">
+          <Icon class="size-6 transition-transform duration-100 group-hover:translate-x-1" name="heroicons:arrow-right" />
+        </span>
+      </a>
+    ))}
+  </div>
+</section>

@@ -1,0 +1,44 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+
+export const prerender = true;
+const title = 'Rate limits and caching — extractor.sh docs';
+const description = 'Rate limits, cache behavior, maximum sizes, and safe usage guidance for the extractor.sh API.';
+---
+
+<DocsLayout {title} {description} path="/docs/limits/">
+  <p class="!mt-0 font-mono text-[0.78rem] font-extrabold uppercase tracking-[0.14em]">Limits and caching</p>
+  <h1>Fast, public, and cacheable.</h1>
+  <p class="text-[1.08rem]">The API uses GET requests so identical URLs and formats can be cached at Cloudflare’s edge.</p>
+
+  <h2>Rate limits</h2>
+  <ul>
+    <li>30 extraction requests per client per 60 seconds.</li>
+    <li>5 browser-heavy fallback requests per client per 60 seconds.</li>
+  </ul>
+  <p>A rate-limited response uses HTTP <code>429</code> and may include a <code>Retry-After</code> header. Reuse identical request URLs so cached responses can be served efficiently.</p>
+
+  <h2>Cache lifetimes</h2>
+  <div class="overflow-x-auto">
+    <table>
+      <thead><tr><th>Result type</th><th>Edge cache lifetime</th></tr></thead>
+      <tbody>
+        <tr><td>Single documents and pages</td><td>Up to 30 days</td></tr>
+        <tr><td>Amazon products</td><td>Up to 1 hour</td></tr>
+        <tr><td>Collections</td><td>Up to 1 hour</td></tr>
+        <tr><td>Errors</td><td>Not cached</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Input and output limits</h2>
+  <ul>
+    <li>URLs may contain up to 2,048 characters.</li>
+    <li>Only public HTTP and HTTPS URLs are accepted.</li>
+    <li>Private networks, local addresses, direct IP targets, embedded credentials, and non-standard ports are rejected.</li>
+    <li>Maximum extracted result size is 2 MB.</li>
+  </ul>
+
+  <h2>Authentication</h2>
+  <p>The public preview currently requires no account or API key. Never place credentials, cookies, authorization tokens, or private data in the <code>url</code> parameter.</p>
+</DocsLayout>

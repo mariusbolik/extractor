@@ -1,0 +1,109 @@
+---
+import { Icon } from 'astro-icon/components';
+---
+
+<section class="mb-20 border-2 border-black bg-white p-[clamp(22px,4vw,44px)] shadow-[10px_10px_0_#000] max-[660px]:shadow-[6px_6px_0_#000]" aria-labelledby="extract-heading">
+  <div class="mb-[26px] flex items-center justify-between gap-5">
+    <div>
+      <p class="mb-4 font-mono text-[0.8rem] font-extrabold uppercase tracking-[0.14em]">One URL. One GET request.</p>
+      <h2 class="font-heading text-[clamp(1.55rem,3vw,2.25rem)] font-normal leading-[1.02] tracking-[-0.045em]" id="extract-heading">Extract a public page</h2>
+    </div>
+    <span class="border-2 border-black px-[10px] py-2 font-mono text-[0.8rem] font-black" aria-hidden="true">GET</span>
+  </div>
+
+  <form id="extract-form" action="/api/extract" method="get">
+    <label class="text-[0.88rem] font-extrabold" for="url">Website URL</label>
+    <div class="mt-[9px] grid grid-cols-[1fr_auto] gap-[14px] max-[660px]:grid-cols-1">
+      <input class="min-h-[52px] min-w-0 border-2 border-black bg-white px-[15px] py-3 text-black placeholder:text-black/50" id="url" name="url" type="url" inputmode="url" autocomplete="url" required maxlength="2048" placeholder="https://example.com/article" />
+      <button class="inline-flex min-h-[52px] cursor-pointer items-center justify-center gap-[9px] border-[2px_5px_5px_2px] border-black bg-white px-[22px] py-[10px] font-[850] transition-[transform,border-width] duration-100 hover:translate-x-[2px] hover:translate-y-[2px] hover:border-[4px_3px_3px_4px] active:translate-x-[3px] active:translate-y-[3px] active:border-[5px_2px_2px_5px] max-[660px]:w-full" type="submit">Extract <Icon class="size-[19px] shrink-0" name="heroicons:arrow-right" aria-hidden="true" /></button>
+    </div>
+    <fieldset class="mt-[18px] flex items-center gap-5 border-0 p-0 max-[660px]:flex-col max-[660px]:items-start max-[660px]:gap-[10px]">
+      <legend class="float-left mr-2 text-[0.88rem] font-extrabold max-[660px]:mb-2">Output format</legend>
+      <label class="inline-flex cursor-pointer items-center gap-[7px]"><input class="m-0 size-[17px] accent-black" type="radio" name="format" value="markdown" checked /> Markdown</label>
+      <label class="inline-flex cursor-pointer items-center gap-[7px]"><input class="m-0 size-[17px] accent-black" type="radio" name="format" value="json" /> JSON</label>
+    </fieldset>
+  </form>
+
+  <div id="result" class="result mt-[34px] border-t-2 border-black pt-6 data-[state=error]:[&_.result-content]:border-dashed" hidden aria-live="polite">
+    <div class="flex items-center justify-between gap-5">
+      <span id="result-label" class="mb-4 font-mono text-[0.8rem] font-extrabold uppercase tracking-[0.14em]">Result</span>
+      <div class="flex items-center gap-4 text-[0.85rem] font-extrabold">
+        <button id="copy-result" class="inline-flex cursor-pointer items-center gap-[5px] border-0 bg-white p-0 font-extrabold underline underline-offset-[0.2em]" type="button"><Icon class="size-[19px] shrink-0" name="heroicons:clipboard-document" aria-hidden="true" /> <span>Copy</span></button>
+        <a class="inline-flex items-center gap-[5px]" id="raw-result" target="_blank" rel="noopener">Open raw <Icon class="size-[19px] shrink-0" name="heroicons:arrow-top-right-on-square" aria-hidden="true" /></a>
+      </div>
+    </div>
+    <div id="result-content" class="result-content mt-3 max-h-[620px] overflow-auto border-2 border-black bg-white p-[clamp(18px,3vw,30px)] leading-[1.65] [&_a]:underline [&_blockquote]:ml-0 [&_blockquote]:border-l-[5px] [&_blockquote]:border-black [&_blockquote]:pl-[18px] [&_h1]:mt-0 [&_h1]:mb-4 [&_h1]:font-heading [&_h1]:text-3xl [&_h1]:leading-tight [&_h2]:mt-8 [&_h2]:mb-3 [&_h2]:font-heading [&_h2]:text-2xl [&_h2]:leading-tight [&_h3]:mt-6 [&_h3]:mb-2 [&_h3]:font-heading [&_h3]:text-xl [&_img]:max-w-full [&_img]:border-2 [&_img]:border-black [&_li+li]:mt-2 [&_ol]:my-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:my-4 [&_pre]:m-0 [&_pre]:rounded-[3px] [&_pre]:whitespace-pre-wrap [&_ul]:my-4 [&_ul]:list-[square] [&_ul]:pl-6"></div>
+  </div>
+</section>
+
+<script>
+  import DOMPurify from 'dompurify';
+  import { marked } from 'marked';
+
+  const form = document.querySelector<HTMLFormElement>('#extract-form');
+  const result = document.querySelector<HTMLElement>('#result');
+  const resultLabel = document.querySelector<HTMLElement>('#result-label');
+  const resultContent = document.querySelector<HTMLElement>('#result-content');
+  const rawResult = document.querySelector<HTMLAnchorElement>('#raw-result');
+  const copyResult = document.querySelector<HTMLButtonElement>('#copy-result');
+  const submit = form?.querySelector<HTMLButtonElement>('button[type="submit"]');
+  let copyValue = '';
+
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!form.reportValidity() || !result || !resultContent || !resultLabel || !rawResult || !submit) return;
+
+    const endpoint = new URL(form.action, window.location.origin);
+    endpoint.search = new URLSearchParams(new FormData(form) as unknown as Record<string, string>).toString();
+    const format = endpoint.searchParams.get('format') || 'markdown';
+
+    result.hidden = false;
+    result.dataset.state = 'loading';
+    resultLabel.textContent = 'Extracting…';
+    resultContent.replaceChildren();
+    submit.disabled = true;
+    rawResult.href = endpoint.toString();
+
+    try {
+      const response = await fetch(endpoint);
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({ error: { message: 'Extraction failed.' } })) as {
+          error?: { message?: string };
+        };
+        throw new Error(payload.error?.message || 'Extraction failed.');
+      }
+
+      if (format === 'json') {
+        const payload = await response.json();
+        copyValue = JSON.stringify(payload, null, 2);
+        const pre = document.createElement('pre');
+        pre.textContent = copyValue;
+        resultContent.replaceChildren(pre);
+        resultLabel.textContent = 'JSON result';
+      } else {
+        copyValue = await response.text();
+        const rendered = await marked.parse(copyValue);
+        resultContent.innerHTML = DOMPurify.sanitize(rendered);
+        resultLabel.textContent = 'Markdown result';
+      }
+      result.dataset.state = 'success';
+    } catch (error) {
+      copyValue = '';
+      result.dataset.state = 'error';
+      resultLabel.textContent = 'Could not extract';
+      const message = document.createElement('p');
+      message.textContent = error instanceof Error ? error.message : 'Extraction failed.';
+      resultContent.replaceChildren(message);
+    } finally {
+      submit.disabled = false;
+    }
+  });
+
+  copyResult?.addEventListener('click', async () => {
+    if (!copyValue || !copyResult) return;
+    await navigator.clipboard.writeText(copyValue);
+    const label = copyResult.querySelector('span');
+    if (label) label.textContent = 'Copied';
+    window.setTimeout(() => { if (label) label.textContent = 'Copy'; }, 1_500);
+  });
+</script>

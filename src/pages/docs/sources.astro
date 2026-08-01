@@ -1,0 +1,79 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+
+export const prerender = true;
+const title = 'Supported sources — extractor.sh docs';
+const description = 'Supported public webpage, Amazon, Bluesky, Instagram, Reddit, Shopify, TikTok, X, and YouTube URL formats for the extractor.sh API.';
+---
+
+<DocsLayout {title} {description} path="/docs/sources/">
+  <p class="!mt-0 font-mono text-[0.78rem] font-extrabold uppercase tracking-[0.14em]">Supported sources</p>
+  <h1>Paste the public page URL.</h1>
+  <p class="text-[1.08rem]">Use the same address a person would open in a browser. extractor.sh recognizes the source and returns one consistent response shape.</p>
+
+  <h2>Web pages</h2>
+  <p>Public HTTP and HTTPS articles, documentation, blogs, and other content pages.</p>
+  <pre><code>https://example.com/article</code></pre>
+  <p>If a page cannot be read directly, extractor.sh can use a structured post, embed, or feed URL that the publisher advertises in that page. You still submit the normal HTML page URL.</p>
+
+  <h2>Amazon</h2>
+  <p>Public product detail pages from supported Amazon country stores return one product document with the useful details available on the page.</p>
+  <pre><code>https://www.amazon.de/product-name/dp/B09B8X9RGM</code></pre>
+  <p>Submit the ordinary product URL. Search results, category pages, carts, accounts, reviews, and personalized offers use regular webpage extraction or may be unavailable. Price and availability can vary and Amazon product results may be cached for up to one hour.</p>
+
+  <h2>Bluesky</h2>
+  <p>Public Bluesky profile pages return recent public posts as a feed. Individual post pages return one normalized document.</p>
+  <pre><code>https://bsky.app/profile/bsky.app
+https://bsky.app/profile/bsky.app/post/3mqcp5qjdfs26</code></pre>
+  <p>Replies and parent threads are not included. Profile feeds may omit complete embedded and quoted content.</p>
+
+  <h2>Instagram</h2>
+  <p>Public post and reel pages return one document. Public profile pages return profile details and recent public posts as a feed.</p>
+  <pre><code>https://www.instagram.com/instagram/
+https://www.instagram.com/p/DbbY9pdm6Q2/</code></pre>
+  <p>Private or login-only content, stories, comments, transcripts, and media downloads are not supported.</p>
+
+  <h2>Shopify</h2>
+  <ul>
+    <li>Public storefront product pages</li>
+    <li>Public collection pages</li>
+    <li>Public storefront homepages</li>
+  </ul>
+  <pre><code>https://store.example/products/black-shirt</code></pre>
+  <p>Submit the ordinary storefront page, not its JSON URL. Product pages return one document. Storefront and collection pages return up to 50 publicly listed products as a feed. Stores that disable or protect their product data continue through regular webpage extraction.</p>
+
+  <h2>Reddit</h2>
+  <ul>
+    <li>Public post pages</li>
+    <li>Public subreddit and community pages</li>
+    <li>Public user profile pages</li>
+  </ul>
+  <pre><code>https://www.reddit.com/r/CloudFlare/</code></pre>
+  <p>Private and quarantined communities are not supported. Post results do not include the complete comment tree.</p>
+
+  <h2>X</h2>
+  <ul>
+    <li>Public <code>x.com</code> status URLs</li>
+    <li>Legacy <code>twitter.com</code> status URLs</li>
+  </ul>
+  <pre><code>https://x.com/jack/status/20</code></pre>
+  <p>Private, deleted, and age-gated posts are not supported.</p>
+
+  <h2>TikTok</h2>
+  <ul>
+    <li>Public video and photo post pages</li>
+    <li>Public creator profile pages</li>
+    <li>Short links that resolve to a supported public page</li>
+  </ul>
+  <pre><code>https://www.tiktok.com/@scout2015/video/6718335390845095173</code></pre>
+  <p>Private, deleted, or age-restricted content, comments, transcripts, and media downloads are not supported.</p>
+
+  <h2>YouTube</h2>
+  <ul>
+    <li>Public watch, Shorts, and <code>youtu.be</code> video pages</li>
+    <li>Public channel and handle pages</li>
+    <li>Public playlist pages</li>
+  </ul>
+  <pre><code>https://www.youtube.com/@Cloudflare</code></pre>
+  <p>Video results contain public metadata, not transcripts, captions, spoken content, or media downloads.</p>
+</DocsLayout>

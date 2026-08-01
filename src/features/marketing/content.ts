@@ -1,0 +1,187 @@
+export const CURRENT_YEAR = new Date().getUTCFullYear();
+
+export interface PlatformArticle {
+  slug: string;
+  platform: string;
+  sourcePath: string;
+  exampleUrl: string;
+  description: string;
+  introduction: string;
+  extracts: string[];
+  aiUseCases: string[];
+  boundaries: string[];
+  keywords: string[];
+}
+
+export const platformArticles: PlatformArticle[] = [
+  {
+    slug: 'scrape-amazon-data',
+    platform: 'Amazon',
+    sourcePath: '/amazon/',
+    exampleUrl: 'https://www.amazon.de/echo-dot-2022/dp/B09B8X9RGM',
+    description: `How to extract public Amazon product data for AI applications in ${CURRENT_YEAR} using one cacheable GET request.`,
+    introduction: 'Amazon product pages contain useful facts alongside navigation, recommendations, account controls, and personalized storefront content. A focused product extraction keeps the public product details and removes most of that surrounding noise.',
+    extracts: ['Product title and canonical URL', 'Public price and availability when present', 'Product description and visible specifications', 'A normalized document suitable for downstream processing'],
+    aiUseCases: ['Product research assistants', 'RAG indexes for public catalogs', 'Catalog normalization and enrichment', 'LLM-ready competitive research'],
+    boundaries: ['Only exact public product detail pages receive specialized extraction.', 'Search results, carts, accounts, reviews, and personalized offers are not specialized sources.', 'Prices and availability can change and may be cached for up to one hour.'],
+    keywords: ['Amazon scraper API', 'Amazon product data API', 'AI product extraction', 'Amazon data for LLM', 'RAG ecommerce data'],
+  },
+  {
+    slug: 'scrape-bluesky-data',
+    platform: 'Bluesky',
+    sourcePath: '/bluesky/',
+    exampleUrl: 'https://bsky.app/profile/bsky.app',
+    description: `How to extract public Bluesky profiles and posts for AI agents and data pipelines in ${CURRENT_YEAR}.`,
+    introduction: 'Bluesky has distinct profile and post URLs. Converting both into the same response shape makes the content easier to search, summarize, and combine with other public sources.',
+    extracts: ['Public profile details', 'Recent public profile posts as feed items', 'Individual public post text and authorship', 'Canonical links and timestamps when available'],
+    aiUseCases: ['Public conversation monitoring', 'AI research agents', 'Semantic search over public posts', 'RAG datasets with source attribution'],
+    boundaries: ['Private and deleted content is unavailable.', 'Replies and parent threads are not included.', 'Quoted or embedded content may be summarized rather than expanded completely.'],
+    keywords: ['Bluesky scraper API', 'Bluesky data extraction', 'Bluesky API for AI', 'social data RAG', 'AI agent web data'],
+  },
+  {
+    slug: 'scrape-instagram-data',
+    platform: 'Instagram',
+    sourcePath: '/instagram/',
+    exampleUrl: 'https://www.instagram.com/instagram/',
+    description: `How to extract public Instagram posts, reels, and profiles for AI workflows in ${CURRENT_YEAR}.`,
+    introduction: 'Public Instagram pages are visually rich, but AI systems usually need compact text, authorship, dates, and links. Normalization turns supported public posts and profiles into predictable Markdown or JSON without returning active embeds.',
+    extracts: ['Public post and reel captions when exposed', 'Public account names and handles', 'Recent public profile posts', 'Media type, timestamps, and canonical links when available'],
+    aiUseCases: ['Brand and creator research', 'AI-assisted content analysis', 'Public social knowledge bases', 'Cross-platform RAG ingestion'],
+    boundaries: ['Private, deleted, login-only, and age-gated content is unavailable.', 'Stories, comments, transcripts, and media downloads are not included.', 'The public source can sometimes expose only minimal post metadata.'],
+    keywords: ['Instagram scraper API', 'Instagram data for AI', 'Instagram post extraction', 'Instagram RAG pipeline', 'AI social media data'],
+  },
+  {
+    slug: 'scrape-reddit-data',
+    platform: 'Reddit',
+    sourcePath: '/reddit/',
+    exampleUrl: 'https://www.reddit.com/r/CloudFlare/',
+    description: `How to extract public Reddit posts, communities, and profiles for AI and RAG pipelines in ${CURRENT_YEAR}.`,
+    introduction: 'Reddit pages mix post content with voting controls, navigation, recommendations, and long comment trees. A normalized extraction is useful when the goal is the public post or a compact community feed rather than a complete discussion archive.',
+    extracts: ['Public post titles and bodies', 'Public subreddit and community feeds', 'Public user profile feeds', 'Authors, timestamps, and canonical URLs when available'],
+    aiUseCases: ['Topic and community research', 'AI trend analysis', 'Public feedback summarization', 'Source-linked RAG collections'],
+    boundaries: ['Private and quarantined communities are unsupported.', 'Complete comment trees are not included.', 'Deleted or restricted posts cannot be recovered.'],
+    keywords: ['Reddit scraper API', 'Reddit data extraction', 'Reddit API for AI', 'Reddit RAG data', 'AI community research'],
+  },
+  {
+    slug: 'scrape-shopify-data',
+    platform: 'Shopify',
+    sourcePath: '/shopify/',
+    exampleUrl: 'https://www.allbirds.com/products/mens-cruiser-shadow-blue-natural-white-sole',
+    description: `How to extract public Shopify product and catalog data for AI applications in ${CURRENT_YEAR}.`,
+    introduction: 'Shopify storefront themes vary widely even though their public products share common concepts. Returning a consistent product document or catalog feed removes theme-specific presentation from downstream AI and data work.',
+    extracts: ['Public product titles and descriptions', 'Variants, prices, and product links when available', 'Public collection and storefront catalogs', 'Up to 50 normalized catalog items per feed'],
+    aiUseCases: ['Commerce assistants and product search', 'Catalog RAG systems', 'Public market and assortment research', 'Cross-store product normalization'],
+    boundaries: ['Stores can disable or protect public product data.', 'Checkout, customer, order, and administrative data is unavailable.', 'Catalog feeds are capped at 50 products.'],
+    keywords: ['Shopify scraper API', 'Shopify products JSON API', 'Shopify data for AI', 'ecommerce RAG', 'AI catalog extraction'],
+  },
+  {
+    slug: 'scrape-tiktok-data',
+    platform: 'TikTok',
+    sourcePath: '/tiktok/',
+    exampleUrl: 'https://www.tiktok.com/@scout2015/video/6718335390845095173',
+    description: `How to extract public TikTok posts and profiles for AI agents and RAG workflows in ${CURRENT_YEAR}.`,
+    introduction: 'TikTok is video-first, but its public pages can still provide useful textual context such as captions, creator identity, dates, hashtags, and sound attribution. That metadata is often enough for discovery and AI classification without downloading media.',
+    extracts: ['Public video and photo-post captions', 'Creator names and handles', 'Dates, hashtags, duration, and sound details when available', 'Public creator profile details'],
+    aiUseCases: ['AI content discovery', 'Public trend classification', 'Creator research workflows', 'Cross-platform social RAG'],
+    boundaries: ['Private, deleted, login-only, and age-restricted content is unavailable.', 'Comments, transcripts, and media downloads are not included.', 'Profile extraction does not provide a complete posting history.'],
+    keywords: ['TikTok scraper API', 'TikTok data extraction 2026', 'TikTok data for AI', 'TikTok RAG pipeline', 'AI trend data'],
+  },
+  {
+    slug: 'scrape-x-data',
+    platform: 'X',
+    sourcePath: '/x/',
+    exampleUrl: 'https://x.com/jack/status/20',
+    description: `How to extract public X posts as clean data for AI applications and agents in ${CURRENT_YEAR}.`,
+    introduction: 'A public X status URL can be useful evidence for an AI workflow, but the surrounding interface is not. A document response keeps the post text, author, date when available, and original link in a reusable representation.',
+    extracts: ['Public post text', 'Public author information', 'Canonical status links', 'Publication timestamps when available'],
+    aiUseCases: ['AI research with source links', 'Public announcement monitoring', 'Knowledge-base ingestion', 'Cross-platform content normalization'],
+    boundaries: ['Only individual public status URLs are supported.', 'Private, deleted, and age-gated posts are unavailable.', 'Timelines, search results, replies, and complete threads are not included.'],
+    keywords: ['X scraper API', 'Twitter scraper API', 'X data for AI', 'tweet extraction API', 'social RAG pipeline'],
+  },
+  {
+    slug: 'scrape-youtube-data',
+    platform: 'YouTube',
+    sourcePath: '/youtube/',
+    exampleUrl: 'https://www.youtube.com/@Cloudflare',
+    description: `How to extract public YouTube metadata, channels, and playlists for AI pipelines in ${CURRENT_YEAR}.`,
+    introduction: 'YouTube pages provide valuable public metadata even when a workflow does not need the media itself. Normalized video and channel results make titles, descriptions, authors, dates, and links easier to index and combine with other sources.',
+    extracts: ['Public video titles and descriptions', 'Channel and playlist feeds', 'Author, publication date, and canonical URL', 'Normalized Markdown or JSON metadata'],
+    aiUseCases: ['Video discovery agents', 'AI research indexes', 'Metadata-based topic classification', 'Source catalogs for multimodal pipelines'],
+    boundaries: ['Private, removed, member-only, and age-gated content is unavailable.', 'Transcripts, captions, spoken content, and media downloads are not included.', 'Results describe public videos; they do not analyze the audiovisual content.'],
+    keywords: ['YouTube scraper API', 'YouTube metadata API', 'YouTube data for AI', 'video RAG pipeline', 'AI video research'],
+  },
+];
+
+export interface AlternativePage {
+  slug: string;
+  provider: string;
+  officialUrl: string;
+  description: string;
+  providerStrength: string;
+  chooseProvider: string[];
+  chooseExtractor: string[];
+  keywords: string[];
+}
+
+export const alternativePages: AlternativePage[] = [
+  {
+    slug: 'scrapingbee',
+    provider: 'ScrapingBee',
+    officialUrl: 'https://www.scrapingbee.com/',
+    description: 'Compare extractor.sh with ScrapingBee for public URL extraction, Markdown, JSON, AI agents, and RAG ingestion.',
+    providerStrength: 'ScrapingBee is a broad scraping API with JavaScript rendering, proxy options, screenshots, selectors, and AI extraction controls.',
+    chooseProvider: ['You need proxy selection or geotargeting.', 'You need browser interactions, screenshots, or selector-level controls.', 'You need a broad scraping infrastructure product.'],
+    chooseExtractor: ['You want one cacheable GET URL.', 'You primarily need clean Markdown or normalized JSON.', 'You are feeding public pages into AI agents, search, or RAG.'],
+    keywords: ['ScrapingBee alternative', 'ScrapingBee alternative for AI', 'Markdown scraping API', 'RAG web extraction API'],
+  },
+  {
+    slug: 'firecrawl',
+    provider: 'Firecrawl',
+    officialUrl: 'https://www.firecrawl.dev/',
+    description: 'Compare extractor.sh with Firecrawl for single-page extraction, AI-ready Markdown, crawling, and RAG workflows.',
+    providerStrength: 'Firecrawl combines single-page scraping with crawling, mapping, screenshots, structured extraction, and other website-scale workflows.',
+    chooseProvider: ['You need to crawl or map an entire website.', 'You need screenshots, actions, change tracking, or schema-driven extraction.', 'You want a broader ingestion platform.'],
+    chooseExtractor: ['You need one public URL at a time.', 'A GET-only cache key fits your architecture.', 'You want normalized handling for supported social and commerce pages.'],
+    keywords: ['Firecrawl alternative', 'Firecrawl alternative GET API', 'AI web scraper', 'RAG Markdown extraction'],
+  },
+  {
+    slug: 'apify',
+    provider: 'Apify',
+    officialUrl: 'https://apify.com/',
+    description: 'Compare extractor.sh with Apify for AI agents, public URL extraction, Actors, automation, and web data workflows.',
+    providerStrength: 'Apify is a general automation platform built around Actors, datasets, schedules, integrations, and a large marketplace of specialized tools.',
+    chooseProvider: ['You need scheduled jobs, datasets, or multi-step automation.', 'You want a marketplace of specialized scrapers.', 'You need to build and deploy custom scraping programs.'],
+    chooseExtractor: ['You want a small synchronous endpoint.', 'You do not need jobs, storage, or workflow orchestration.', 'Your input is a public page URL and your output is Markdown or JSON.'],
+    keywords: ['Apify alternative', 'Apify alternative for AI agents', 'simple scraping API', 'public URL to Markdown'],
+  },
+  {
+    slug: 'scraperapi',
+    provider: 'ScraperAPI',
+    officialUrl: 'https://www.scraperapi.com/',
+    description: 'Compare extractor.sh with ScraperAPI for proxy-backed scraping, JavaScript rendering, AI agents, and Markdown extraction.',
+    providerStrength: 'ScraperAPI focuses on proxy-backed web requests and offers JavaScript rendering, geotargeting, sessions, and synchronous or asynchronous workflows.',
+    chooseProvider: ['You need proxy rotation, sessions, or geotargeting.', 'You want raw target HTML for your own parser.', 'You need rendering controls for arbitrary websites.'],
+    chooseExtractor: ['You want cleaned content instead of raw HTML.', 'You prefer one cacheable GET request with no API key in the preview.', 'You need consistent fields across supported sources.'],
+    keywords: ['ScraperAPI alternative', 'Scraper API alternative for AI', 'URL to Markdown API', 'AI-ready web data'],
+  },
+  {
+    slug: 'browserless',
+    provider: 'Browserless',
+    officialUrl: 'https://www.browserless.io/',
+    description: 'Compare extractor.sh with Browserless for browser automation, rendered HTML, AI extraction, and lightweight URL processing.',
+    providerStrength: 'Browserless provides managed browser infrastructure and REST endpoints for rendered HTML, screenshots, selectors, unblocking, and browser functions.',
+    chooseProvider: ['You need direct browser automation or CDP access.', 'You need screenshots, scripted actions, or CSS selector extraction.', 'Rendering is the core of your workload.'],
+    chooseExtractor: ['You want browser rendering to be a last resort.', 'You need Markdown or normalized JSON rather than a browser session.', 'Low-cost cache hits matter for repeated public URLs.'],
+    keywords: ['Browserless alternative', 'Browserless alternative for AI', 'browser scraping alternative', 'cached extraction API'],
+  },
+  {
+    slug: 'zyte',
+    provider: 'Zyte',
+    officialUrl: 'https://www.zyte.com/zyte-api/',
+    description: 'Compare extractor.sh with Zyte API for automatic extraction, browser rendering, AI data workflows, and simple public URLs.',
+    providerStrength: 'Zyte API offers managed HTTP and browser requests plus automatic extraction models for pages such as products, articles, jobs, and search results.',
+    chooseProvider: ['You need managed proxies, geolocation, sessions, or browser actions.', 'You need specialized automatic extraction schemas.', 'You are building a larger enterprise scraping operation.'],
+    chooseExtractor: ['You need a small GET-only interface.', 'You want immediately reusable Markdown for AI or RAG.', 'You value source-specific public extraction without location controls.'],
+    keywords: ['Zyte alternative', 'Zyte API alternative for AI', 'automatic extraction API', 'RAG web content API'],
+  },
+];

@@ -1,0 +1,29 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SocialLanding from '../components/SocialLanding.astro';
+
+export const prerender = true;
+const title = 'Shopify products and catalogs to Markdown or JSON — extractor.sh';
+const description = 'Extract public Shopify products, collections, and storefront catalogs into clean Markdown or normalized JSON.';
+---
+
+<BaseLayout {title} {description} path="/shopify/">
+  <SocialLanding
+    platform="Shopify"
+    eyebrow="Shopify extractor"
+    headline="Storefront data, ready to use."
+    {description}
+    outcome="Products and catalogs in one consistent format."
+    supported={[
+      'Public storefront product pages',
+      'Public collection pages',
+      'Public storefront homepages',
+    ]}
+    limitations={[
+      'Catalog feeds contain up to 50 products',
+      'Protected or disabled storefront data may be unavailable',
+      'No carts, customer accounts, checkout data, or order history',
+    ]}
+    exampleUrl="https://www.allbirds.com/products/mens-cruiser-shadow-blue-natural-white-sole"
+  />
+</BaseLayout>

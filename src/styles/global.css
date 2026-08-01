@@ -1,0 +1,78 @@
+@import "@fontsource/archivo-black/latin.css";
+@import "tailwindcss";
+
+@theme {
+  --font-heading: "Archivo Black", Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+}
+
+:root {
+  color-scheme: light;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #000;
+  background: #fff;
+  font-synthesis: none;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background-color: #fff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cpath d='M0 0h48v48H0z' fill='white'/%3E%3Cpath d='M0 48 48 0M-12 12 12-12M36 60 60 36' stroke='black' stroke-width='.6' stroke-opacity='.07'/%3E%3C/svg%3E");
+}
+
+body,
+button,
+input {
+  font: inherit;
+}
+
+a {
+  color: #000;
+  text-underline-offset: 0.2em;
+  text-decoration-thickness: 1px;
+}
+
+a:hover {
+  text-decoration-thickness: 2px;
+}
+
+:focus-visible {
+  outline: 3px solid #000;
+  outline-offset: 3px;
+}
+
+::selection {
+  color: #fff;
+  background: #000;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+code,
+pre {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

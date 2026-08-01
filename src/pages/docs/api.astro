@@ -1,0 +1,70 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+
+export const prerender = true;
+const title = 'API reference — extractor.sh docs';
+const description = 'Reference for the extractor.sh GET API, including query parameters, response fields, content types, and errors.';
+---
+
+<DocsLayout {title} {description} path="/docs/api/">
+  <p class="!mt-0 font-mono text-[0.78rem] font-extrabold uppercase tracking-[0.14em]">API reference</p>
+  <h1>GET /api/extract</h1>
+  <p class="text-[1.08rem]">Extract one public URL as normalized JSON or raw Markdown. Only GET requests are supported.</p>
+
+  <h2>Query parameters</h2>
+  <div class="overflow-x-auto">
+    <table>
+      <thead><tr><th>Parameter</th><th>Required</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>url</code></td><td>Yes</td><td>An absolute public HTTP or HTTPS URL, up to 2,048 characters.</td></tr>
+        <tr><td><code>format</code></td><td>No</td><td><code>json</code> (default) or <code>markdown</code>.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>JSON response</h2>
+  <pre><code>{`{
+  "url": "https://example.com/article",
+  "source": "web",
+  "kind": "document",
+  "title": "Example article",
+  "author": null,
+  "publishedAt": null,
+  "content": "# Example article\\n\\n...",
+  "items": []
+}`}</code></pre>
+  <ul>
+    <li><code>source</code> is <code>web</code>, <code>amazon</code>, <code>bluesky</code>, <code>instagram</code>, <code>reddit</code>, <code>shopify</code>, <code>tiktok</code>, <code>x</code>, or <code>youtube</code>.</li>
+    <li><code>kind</code> is <code>document</code> for one item or <code>feed</code> for a collection.</li>
+    <li><code>items</code> contains normalized collection items and is empty for a single document.</li>
+  </ul>
+
+  <h2>Markdown response</h2>
+  <p>With <code>format=markdown</code>, the body is raw Markdown and the response uses <code>Content-Type: text/markdown; charset=utf-8</code>.</p>
+
+  <h2>Errors</h2>
+  <pre><code>{`{
+  "error": {
+    "code": "invalid_url",
+    "message": "Enter a complete, valid URL."
+  }
+}`}</code></pre>
+  <div class="overflow-x-auto">
+    <table>
+      <thead><tr><th>Status</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td><code>400</code></td><td>Missing, invalid, or unsupported input.</td></tr>
+        <tr><td><code>404</code></td><td>The public source was not found or is unavailable.</td></tr>
+        <tr><td><code>413</code></td><td>The source or extracted result is too large.</td></tr>
+        <tr><td><code>415</code></td><td>The source is not an HTML, Markdown, or plain-text page.</td></tr>
+        <tr><td><code>422</code></td><td>The page was reachable but useful content could not be extracted.</td></tr>
+        <tr><td><code>429</code></td><td>The per-client rate limit was exceeded.</td></tr>
+        <tr><td><code>502</code></td><td>The public source blocked access, rate-limited the request, or returned an upstream error. The error message includes the source status when available.</td></tr>
+        <tr><td><code>504</code></td><td>The source did not respond or finish loading before the timeout.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Machine-readable contract</h2>
+  <p>Use the <a href="/openapi.json">OpenAPI 3.1 document</a> for the complete machine-readable schema.</p>
+</DocsLayout>

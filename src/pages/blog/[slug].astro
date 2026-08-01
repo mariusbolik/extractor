@@ -1,0 +1,83 @@
+---
+import { Icon } from 'astro-icon/components';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { CURRENT_YEAR, platformArticles, type PlatformArticle } from '../../features/marketing/content';
+
+export const prerender = true;
+
+export function getStaticPaths() {
+  return platformArticles.map((article) => ({ params: { slug: article.slug }, props: { article } }));
+}
+
+interface Props { article: PlatformArticle }
+const { article } = Astro.props;
+const path = `/blog/${article.slug}/`;
+const title = `How to scrape data from ${article.platform} in ${CURRENT_YEAR} — extractor.sh`;
+const description = article.description;
+const apiExample = `curl --get 'https://extractor.mcb-software.workers.dev/api/extract' \\
+  --data-urlencode 'url=${article.exampleUrl}' \\
+  --data-urlencode 'format=json'`;
+const buildDate = new Date().toISOString().slice(0, 10);
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'TechArticle',
+  headline: `How to scrape data from ${article.platform} in ${CURRENT_YEAR}`,
+  description,
+  datePublished: buildDate,
+  dateModified: buildDate,
+  author: { '@type': 'Organization', name: 'extractor.sh' },
+  publisher: { '@type': 'Organization', name: 'extractor.sh' },
+  mainEntityOfPage: new URL(path, Astro.site).toString(),
+  keywords: article.keywords.join(', '),
+};
+---
+
+<BaseLayout {title} {description} keywords={article.keywords} {path} pageType="article" {schema}>
+  <article class="mx-auto max-w-[900px]">
+    <header class="border-b-2 border-black pb-10">
+      <a class="mb-5 inline-flex items-center gap-2 font-mono text-[0.76rem] font-extrabold uppercase tracking-[0.12em]" href="/blog/"><Icon class="size-4" name="heroicons:arrow-left" /> All guides</a>
+      <p class="mb-4 font-mono text-[0.8rem] font-extrabold uppercase tracking-[0.14em]">{article.platform} extraction / {CURRENT_YEAR}</p>
+      <h1 class="mb-6 font-heading text-[clamp(2.1rem,5vw,4.2rem)] font-normal leading-[1.03] tracking-[-0.045em]">How to scrape data from {article.platform} in {CURRENT_YEAR}</h1>
+      <p class="mb-0 max-w-[760px] text-[clamp(1.05rem,2vw,1.25rem)] leading-[1.7]">{article.introduction}</p>
+    </header>
+
+    <section class="py-10 [&_p]:leading-[1.75]">
+      <p class="mb-4 font-mono text-[0.78rem] font-extrabold uppercase tracking-[0.13em]">Quick answer</p>
+      <h2 class="mb-6 font-heading text-[clamp(1.5rem,3vw,2.2rem)] font-normal leading-[1.08] tracking-[-0.035em]">Use the public page URL you already have.</h2>
+      <p>Send the ordinary public {article.platform} URL to extractor.sh. Choose JSON for stable fields or Markdown when an AI model will read the result directly. The API uses GET, so an identical successful request can be served from Cloudflare’s edge cache.</p>
+      <pre class="mt-6 max-w-full overflow-auto rounded-[3px] border-2 border-black bg-black p-5 font-mono text-[0.8rem] leading-[1.6] text-white"><code>{apiExample}</code></pre>
+    </section>
+
+    <div class="grid grid-cols-2 gap-6 max-[760px]:grid-cols-1">
+      <section class="border-2 border-black bg-white p-[clamp(24px,4vw,42px)]">
+        <p class="mb-4 font-mono text-[0.76rem] font-extrabold uppercase tracking-[0.12em]">Available data</p>
+        <h2 class="mb-5 font-heading text-[1.45rem] font-normal leading-[1.08] tracking-[-0.035em]">What you can extract</h2>
+        <ul class="list-[square] space-y-3 pl-5 leading-[1.7]">{article.extracts.map((item) => <li>{item}</li>)}</ul>
+      </section>
+      <section class="border-2 border-black bg-white p-[clamp(24px,4vw,42px)]">
+        <p class="mb-4 font-mono text-[0.76rem] font-extrabold uppercase tracking-[0.12em]">AI workflows</p>
+        <h2 class="mb-5 font-heading text-[1.45rem] font-normal leading-[1.08] tracking-[-0.035em]">Where normalized data helps</h2>
+        <ul class="list-[square] space-y-3 pl-5 leading-[1.7]">{article.aiUseCases.map((item) => <li>{item}</li>)}</ul>
+      </section>
+    </div>
+
+    <section class="py-10 [&_p]:leading-[1.75]">
+      <p class="mb-4 font-mono text-[0.78rem] font-extrabold uppercase tracking-[0.13em]">AI-ready output</p>
+      <h2 class="mb-6 font-heading text-[clamp(1.5rem,3vw,2.2rem)] font-normal leading-[1.08] tracking-[-0.035em]">Markdown for models. JSON for systems.</h2>
+      <p>Raw HTML consumes tokens on navigation, scripts, styling, and interface labels. Clean Markdown keeps the readable hierarchy for LLM prompts and RAG chunks. Normalized JSON is better when your application needs explicit source, author, publication date, content, and feed items.</p>
+      <p>Always retain the canonical URL from the response. AI-generated summaries should remain traceable to the public source, especially when the underlying page can change.</p>
+    </section>
+
+    <section class="border-2 border-black bg-white p-[clamp(24px,4vw,42px)]">
+      <p class="mb-4 font-mono text-[0.76rem] font-extrabold uppercase tracking-[0.12em]">Boundaries</p>
+      <h2 class="mb-5 font-heading text-[1.45rem] font-normal leading-[1.08] tracking-[-0.035em]">Public data only</h2>
+      <ul class="list-[square] space-y-3 pl-5 leading-[1.7]">{article.boundaries.map((item) => <li>{item}</li>)}</ul>
+      <p class="mt-6 mb-0 leading-[1.7]">extractor.sh does not bypass CAPTCHAs, login walls, paywalls, access controls, or regional restrictions. Review the source’s terms and applicable law before collecting or reusing data.</p>
+    </section>
+
+    <footer class="mt-10 flex flex-wrap items-center justify-between gap-5 border-t-2 border-black pt-8">
+      <a class="inline-flex items-center gap-2 border-[2px_5px_5px_2px] border-black bg-white px-5 py-3 font-extrabold no-underline hover:translate-x-[2px] hover:translate-y-[2px] hover:border-[4px_3px_3px_4px]" href={`/?example=${encodeURIComponent(article.exampleUrl)}`}>Try this URL <Icon class="size-5" name="heroicons:arrow-right" /></a>
+      <a href={article.sourcePath}>See supported {article.platform} URLs</a>
+    </footer>
+  </article>
+</BaseLayout>

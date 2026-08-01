@@ -1,0 +1,45 @@
+---
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  path: string;
+}
+
+const { title, description, path } = Astro.props;
+const links = [
+  { href: '/docs/', label: 'Overview' },
+  { href: '/docs/quickstart/', label: 'Quickstart' },
+  { href: '/docs/api/', label: 'API reference' },
+  { href: '/docs/sources/', label: 'Supported sources' },
+  { href: '/docs/limits/', label: 'Limits and caching' },
+  { href: '/docs/limitations/', label: 'Limitations' },
+];
+---
+
+<BaseLayout {title} {description} {path}>
+  <div class="grid items-start gap-10 lg:grid-cols-[220px_minmax(0,1fr)]">
+    <aside class="border-2 border-black bg-white p-5 lg:sticky lg:top-6" aria-label="Documentation navigation">
+      <p class="mb-4 font-mono text-[0.75rem] font-extrabold uppercase tracking-[0.14em]">Developer docs</p>
+      <nav class="flex flex-col border-t-2 border-black">
+        {links.map((link) => (
+          <a
+            class:list={[
+              'border-b-2 border-black px-1 py-3 text-[0.9rem] font-bold no-underline hover:pl-2',
+              path === link.href && 'bg-black px-3 !text-white hover:pl-3 hover:!text-white',
+            ]}
+            href={link.href}
+            aria-current={path === link.href ? 'page' : undefined}
+          >
+            {link.label}
+          </a>
+        ))}
+      </nav>
+    </aside>
+
+    <article class="min-w-0 border-2 border-black bg-white p-[clamp(24px,5vw,52px)] leading-[1.7] [&_a]:font-bold [&_blockquote]:my-6 [&_blockquote]:border-l-4 [&_blockquote]:border-black [&_blockquote]:pl-5 [&_code]:font-mono [&_h1]:mb-6 [&_h1]:font-heading [&_h1]:text-[clamp(2rem,4.5vw,3.5rem)] [&_h1]:font-normal [&_h1]:leading-[1.02] [&_h1]:tracking-[-0.045em] [&_h2]:mt-12 [&_h2]:mb-4 [&_h2]:font-heading [&_h2]:text-[clamp(1.4rem,2.7vw,2rem)] [&_h2]:font-normal [&_h2]:leading-tight [&_h3]:mt-8 [&_h3]:mb-3 [&_h3]:font-heading [&_h3]:text-[1.1rem] [&_h3]:font-normal [&_li+li]:mt-2 [&_ol]:my-5 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:my-4 [&_pre]:my-6 [&_pre]:max-w-full [&_pre]:overflow-auto [&_pre]:rounded-[3px] [&_pre]:border-2 [&_pre]:border-black [&_pre]:bg-black [&_pre]:p-5 [&_pre]:font-mono [&_pre]:text-[0.82rem] [&_pre]:leading-[1.6] [&_pre]:text-white [&_table]:my-6 [&_table]:w-full [&_table]:border-collapse [&_td]:border-2 [&_td]:border-black [&_td]:p-3 [&_td]:align-top [&_th]:border-2 [&_th]:border-black [&_th]:bg-black [&_th]:p-3 [&_th]:text-left [&_th]:text-white [&_ul]:my-5 [&_ul]:list-[square] [&_ul]:pl-6">
+      <slot />
+    </article>
+  </div>
+</BaseLayout>

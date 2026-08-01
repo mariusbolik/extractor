@@ -1,0 +1,29 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SocialLanding from '../components/SocialLanding.astro';
+
+export const prerender = true;
+const title = 'TikTok posts and profiles to Markdown or JSON — extractor.sh';
+const description = 'Convert public TikTok videos, photo posts, and creator profiles into clean Markdown or normalized JSON.';
+---
+
+<BaseLayout {title} {description} path="/tiktok/">
+  <SocialLanding
+    platform="TikTok"
+    eyebrow="TikTok extractor"
+    headline="Public TikTok content, without the clutter."
+    {description}
+    outcome="Posts and profiles in one consistent format."
+    supported={[
+      'Public TikTok video and photo post pages',
+      'Public TikTok creator profile pages',
+      'TikTok short links that resolve to a supported public page',
+    ]}
+    limitations={[
+      'No private, deleted, or age-restricted content',
+      'No comments, transcripts, or media downloads',
+      'Profile results contain public profile details, not a complete post history',
+    ]}
+    exampleUrl="https://www.tiktok.com/@scout2015/video/6718335390845095173"
+  />
+</BaseLayout>

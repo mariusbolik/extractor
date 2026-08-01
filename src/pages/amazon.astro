@@ -1,0 +1,29 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SocialLanding from '../components/SocialLanding.astro';
+
+export const prerender = true;
+const title = 'Amazon products to Markdown or JSON — extractor.sh';
+const description = 'Extract useful public Amazon product details into clean Markdown or normalized JSON.';
+---
+
+<BaseLayout {title} {description} path="/amazon/">
+  <SocialLanding
+    platform="Amazon"
+    eyebrow="Amazon product extractor"
+    headline="Product details, minus the storefront noise."
+    {description}
+    outcome="Public product details in one consistent format."
+    supported={[
+      'Public product detail URLs from supported Amazon country stores',
+      'Product title, brand, price, rating, availability, image, and features when present',
+      'Normal product URLs containing an ASIN',
+    ]}
+    limitations={[
+      'No search results, carts, accounts, or personalized offers',
+      'CAPTCHAs and verification pages are not bypassed',
+      'Price and availability can vary and results may be cached for up to one hour',
+    ]}
+    exampleUrl="https://www.amazon.de/echo-dot-2022/dp/B09B8X9RGM"
+  />
+</BaseLayout>

@@ -1,0 +1,40 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+
+export const prerender = true;
+const title = 'Service limitations — extractor.sh docs';
+const description = 'Practical extractor.sh limitations, including public-only access, CAPTCHAs, request regions, authentication, and source-specific boundaries.';
+---
+
+<DocsLayout {title} {description} path="/docs/limitations/">
+  <p class="!mt-0 font-mono text-[0.78rem] font-extrabold uppercase tracking-[0.14em]">Limitations</p>
+  <h1>Know the boundaries.</h1>
+  <p class="text-[1.08rem]">extractor.sh is built for straightforward extraction of public content. It is not an access-control or browsing-automation service.</p>
+
+  <h2>Access restrictions</h2>
+  <ul>
+    <li>CAPTCHAs are not bypassed or solved.</li>
+    <li>Login walls, private pages, paywalls, age gates, and other access controls are not bypassed.</li>
+    <li>Cookies, authorization headers, custom request headers, and browser sessions cannot be supplied.</li>
+    <li>Private networks, local addresses, direct IP targets, and non-standard ports are rejected.</li>
+  </ul>
+
+  <h2>Request location</h2>
+  <ul>
+    <li>You cannot select a specific server, country, region, or request location.</li>
+    <li>Requests run on the infrastructure location selected automatically by Cloudflare.</li>
+    <li>Region-locked content may therefore be unavailable or differ from what you see locally.</li>
+  </ul>
+
+  <h2>Extraction boundaries</h2>
+  <ul>
+    <li>Extraction quality depends on the content exposed by the public source.</li>
+    <li>Highly interactive or protected pages may return incomplete content or fail.</li>
+    <li>Reddit post results do not include complete comment trees.</li>
+    <li>YouTube results do not include transcripts, captions, spoken content, or media downloads.</li>
+    <li>X extraction supports individual public post URLs, not private or deleted posts.</li>
+  </ul>
+
+  <h2>No availability guarantee</h2>
+  <p>Public sites can change their pages or access rules without notice. A URL that works today may return different content or stop working later.</p>
+</DocsLayout>
