@@ -1,7 +1,11 @@
 import { ExtractionError } from './errors';
 import { extractUrl } from './extract';
 import { extractionTtl } from './cache';
-import { toPublicExtractionResult, type PublicExtractionResult } from './types';
+import {
+  toPublicExtractionResult,
+  type ExtractionDependencies,
+  type PublicExtractionResult,
+} from './types';
 
 type ExtractionRuntime = Pick<Env, 'BROWSER' | 'BROWSER_RATE_LIMITER' | 'EXTRACT_RATE_LIMITER'>;
 
@@ -19,6 +23,7 @@ export async function runPublicExtraction(
   rawUrl: string,
   clientKey: string,
   runtime: ExtractionRuntime,
+  options: Pick<ExtractionDependencies, 'focus'> = {},
 ): Promise<PublicExtraction> {
   const rate = await runtime.EXTRACT_RATE_LIMITER.limit({ key: clientKey });
   if (!rate.success) {
@@ -31,6 +36,7 @@ export async function runPublicExtraction(
       const browserRate = await runtime.BROWSER_RATE_LIMITER.limit({ key: clientKey });
       return browserRate.success;
     },
+    focus: options.focus,
   });
 
   return {

@@ -117,6 +117,8 @@ export interface ExtractionDependencies {
   fetcher?: typeof fetch;
   browser?: BrowserRun;
   allowBrowser?: () => Promise<boolean>;
+  /** Optional topic used by agent tools to select a relevant page section. */
+  focus?: string;
 }
 
 export type OutputFormat = 'json' | 'markdown';

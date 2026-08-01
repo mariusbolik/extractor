@@ -182,8 +182,9 @@ Connect an MCP-compatible client to the public stateless Streamable HTTP endpoin
 
 - \`url\`: required absolute public HTTP or HTTPS page URL.
 - \`format\`: optional \`markdown\` (default) or \`json\`.
+- \`focus\`: optional short topic such as \`pricing\`, \`features\`, or \`FAQ\`.
 
-Markdown is best for reading and summarizing. JSON follows extractor.sh schema version 1. The MCP server and \`GET ${ORIGIN}/api/extract\` share the same Cloudflare cache and rate limits, including the lower browser-rendering limit. Do not send credentials, cookies, private URLs, or private data.
+Markdown is best for reading and summarizing. JSON follows extractor.sh schema version 1. When a request asks for a specific part of a landing page, pass it as \`focus\` so unrelated demos or navigation do not displace that section. Ordinary MCP and \`GET ${ORIGIN}/api/extract\` calls share the same Cloudflare cache; focused MCP results use separate topic-aware cache entries. All calls share the same rate limits, including the lower browser-rendering limit. Do not send credentials, cookies, private URLs, or private data.
 
 - [MCP Server Card](${ORIGIN}/.well-known/mcp/server-card.json)
 - [Limits and caching](${ORIGIN}/docs/limits/)
@@ -257,7 +258,7 @@ extractor.sh is designed for straightforward extraction of public content throug
 `,
   '/pricing/': `# extractor.sh pricing
 
-> Simple pay-as-you-go pricing: €0.99 / 10,000 extractions.
+> Simple pay-as-you-go pricing: €0.49 / 1,000 extractions.
 
 There are no subscriptions, tiers, or monthly commitments. Checkout is coming soon and is not currently available. API usage is documented at \`GET ${ORIGIN}/api/extract\`.
 `,

@@ -29,4 +29,21 @@ describe('HTML to Markdown', () => {
       'Hello [world](https://example.com/world).',
     );
   });
+
+  it('selects a requested landing-page section instead of an unrelated code demo', () => {
+    const html = `
+      <html><head><title>Search API</title></head><body>
+        <div id="demo"><h1>Search API</h1><pre>{ "organic": ["a very long API response"] }</pre></div>
+        <div id="pricing">
+          <h2>Simple pricing</h2>
+          <h3>Starter</h3><p>$50 for 50,000 queries at $1.00 per 1,000.</p>
+          <h3>Scale</h3><p>$1,250 for 2.5 million queries at $0.50 per 1,000.</p>
+        </div>
+      </body></html>`;
+
+    const result = extractMarkdownFromHtml(html, 'https://example.com/', 'pricing');
+    expect(result.content).toContain('Simple pricing');
+    expect(result.content).toContain('$0.50 per 1,000');
+    expect(result.content).not.toContain('organic');
+  });
 });

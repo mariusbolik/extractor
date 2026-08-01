@@ -93,7 +93,7 @@ export async function extractWebPage(
     // than rendering a theme. Only confirmed Shopify HTML activates this call.
     const shopify = await extractShopifyStorefront(page.body, new URL(fetchedUrl), dependencies);
     if (shopify) return shopify;
-    const extracted = extractMarkdownFromHtml(page.body, fetchedUrl);
+    const extracted = extractMarkdownFromHtml(page.body, fetchedUrl, dependencies.focus);
     return {
       type: 'article',
       url: fetchedUrl,
@@ -138,7 +138,7 @@ export async function extractWebPage(
 
   try {
     const html = await renderPageHtml(url, dependencies.browser);
-    const extracted = extractMarkdownFromHtml(html, fetchedUrl);
+    const extracted = extractMarkdownFromHtml(html, fetchedUrl, dependencies.focus);
     return {
       type: 'article',
       url: fetchedUrl,

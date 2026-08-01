@@ -50,10 +50,20 @@ export function htmlFragmentToMarkdown(html: string, baseUrl: string): string {
 export function extractMarkdownFromHtml(
   html: string,
   pageUrl: string,
+  focus?: string,
 ): { title: string | null; author: string | null; content: string } {
   const { document } = parseHTML(html);
   document.querySelectorAll('script, style, noscript, template, iframe').forEach((node) => node.remove());
   absolutizeLinks(document as unknown as QueryRoot, pageUrl);
+
+  const pageTitle = document.querySelector('title')?.textContent?.trim() || null;
+  const focused = focus ? focusedMarkdown(document, focus) : '';
+  if (focused.length >= MIN_USEFUL_CONTENT) {
+    const content = pageTitle && !focused.startsWith('# ')
+      ? `# ${pageTitle}\n\n${focused}`
+      : focused;
+    return { title: pageTitle, author: null, content };
+  }
 
   const parsed = new Readability(document as unknown as Document, {
     charThreshold: MIN_USEFUL_CONTENT,
@@ -84,6 +94,36 @@ export function extractMarkdownFromHtml(
 
   if (title && !content.startsWith('# ')) content = `# ${title}\n\n${content}`;
   return { title, author, content };
+}
+
+function normalizedText(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+function focusedMarkdown(document: Document, focus: string): string {
+  const terms = normalizedText(focus).split(' ').filter((term) => term.length >= 3);
+  if (terms.length === 0) return '';
+
+  const matches = (value: string | null | undefined) => {
+    const normalized = normalizedText(value ?? '');
+    return terms.some((term) => normalized.includes(term));
+  };
+
+  // IDs such as `pricing`, `features`, or `faq` are the strongest signal on
+  // landing pages. Heading text is the fallback when authors omit section IDs.
+  const idMatch = [...document.querySelectorAll('[id]')]
+    .find((element) => matches(element.getAttribute('id')) && element.id !== '__next');
+  const headingMatch = [...document.querySelectorAll('h1, h2, h3, h4, h5, h6')]
+    .find((element) => matches(element.textContent));
+  const root = idMatch
+    ?? headingMatch?.closest('[id]:not(#__next), section, article, main')
+    ?? headingMatch?.parentElement;
+  if (!root) return '';
+
+  const clone = root.cloneNode(true) as Element;
+  clone.querySelectorAll('script, style, noscript, template, iframe, svg, nav, header, footer, aside, form, button')
+    .forEach((node) => node.remove());
+  return createTurndown().turndown(clone.innerHTML).trim();
 }
 
 export function escapeMarkdown(value: string): string {

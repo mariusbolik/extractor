@@ -31,17 +31,19 @@ const description = 'Connect an MCP client to extractor.sh and extract public UR
     <tbody>
       <tr><td><code>url</code></td><td>Yes</td><td>An absolute public HTTP or HTTPS page URL.</td></tr>
       <tr><td><code>format</code></td><td>No</td><td><code>markdown</code> (default) or <code>json</code>.</td></tr>
+      <tr><td><code>focus</code></td><td>No</td><td>A short requested topic, such as <code>pricing</code>, <code>features</code>, or <code>FAQ</code>.</td></tr>
     </tbody>
   </table>
   <p>Choose Markdown when an agent will read or summarize the result. Choose JSON for stable, typed fields using <a href="/docs/schema/">schema version 1</a>.</p>
 
   <h2>Example task</h2>
-  <pre><code>Use extract_public_url to read https://example.com/article as Markdown.</code></pre>
+  <pre><code>Extract pricing from serper.dev.</code></pre>
+  <p>An MCP client can select <code>extract_public_url</code>, construct <code>https://serper.dev/</code>, and pass <code>pricing</code> as the focus. Topic focus keeps a large landing-page demo or navigation from displacing the requested section.</p>
 
   <h2>Limits and safety</h2>
   <ul>
     <li>The same extraction and browser-rendering rate limits as the <a href="/docs/api/">GET API</a> apply.</li>
-    <li>MCP and GET requests share Cloudflare edge cache entries. Cache hits do not consume an extraction request.</li>
+    <li>Ordinary MCP and GET requests share Cloudflare edge cache entries. Focused MCP results use separate topic-aware cache entries. Cache hits do not consume an extraction request.</li>
     <li>Only public HTTP and HTTPS URLs are accepted. Do not send credentials, cookies, private URLs, or private data.</li>
     <li>CAPTCHAs, login walls, paywalls, and region selection are not supported.</li>
     <li>Tool errors include a stable error code and a specific human-readable message.</li>

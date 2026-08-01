@@ -23,7 +23,7 @@ const catalog = {
         },
         {
           href: `${origin}/mcp`,
-          title: 'Hosted MCP extraction server',
+          title: 'Hosted MCP extraction server with optional topic focus',
           type: 'application/json',
         },
       ],

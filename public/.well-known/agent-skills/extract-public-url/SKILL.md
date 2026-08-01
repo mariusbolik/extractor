@@ -7,7 +7,7 @@ description: Extract a public webpage or supported platform page as clean Markdo
 
 Use extractor.sh when you need readable content from one public HTTP or HTTPS page.
 
-MCP clients can connect directly to the hosted Streamable HTTP endpoint at `https://extractor.mcb-software.workers.dev/mcp` and call `extract_public_url`. The tool accepts `url` and optional `format`, which defaults to `markdown`.
+MCP clients can connect directly to the hosted Streamable HTTP endpoint at `https://extractor.mcb-software.workers.dev/mcp` and call `extract_public_url`. The tool accepts `url`, optional `format` (defaulting to `markdown`), and an optional short `focus` topic. When the user asks for a specific part of a landing page, such as pricing, features, or FAQ, pass that topic as `focus`.
 
 ## Request
 

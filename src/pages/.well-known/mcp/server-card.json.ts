@@ -13,6 +13,13 @@ const card = {
   },
   authentication: { required: false },
   capabilities: { tools: true, resources: false, prompts: false },
+  tools: [
+    {
+      name: 'extract_public_url',
+      description: 'Extract a public URL as Markdown or normalized JSON, optionally focused on a requested topic.',
+      inputs: ['url', 'format', 'focus'],
+    },
+  ],
   documentation: 'https://extractor.mcb-software.workers.dev/docs/mcp/',
 };
 
