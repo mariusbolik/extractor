@@ -25,10 +25,10 @@ const description = 'A simple, cache-first GET API that extracts public webpages
       <h2 class="mb-5 font-heading text-[clamp(1.55rem,3vw,2.4rem)] font-normal leading-[1.02] tracking-[-0.045em]">Nothing to sign up for.</h2>
       <p>Use the same endpoint as the form. JSON is normalized across sources; Markdown is returned as a raw <code>text/markdown</code> response.</p>
     </div>
-    <pre class="m-0 max-w-full overflow-auto rounded-[3px] border-2 border-black bg-black p-5 font-mono text-[0.82rem] leading-[1.55] text-white"><code>curl --get \
+    <pre class="m-0 max-w-full overflow-auto rounded-[3px] border-2 border-black bg-white p-5 font-mono text-[0.82rem] leading-[1.55] text-black"><code>curl --get \
   'https://extractor.mcb-software.workers.dev/api/extract' \
   --data-urlencode 'url=https://example.com/article' \
-  --data-urlencode 'format=markdown'</code></pre>
+  --data-urlencode 'format=json'</code></pre>
   </section>
 
   <section id="mcp" class="mt-8 grid grid-cols-1 items-center gap-10 border-2 border-black bg-white p-[clamp(24px,5vw,52px)] [&_p]:max-w-[760px] [&_p]:leading-[1.7] lg:grid-cols-2">
@@ -38,7 +38,7 @@ const description = 'A simple, cache-first GET API that extracts public webpages
       <p>Connect an MCP client and call <code>extract_public_url</code>. It returns clean Markdown by default or the same normalized JSON as the public API.</p>
       <a class="mt-6 inline-flex border-b-2 border-black pb-1 font-bold no-underline" href="/docs/mcp/">Read the MCP docs →</a>
     </div>
-    <pre class="m-0 max-w-full overflow-auto rounded-[3px] border-2 border-black bg-black p-5 font-mono text-[0.82rem] leading-[1.55] text-white"><code>https://extractor.mcb-software.workers.dev/mcp</code></pre>
+    <pre class="m-0 max-w-full overflow-auto rounded-[3px] border-2 border-black bg-white p-5 font-mono text-[0.82rem] leading-[1.55] text-black"><code>https://extractor.mcb-software.workers.dev/mcp</code></pre>
   </section>
 
   <section class="mt-8 border-2 border-black bg-white p-[clamp(24px,5vw,52px)] [&_li]:max-w-[760px] [&_li]:leading-[1.7] [&_p]:max-w-[760px] [&_p]:leading-[1.7]">

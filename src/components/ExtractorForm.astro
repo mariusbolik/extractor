@@ -19,8 +19,8 @@ import { Icon } from 'astro-icon/components';
     </div>
     <fieldset class="mt-[18px] flex items-center gap-5 border-0 p-0 max-[660px]:flex-col max-[660px]:items-start max-[660px]:gap-[10px]">
       <legend class="float-left mr-2 text-[0.88rem] font-extrabold max-[660px]:mb-2">Output format</legend>
-      <label class="inline-flex cursor-pointer items-center gap-[7px]"><input class="m-0 size-[17px] accent-black" type="radio" name="format" value="markdown" checked /> Markdown</label>
-      <label class="inline-flex cursor-pointer items-center gap-[7px]"><input class="m-0 size-[17px] accent-black" type="radio" name="format" value="json" /> JSON</label>
+      <label class="inline-flex cursor-pointer items-center gap-[7px]"><input class="m-0 size-[17px] accent-black" type="radio" name="format" value="json" checked /> JSON</label>
+      <label class="inline-flex cursor-pointer items-center gap-[7px]"><input class="m-0 size-[17px] accent-black" type="radio" name="format" value="markdown" /> Markdown</label>
     </fieldset>
   </form>
 
@@ -32,14 +32,11 @@ import { Icon } from 'astro-icon/components';
         <a class="inline-flex items-center gap-[5px]" id="raw-result" target="_blank" rel="noopener">Open raw <Icon class="size-[19px] shrink-0" name="heroicons:arrow-top-right-on-square" aria-hidden="true" /></a>
       </div>
     </div>
-    <div id="result-content" class="result-content mt-3 max-h-[620px] overflow-auto border-2 border-black bg-white p-[clamp(18px,3vw,30px)] leading-[1.65] [&_a]:underline [&_blockquote]:ml-0 [&_blockquote]:border-l-[5px] [&_blockquote]:border-black [&_blockquote]:pl-[18px] [&_h1]:mt-0 [&_h1]:mb-4 [&_h1]:font-heading [&_h1]:text-3xl [&_h1]:leading-tight [&_h2]:mt-8 [&_h2]:mb-3 [&_h2]:font-heading [&_h2]:text-2xl [&_h2]:leading-tight [&_h3]:mt-6 [&_h3]:mb-2 [&_h3]:font-heading [&_h3]:text-xl [&_img]:max-w-full [&_img]:border-2 [&_img]:border-black [&_li+li]:mt-2 [&_ol]:my-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:my-4 [&_pre]:m-0 [&_pre]:rounded-[3px] [&_pre]:whitespace-pre-wrap [&_ul]:my-4 [&_ul]:list-[square] [&_ul]:pl-6"></div>
+    <div id="result-content" class="result-content mt-3 max-h-[620px] overflow-auto border-2 border-black bg-white p-[clamp(18px,3vw,30px)] font-mono text-[0.84rem] leading-[1.65] [&_.shiki]:!bg-white [&_pre]:m-0 [&_pre]:min-w-max [&_pre]:rounded-[3px] [&_pre]:bg-white [&_pre]:whitespace-pre"></div>
   </div>
 </section>
 
 <script>
-  import DOMPurify from 'dompurify';
-  import { marked } from 'marked';
-
   const form = document.querySelector<HTMLFormElement>('#extract-form');
   const result = document.querySelector<HTMLElement>('#result');
   const resultLabel = document.querySelector<HTMLElement>('#result-label');
@@ -47,7 +44,29 @@ import { Icon } from 'astro-icon/components';
   const rawResult = document.querySelector<HTMLAnchorElement>('#raw-result');
   const copyResult = document.querySelector<HTMLButtonElement>('#copy-result');
   const submit = form?.querySelector<HTMLButtonElement>('button[type="submit"]');
+  let jsonHighlighter: ReturnType<typeof createJsonHighlighter> | undefined;
   let copyValue = '';
+
+  // Shiki is only needed after a successful JSON request. Keeping its single
+  // grammar and light theme in a lazy chunk avoids slowing the initial form.
+  async function createJsonHighlighter() {
+    const [{ createHighlighterCore }, { createJavaScriptRegexEngine }, { default: json }, { default: githubLight }] = await Promise.all([
+      import('shiki/core'),
+      import('shiki/engine/javascript'),
+      import('shiki/langs/json.mjs'),
+      import('shiki/themes/github-light-default.mjs'),
+    ]);
+    return createHighlighterCore({
+      themes: [githubLight],
+      langs: [json],
+      engine: createJavaScriptRegexEngine(),
+    });
+  }
+
+  function getJsonHighlighter() {
+    jsonHighlighter ??= createJsonHighlighter();
+    return jsonHighlighter;
+  }
 
   form?.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -55,7 +74,7 @@ import { Icon } from 'astro-icon/components';
 
     const endpoint = new URL(form.action, window.location.origin);
     endpoint.search = new URLSearchParams(new FormData(form) as unknown as Record<string, string>).toString();
-    const format = endpoint.searchParams.get('format') || 'markdown';
+    const format = endpoint.searchParams.get('format') || 'json';
 
     result.hidden = false;
     result.dataset.state = 'loading';
@@ -76,15 +95,18 @@ import { Icon } from 'astro-icon/components';
       if (format === 'json') {
         const payload = await response.json();
         copyValue = JSON.stringify(payload, null, 2);
-        const pre = document.createElement('pre');
-        pre.textContent = copyValue;
-        resultContent.replaceChildren(pre);
+        const highlighter = await getJsonHighlighter();
+        resultContent.innerHTML = highlighter.codeToHtml(copyValue, {
+          lang: 'json',
+          theme: 'github-light-default',
+        });
         resultLabel.textContent = 'JSON result';
       } else {
         copyValue = await response.text();
-        const rendered = await marked.parse(copyValue);
-        resultContent.innerHTML = DOMPurify.sanitize(rendered);
-        resultLabel.textContent = 'Markdown result';
+        const pre = document.createElement('pre');
+        pre.textContent = copyValue;
+        resultContent.replaceChildren(pre);
+        resultLabel.textContent = 'Raw Markdown result';
       }
       result.dataset.state = 'success';
     } catch (error) {

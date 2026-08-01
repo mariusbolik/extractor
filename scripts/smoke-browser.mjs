@@ -74,7 +74,7 @@ async function submitExtraction({ url, format, source, type, text }) {
   assert.equal(response.status(), 200, `${source} returned HTTP ${response.status()}`);
   await page.locator('#result[data-state="success"]').waitFor({ timeout: 30_000 });
 
-  const expectedLabel = format === 'json' ? 'JSON result' : 'Markdown result';
+  const expectedLabel = format === 'json' ? 'JSON result' : 'Raw Markdown result';
   assert.equal(await page.locator('#result-label').textContent(), expectedLabel);
   const content = page.locator('#result-content');
   await assertNoHorizontalOverflow(`${source} ${format} preview`);
@@ -86,11 +86,17 @@ async function submitExtraction({ url, format, source, type, text }) {
   assert.equal(rawUrl.searchParams.get('format'), format);
 
   if (format === 'json') {
+    assert.equal(await content.locator('pre.shiki').count(), 1, 'JSON preview is not highlighted by Shiki');
+    const background = await content.locator('pre.shiki').evaluate((element) => getComputedStyle(element).backgroundColor);
+    assert.equal(background, 'rgb(255, 255, 255)', 'Shiki JSON preview does not use a white background');
     const payload = JSON.parse(await content.locator('pre').innerText());
     assert.equal(payload.schemaVersion, 1);
     assertEntity(payload, source, type);
     assertIntegerPrices(payload);
   } else {
+    assert.equal(await content.locator('pre').count(), 1, 'Markdown preview is not raw preformatted text');
+    assert.equal(await content.locator('pre.shiki').count(), 0, 'Markdown preview should not be syntax highlighted');
+    assert.equal(await content.locator('h1, h2, h3, p, ul, ol, blockquote').count(), 0, 'Markdown preview was rendered as HTML');
     assert.match(response.headers()['content-type'] || '', /^text\/markdown/i);
   }
 }
@@ -99,6 +105,7 @@ try {
   const home = await page.goto(`${origin}/`, { waitUntil: 'networkidle' });
   assert.equal(home?.status(), 200);
   await page.locator('#extract-form').waitFor();
+  assert.equal(await page.locator('input[name="format"][value="json"]').isChecked(), true, 'JSON is not the default website output');
   assert.equal(await page.locator('.method-card').count(), 13);
   assert.equal(await page.locator('footer a[href="/alternatives/"]').count(), 1, 'Alternatives footer link is missing');
   assert.equal(await page.locator('footer a[href="/blog/"]').count(), 1, 'Blog footer link is missing');
