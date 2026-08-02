@@ -118,7 +118,7 @@ try {
   const formatRadios = page.locator('input[name="format"]');
   assert.equal(await page.locator('#url').getAttribute('placeholder'), 'https://www.amazon.com/dp/B09B8V1LZ3', 'Homepage form does not use the verified Amazon.com placeholder');
   assert.match(await page.locator('#api pre code').textContent() || '', /https:\/\/www\.amazon\.com\/dp\/B09B8V1LZ3/, 'Homepage API example does not use the verified Amazon.com product');
-  assert.equal(await page.locator('input[name="format"][value="json"]').isChecked(), true, 'JSON is not the default website output');
+  assert.equal(await page.locator('input[name="format"][value="markdown"]').isChecked(), true, 'Markdown is not the default website output');
   for (const radio of await formatRadios.all()) {
     const borderRadius = await radio.evaluate((element) => getComputedStyle(element).borderRadius);
     assert.equal(borderRadius, '0px', 'A format radio is not square');
@@ -147,6 +147,11 @@ try {
   assert.equal(await page.locator('footer a[href="/blog/"]').count(), 1, 'Blog footer link is missing');
   assert.equal((await page.locator('footer > span').textContent())?.trim(), '© extractor.sh', 'Footer copyright label is incorrect');
   assert.equal(await page.locator('footer a[href="https://dlvr.sh"]').count(), 0, 'dlvr.sh is still in the footer');
+  assert.deepEqual(
+    await page.locator('header nav a').allTextContents(),
+    ['Docs', 'Pricing', 'Contact'],
+    'Contact is not the final header navigation item',
+  );
   const dlvrBanner = page.locator('main > [data-dlvr-banner]');
   assert.equal(await dlvrBanner.count(), 1, 'dlvr.sh homepage banner is missing');
   assert.equal(await dlvrBanner.getAttribute('href'), 'https://dlvr.sh', 'dlvr.sh homepage banner has the wrong URL');
