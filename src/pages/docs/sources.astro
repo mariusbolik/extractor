@@ -14,7 +14,7 @@ const description = 'Supported public webpage, commerce, social, audio, podcast,
   <h2>Web pages</h2>
   <p>Public HTTP and HTTPS articles, documentation, blogs, and other content pages.</p>
   <pre><code>https://example.com/article</code></pre>
-  <p>If a page cannot be read directly, extractor.sh can use a structured post, embed, or feed URL that the publisher advertises in that page. You still submit the normal HTML page URL.</p>
+  <p>Submit the ordinary public page URL. extractor.sh handles supported pages automatically and returns the same consistent response shape.</p>
 
   <h2>Amazon</h2>
   <p>Public product detail pages return one product entity. Public search results pages return a feed containing up to 20 product entities.</p>
@@ -61,7 +61,7 @@ https://www.instagram.com/p/DbbY9pdm6Q2/</code></pre>
     <li>Public storefront homepages</li>
   </ul>
   <pre><code>https://store.example/products/black-shirt</code></pre>
-  <p>Submit the ordinary storefront page, not its JSON URL. Product pages return one product entity. Storefront and collection pages return up to 50 product entities as a feed. Stores that disable or protect their product data continue through regular webpage extraction.</p>
+  <p>Submit the ordinary public storefront page. Product pages return one product entity. Storefront and collection pages return up to 50 product entities as a feed. Protected or unavailable storefront data may produce an incomplete result or an error.</p>
 
   <h2>SoundCloud</h2>
   <p>Public tracks, playlists, and sets return an audio entity. Creator pages return a profile entity.</p>

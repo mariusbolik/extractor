@@ -2,6 +2,8 @@ import { Readability } from '@mozilla/readability';
 import { parseHTML } from 'linkedom';
 import TurndownService from 'turndown';
 import { ExtractionError } from './errors';
+import { extractPageMetadataFromDocument, extractPreviewMediaFromDocument } from './metadata';
+import type { ExtractedMedia } from './types';
 
 const MIN_USEFUL_CONTENT = 80;
 
@@ -51,18 +53,42 @@ export function extractMarkdownFromHtml(
   html: string,
   pageUrl: string,
   focus?: string,
-): { title: string | null; author: string | null; content: string } {
+): {
+  title: string | null;
+  author: string | null;
+  publishedAt: string | null;
+  description: string | null;
+  content: string;
+  media: ExtractedMedia[];
+  metadataOnly: boolean;
+} {
   const { document } = parseHTML(html);
+  const metadata = extractPageMetadataFromDocument(document as unknown as Document, pageUrl);
+  const pageTitle = metadata.title;
+  // Media discovery is metadata-only and reuses this DOM. It performs no image
+  // request and does not pay for a second LinkeDOM parse of the same document.
+  const media = extractPreviewMediaFromDocument(
+    document as unknown as Document,
+    pageUrl,
+    pageTitle,
+  );
   document.querySelectorAll('script, style, noscript, template, iframe').forEach((node) => node.remove());
   absolutizeLinks(document as unknown as QueryRoot, pageUrl);
 
-  const pageTitle = document.querySelector('title')?.textContent?.trim() || null;
   const focused = focus ? focusedMarkdown(document, focus) : '';
   if (focused.length >= MIN_USEFUL_CONTENT) {
     const content = pageTitle && !focused.startsWith('# ')
       ? `# ${pageTitle}\n\n${focused}`
       : focused;
-    return { title: pageTitle, author: null, content };
+    return {
+      title: pageTitle,
+      author: metadata.author,
+      publishedAt: metadata.publishedAt,
+      description: metadata.description,
+      content,
+      media,
+      metadataOnly: false,
+    };
   }
 
   const parsed = new Readability(document as unknown as Document, {
@@ -75,8 +101,8 @@ export function extractMarkdownFromHtml(
 
   if (parsed?.content) {
     content = createTurndown().turndown(parsed.content).trim();
-    title = parsed.title?.trim() || null;
-    author = parsed.byline?.trim() || null;
+    title = parsed.title?.trim() || metadata.title;
+    author = parsed.byline?.trim() || metadata.author;
   }
 
   if (content.length < MIN_USEFUL_CONTENT) {
@@ -88,12 +114,28 @@ export function extractMarkdownFromHtml(
     }
   }
 
+  let metadataOnly = false;
+  if (content.length < MIN_USEFUL_CONTENT && (metadata.description?.length ?? 0) >= MIN_USEFUL_CONTENT) {
+    title ||= metadata.title || new URL(pageUrl).hostname.replace(/^www\./, '');
+    author ||= metadata.author;
+    content = metadata.description!;
+    metadataOnly = true;
+  }
+
   if (content.length < MIN_USEFUL_CONTENT) {
     throw new ExtractionError('extraction_failed', 'No useful page content was found.', 422);
   }
 
   if (title && !content.startsWith('# ')) content = `# ${title}\n\n${content}`;
-  return { title, author, content };
+  return {
+    title,
+    author,
+    publishedAt: metadata.publishedAt,
+    description: metadata.description,
+    content,
+    media,
+    metadataOnly,
+  };
 }
 
 function normalizedText(value: string): string {

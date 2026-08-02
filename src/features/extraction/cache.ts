@@ -1,6 +1,6 @@
 import type { ExtractionResult } from './types';
 
-export const API_CACHE_VERSION = '2026-08-schema-v1';
+export const API_CACHE_VERSION = '2026-08-schema-v1-link-metadata';
 
 const COLLECTION_TTL = 3_600;
 const PRODUCT_TTL = 3_600;

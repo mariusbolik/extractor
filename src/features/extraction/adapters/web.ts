@@ -94,16 +94,19 @@ export async function extractWebPage(
     const shopify = await extractShopifyStorefront(page.body, new URL(fetchedUrl), dependencies);
     if (shopify) return shopify;
     const extracted = extractMarkdownFromHtml(page.body, fetchedUrl, dependencies.focus);
+    if (extracted.metadataOnly) {
+      const discovered = await extractDiscoveredAlternative(sourceHtml, fetchedUrl, dependencies);
+      if (discovered) return discovered;
+    }
+    const { metadataOnly, description: _description, ...article } = extracted;
     return {
-      type: 'article',
+      type: metadataOnly ? 'document' : 'article',
       url: fetchedUrl,
       source: 'web',
       id: null,
-      ...extracted,
-      publishedAt: null,
-      media: [],
+      ...article,
       attributes: {},
-      method: 'linkedom',
+      method: metadataOnly ? 'metadata' : 'linkedom',
     };
   } catch (error) {
     if (error instanceof ExtractionError && ['invalid_url', 'unsafe_url', 'not_found', 'unsupported_content_type', 'content_too_large', 'timeout'].includes(error.code)) {
@@ -129,24 +132,23 @@ export async function extractWebPage(
   }
 
   if (!dependencies.browser) {
-    throw new ExtractionError('extraction_failed', 'No useful content was found and browser rendering is unavailable.', 422);
+    throw new ExtractionError('extraction_failed', 'The page did not expose usable public content.', 422);
   }
 
   if (dependencies.allowBrowser && !(await dependencies.allowBrowser())) {
-    throw new ExtractionError('rate_limited', 'Browser fallback rate limit exceeded.', 429, 60);
+    throw new ExtractionError('rate_limited', 'High-cost extraction rate limit exceeded.', 429, 60);
   }
 
   try {
     const html = await renderPageHtml(url, dependencies.browser);
     const extracted = extractMarkdownFromHtml(html, fetchedUrl, dependencies.focus);
+    const { metadataOnly: _metadataOnly, description: _description, ...article } = extracted;
     return {
       type: 'article',
       url: fetchedUrl,
       source: 'web',
       id: null,
-      ...extracted,
-      publishedAt: null,
-      media: [],
+      ...article,
       attributes: {},
       method: 'browser',
     };

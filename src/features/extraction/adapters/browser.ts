@@ -75,7 +75,7 @@ export async function renderPageHtml(url: URL, binding: BrowserRun): Promise<str
     if (!response) {
       throw new ExtractionError(
         'upstream_error',
-        'Browser navigation did not receive an HTTP response from the source.',
+        'The source did not return an HTTP response.',
         502,
       );
     }
@@ -102,7 +102,7 @@ export async function renderPageHtml(url: URL, binding: BrowserRun): Promise<str
 
     const html = await page.content();
     if (new TextEncoder().encode(html).byteLength > MAX_RENDERED_BYTES) {
-      throw new ExtractionError('content_too_large', 'The rendered page is larger than 5 MB.', 413);
+      throw new ExtractionError('content_too_large', 'The processed page is larger than 5 MB.', 413);
     }
 
     return html;
@@ -115,19 +115,19 @@ export async function renderPageHtml(url: URL, binding: BrowserRun): Promise<str
       throw new ExtractionError('upstream_error', 'The source hostname could not be resolved.', 502);
     }
     if (error instanceof Error && /ERR_CONNECTION_REFUSED/i.test(error.message)) {
-      throw new ExtractionError('upstream_error', 'The source refused the browser connection.', 502);
+      throw new ExtractionError('upstream_error', 'The source refused the connection.', 502);
     }
     if (error instanceof Error && /ERR_CONNECTION_(?:TIMED_OUT|CLOSED|RESET)|ERR_TIMED_OUT/i.test(error.message)) {
-      throw new ExtractionError('timeout', 'The browser connection to the source timed out.', 504);
+      throw new ExtractionError('timeout', 'The connection to the source timed out.', 504);
     }
     if (error instanceof Error && /ERR_TOO_MANY_REDIRECTS/i.test(error.message)) {
-      throw new ExtractionError('upstream_error', 'The source redirected the browser too many times.', 502);
+      throw new ExtractionError('upstream_error', 'The source redirected too many times.', 502);
     }
     if (error instanceof Error && /ERR_CERT_/i.test(error.message)) {
       throw new ExtractionError('upstream_error', 'The source has an invalid or unsupported TLS certificate.', 502);
     }
     if (!browser) {
-      throw new ExtractionError('upstream_error', 'Browser rendering is temporarily unavailable.', 502);
+      throw new ExtractionError('upstream_error', 'A required extraction service is temporarily unavailable.', 502);
     }
     throw new ExtractionError('extraction_failed', 'The source loaded, but its content could not be extracted.', 422);
   } finally {

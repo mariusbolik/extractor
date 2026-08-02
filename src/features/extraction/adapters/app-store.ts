@@ -171,7 +171,7 @@ async function fetchAppleResults(
     if (!Array.isArray(payload.results)) throw new Error('Missing results');
     return payload.results;
   } catch {
-    throw new ExtractionError('extraction_failed', 'Apple returned an invalid app API response.', 502);
+    throw new ExtractionError('extraction_failed', 'Apple returned invalid public app data.', 502);
   }
 }
 

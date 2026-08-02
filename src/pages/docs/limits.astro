@@ -14,7 +14,7 @@ const description = 'Rate limits, cache behavior, maximum sizes, and safe usage 
   <h2>Rate limits</h2>
   <ul>
     <li>30 extraction requests per client per 60 seconds.</li>
-    <li>5 browser-heavy fallback requests per client per 60 seconds.</li>
+    <li>5 high-cost extraction requests per client per 60 seconds.</li>
   </ul>
   <p>A rate-limited response uses HTTP <code>429</code> and may include a <code>Retry-After</code> header. Reuse identical request URLs so cached responses can be served efficiently.</p>
   <p>Successful API responses include <code>X-Extractor-Cache: MISS</code> when extraction work ran and <code>X-Extractor-Cache: HIT</code> when the versioned edge cache served the result.</p>

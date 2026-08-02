@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { alternativePages, platformArticles } from '../marketing/content';
 import { getSiteMarkdown } from './site-markdown';
@@ -48,5 +49,47 @@ describe('agent-readable site Markdown', () => {
 
   it('does not claim Markdown representations for unknown paths', () => {
     expect(getSiteMarkdown('/missing')).toBeNull();
+  });
+
+  it('keeps private retrieval mechanisms out of public documentation', () => {
+    const publicDocuments = [
+      '../../pages/index.astro',
+      '../../pages/docs/api.astro',
+      '../../pages/docs/limits.astro',
+      '../../pages/docs/mcp.astro',
+      '../../pages/docs/schema.astro',
+      '../../pages/docs/sources.astro',
+      '../../../public/llms-full.txt',
+    ].map((path) => readFileSync(new URL(path, import.meta.url), 'utf8'));
+
+    const agentMarkdown = [
+      '/',
+      '/docs/mcp/',
+      '/docs/api/',
+      '/docs/schema/',
+      '/docs/sources/',
+      '/docs/limits/',
+    ].map((path) => getSiteMarkdown(path) ?? '');
+
+    const privateTerms = [
+      /\boembed\b/i,
+      /\brss\b/i,
+      /\batom\b/i,
+      /react-tweet/i,
+      /linkedom/i,
+      /readability/i,
+      /turndown/i,
+      /browser[- ](?:run|rendering|heavy)/i,
+      /structured post/i,
+      /json endpoint/i,
+      /compact (?:product page|search representation)/i,
+      /page hydration/i,
+      /lookup service/i,
+      /\bappview\b/i,
+    ];
+
+    for (const document of [...publicDocuments, ...agentMarkdown]) {
+      for (const privateTerm of privateTerms) expect(document).not.toMatch(privateTerm);
+    }
   });
 });

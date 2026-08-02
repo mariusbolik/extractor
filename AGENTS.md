@@ -14,6 +14,8 @@
 ## Required behavior
 
 - Use only public GET requests for extraction.
+- When researching or adding a source, search for low-cost machine-readable paths before scraping HTML: standards and discovery links, XML/RSS/Atom feeds, JSON/JSON-LD, oEmbed, official or public APIs, compact/mobile representations, and publicly reachable source-specific endpoints. Treat “backdoors” only as alternate public representations—never bypass authentication, paywalls, access controls, captchas, or other protections. Prefer no-key/no-cost paths, reuse a fetched response when possible, and keep Browser Run as the final fallback.
+- Keep retrieval mechanisms private. Public UI, docs, examples, agent-readable files, errors, and API or MCP responses may describe supported platforms, accepted URL types, capabilities, result entities, limits, and caching, but must not identify or imply the internal endpoint, feed, API, oEmbed provider, compact or mobile representation, library, parser, fallback order, or Browser Run path used to obtain data. Internal code, comments, contributor documentation, and tests may name these mechanisms. Continue stripping `method` from public schema-v1 output.
 - Preserve the generic fallback order: native `text/markdown`, LinkeDOM/readability, then Browser Run.
 - Route recognized Amazon products/searches, Apple App Store apps, Bluesky profiles/posts, Google News searches/topics/top stories, Google Play apps, Instagram posts/profiles, Reddit, Shopify, SoundCloud, Spotify, TikTok posts/profiles, Vimeo, X, and YouTube URLs through their dedicated adapters first.
 - For an exact Amazon product URL, extract the ASIN and fetch Amazon's compact product page. For an Amazon search URL containing `k`, fetch its compact search representation and return up to 20 product items. Do not send recognized Amazon products or searches to Browser Run.
@@ -26,6 +28,7 @@
 - Use official public oEmbed metadata for recognized Vimeo, SoundCloud, and Spotify URLs. Strip active embed markup and do not launch Browser Run for these sources.
 - Treat status-shaped URLs on arbitrary domains as possible Mastodon posts. Validate them through the instance's public oEmbed endpoint, enrich confirmed statuses through public status data, and otherwise return the URL to normal webpage extraction. Confirmed Mastodon posts must not launch Browser Run.
 - Try publisher-advertised WordPress JSON, oEmbed, and feed links only after ordinary HTML extraction fails and before Browser Run.
+- Keep `linkpeek` benchmark-only; production metadata extraction must reuse the LinkeDOM tree already created from HTML fetched through the guarded request pipeline. Preserve readable body content as the primary result, enrich safe deep-page dates and missing non-URL authors, and use a sufficiently detailed publisher description only after discovery fails and before Browser Run. Never call linkpeek's network-fetching `preview()` API.
 - For confirmed Shopify storefront HTML, prefer its public product JSON before theme parsing. Exact product pages are products; storefront roots and collection pages are feeds capped at 50 products. Keep blogs, pages, policies, searches, and other Shopify content routes in ordinary webpage extraction.
 - Keep public JSON output on schema version 1. Treat `src/features/extraction/schema.ts` as the runtime and generated JSON Schema source of truth and keep TypeScript types in `src/features/extraction/types.ts` aligned with it.
 - Use semantic entity types: `document`, `article`, `product`, `post`, `profile`, `video`, `audio`, and `feed`. Keep shared nullable fields present; omit unavailable optional type-specific attributes. Only profiles and feeds contain `items`.
@@ -77,6 +80,7 @@ bun run test:smoke:browser
 - Server-only rescue branches that cannot be induced reliably on a public site still require deterministic fixture tests; state clearly that those branches were fixture-tested rather than claiming Chromium coverage.
 - Do not report a change as Chromium-smoke-tested unless this command completed successfully after the relevant production deployment.
 - Evaluate proposed generic HTML extractor replacements with `bun run benchmark:extractors`. Compare both implementations against the same fetched HTML on at least 100 successful public HTML responses; do not add the losing implementation to the Worker runtime.
+- Evaluate generic metadata parser changes with `bun run benchmark:metadata`. Keep a balanced corpus of root and deep content URLs, compare identical fetched HTML on at least 100 successful responses, and manually inspect dates, authors, and image disagreements before adopting higher-coverage fields.
 
 ## Cloudflare safety
 

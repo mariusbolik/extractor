@@ -6,6 +6,7 @@ export type EntityType = typeof entityTypes[number];
 export type ExtractionMethod =
   | 'native-markdown'
   | 'linkedom'
+  | 'metadata'
   | 'browser'
   | 'amazon-html'
   | 'amazon-search-html'
@@ -73,6 +74,7 @@ export interface EntityAttributes {
   publisher?: string;
   publisherUrl?: string;
   handle?: string;
+  authorImageUrl?: string;
   contentWarning?: string;
   mediaType?: 'text' | 'image' | 'video' | 'audio' | 'carousel' | 'mixed';
   durationSeconds?: number;

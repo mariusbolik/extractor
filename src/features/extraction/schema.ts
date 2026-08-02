@@ -56,6 +56,7 @@ const ProductAttributesSchema = z.strictObject({
 });
 const PostAttributesSchema = z.strictObject({
   handle: z.string().optional(),
+  authorImageUrl: z.url().optional(),
   contentWarning: z.string().optional(),
   mediaType: z.enum(['text', 'image', 'video', 'audio', 'carousel', 'mixed']).optional(),
   durationSeconds: nonNegativeInteger.optional(),

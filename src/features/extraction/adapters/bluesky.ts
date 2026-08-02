@@ -186,7 +186,7 @@ export async function extractBlueskyProfile(
     const parsed = parser.parse(response.body) as Record<string, unknown>;
     channel = (parsed.rss as Record<string, unknown> | undefined)?.channel as Record<string, unknown> | undefined;
   } catch {
-    throw new ExtractionError('upstream_error', 'Bluesky returned an invalid public profile feed.', 502);
+    throw new ExtractionError('upstream_error', 'Bluesky returned invalid public profile data.', 502);
   }
 
   if (!channel) throw new ExtractionError('not_found', 'No public Bluesky profile was found.', 404);

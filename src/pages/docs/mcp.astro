@@ -42,7 +42,7 @@ const description = 'Connect an MCP client to extractor.sh and extract public UR
 
   <h2>Limits and safety</h2>
   <ul>
-    <li>The same extraction and browser-rendering rate limits as the <a href="/docs/api/">GET API</a> apply.</li>
+    <li>The same standard and high-cost request limits as the <a href="/docs/api/">GET API</a> apply.</li>
     <li>Ordinary MCP and GET requests share Cloudflare edge cache entries. Focused MCP results use separate topic-aware cache entries. Cache hits do not consume an extraction request.</li>
     <li>Only public HTTP and HTTPS URLs are accepted. Do not send credentials, cookies, private URLs, or private data.</li>
     <li>CAPTCHAs, login walls, paywalls, and region selection are not supported.</li>

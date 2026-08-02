@@ -234,7 +234,7 @@ export async function extractGoogleNews(
     } catch (htmlError) {
       if (!dependencies.browser) throw htmlError;
       if (dependencies.allowBrowser && !(await dependencies.allowBrowser())) {
-        throw new ExtractionError('rate_limited', 'Browser fallback rate limit exceeded.', 429, 60);
+        throw new ExtractionError('rate_limited', 'High-cost extraction rate limit exceeded.', 429, 60);
       }
       // Browser Rendering is deliberately third and last: one RSS request and
       // one regular HTML request must both fail before this billable fallback.
@@ -260,9 +260,9 @@ export async function extractGoogleNews(
     const parsed = parser.parse(response.body) as Record<string, unknown>;
     channel = (parsed.rss as Record<string, unknown> | undefined)?.channel as Record<string, unknown> | undefined;
   } catch {
-    throw new ExtractionError('upstream_error', 'Google News returned invalid public feed data.', 502);
+    throw new ExtractionError('upstream_error', 'Google News returned invalid public article data.', 502);
   }
-  if (!channel) throw new ExtractionError('not_found', 'No public Google News feed was found.', 404);
+  if (!channel) throw new ExtractionError('not_found', 'No public Google News content was found.', 404);
 
   const entries = list(channel.item as Record<string, unknown> | Record<string, unknown>[] | undefined).slice(0, 50);
   const items: ExtractedItem[] = entries.flatMap((entry) => {
@@ -289,7 +289,7 @@ export async function extractGoogleNews(
       },
     }];
   });
-  if (!items.length) throw new ExtractionError('not_found', 'The Google News feed contains no public articles.', 404);
+  if (!items.length) throw new ExtractionError('not_found', 'The Google News page contains no public articles.', 404);
 
   const title = text(channel.title) || (query ? `Google News search: ${query}` : 'Google News');
   const description = text(channel.description);

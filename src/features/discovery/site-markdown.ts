@@ -203,7 +203,7 @@ Connect an MCP-compatible client to the public stateless Streamable HTTP endpoin
 - \`format\`: optional \`markdown\` (default) or \`json\`.
 - \`focus\`: optional short topic such as \`pricing\`, \`features\`, or \`FAQ\`.
 
-Markdown is best for reading and summarizing. JSON follows extractor.sh schema version 1. When a request asks for a specific part of a landing page, pass it as \`focus\` so unrelated demos or navigation do not displace that section. Ordinary MCP and \`GET ${ORIGIN}/api/extract\` calls share the same Cloudflare cache; focused MCP results use separate topic-aware cache entries. All calls share the same rate limits, including the lower browser-rendering limit. Do not send credentials, cookies, private URLs, or private data.
+Markdown is best for reading and summarizing. JSON follows extractor.sh schema version 1. When a request asks for a specific part of a landing page, pass it as \`focus\` so unrelated demos or navigation do not displace that section. Ordinary MCP and \`GET ${ORIGIN}/api/extract\` calls share the same Cloudflare cache; focused MCP results use separate topic-aware cache entries. All calls share the same rate limits, including the lower high-cost request limit. Do not send credentials, cookies, private URLs, or private data.
 
 - [MCP Server Card](${ORIGIN}/.well-known/mcp/server-card.json)
 - [Limits and caching](${ORIGIN}/docs/limits/)
@@ -257,7 +257,7 @@ Private sources, credentials, stories, transcripts, media downloads, Bluesky rep
 `,
   '/docs/limits/': `# extractor.sh limits and caching
 
-The \`GET ${ORIGIN}/api/extract\` endpoint allows 30 extraction requests per client per 60 seconds and 5 browser-heavy fallbacks per client per 60 seconds.
+The \`GET ${ORIGIN}/api/extract\` endpoint allows 30 extraction requests per client per 60 seconds and 5 high-cost extraction requests per client per 60 seconds.
 
 - Single entities and pages may be cached at the edge for up to 30 days.
 - Products, profiles, and feeds may be cached for up to 1 hour.

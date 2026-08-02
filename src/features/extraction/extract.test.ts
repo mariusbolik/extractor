@@ -45,6 +45,40 @@ describe('extractUrl', () => {
     expect(renderPageHtmlMock).not.toHaveBeenCalled();
   });
 
+  it('returns a useful article preview image from ordinary HTML', async () => {
+    const title = 'A useful public article';
+    const result = await extractUrl('https://example.com/article', {
+      fetcher: mockFetch(`
+        <html><head>
+          <title>${title}</title>
+          <meta property="og:image" content="https://cdn.example.com/article.jpg">
+          <meta property="og:image:width" content="1200">
+          <meta property="og:image:height" content="630">
+          <meta property="article:published_time" content="2026-07-30T12:15:00+02:00">
+          <meta name="author" content="Ada Example">
+        </head><body><article>
+          <h1>${title}</h1>
+          <p>This ordinary server-rendered article has enough useful content to extract without opening a browser.</p>
+        </article></body></html>
+      `, 'text/html'),
+    });
+
+    expect(result).toMatchObject({
+      type: 'article',
+      method: 'linkedom',
+      media: [{
+        type: 'image',
+        url: 'https://cdn.example.com/article.jpg',
+        width: 1200,
+        height: 630,
+      }],
+      author: 'Ada Example',
+      publishedAt: '2026-07-30T10:15:00.000Z',
+    });
+    expect(toPublicExtractionResult(result).media).toHaveLength(1);
+    expect(renderPageHtmlMock).not.toHaveBeenCalled();
+  });
+
   it('rejects unsupported media without wasting a browser launch', async () => {
     await expect(extractUrl('https://example.com/image.png', {
       fetcher: mockFetch('PNG bytes would be here', 'image/png'),
@@ -60,7 +94,7 @@ describe('extractUrl', () => {
 
   it('falls back to Browser Run after unusable HTML', async () => {
     renderPageHtmlMock.mockResolvedValue(`
-      <html><head><title>Rendered</title></head><body><main>
+      <html><head><title>Rendered</title><meta property="og:image" content="https://cdn.example.com/rendered.jpg"></head><body><main>
       <h1>Rendered page</h1><p>This useful content appeared after JavaScript rendered the page for the visitor.</p>
       <p>There is enough material here to pass the readable-content threshold safely.</p>
       </main></body></html>`);
@@ -73,6 +107,37 @@ describe('extractUrl', () => {
 
     expect(result.method).toBe('browser');
     expect(result.content).toContain('Rendered page');
+    expect(result.media).toEqual([{ type: 'image', url: 'https://cdn.example.com/rendered.jpg' }]);
+  });
+
+  it('uses descriptive publisher metadata before Browser Rendering', async () => {
+    const description = 'This public application description is detailed enough to give an agent useful context without launching an expensive browser session.';
+    const result = await extractUrl('https://example.com/app', {
+      fetcher: mockFetch(`<html><head>
+        <meta property="og:title" content="Public application">
+        <meta property="og:description" content="${description}">
+        <meta property="og:image" content="https://cdn.example.com/social-card.jpg">
+        <meta property="og:image:width" content="1200">
+        <meta property="og:image:height" content="630">
+      </head><body><div id="app"></div><script src="/app.js"></script></body></html>`, 'text/html'),
+      browser: { fetch: vi.fn() } as unknown as BrowserRun,
+      allowBrowser: async () => true,
+    });
+
+    expect(result).toMatchObject({
+      type: 'document',
+      title: 'Public application',
+      method: 'metadata',
+      media: [{
+        type: 'image',
+        url: 'https://cdn.example.com/social-card.jpg',
+        width: 1200,
+        height: 630,
+      }],
+    });
+    expect(result.content).toContain(description);
+    expect(toPublicExtractionResult(result)).not.toHaveProperty('method');
+    expect(renderPageHtmlMock).not.toHaveBeenCalled();
   });
 
   it('does not launch a browser for a direct upstream failure', async () => {
@@ -261,6 +326,15 @@ describe('extractUrl', () => {
   });
 
   it('normalizes a public X post through the official oEmbed endpoint', async () => {
+    fetchTweetMock.mockResolvedValue({
+      data: {
+        user: {
+          name: 'jack',
+          screen_name: 'jack',
+          profile_image_url_https: 'https://pbs.twimg.com/profile_images/jack_normal.jpg',
+        },
+      },
+    });
     const fetcher = mockFetch(JSON.stringify({
       author_name: 'jack',
       author_url: 'https://x.com/jack',
@@ -268,11 +342,27 @@ describe('extractUrl', () => {
     }), 'application/json');
 
     const result = await extractUrl('https://x.com/jack/status/20', { fetcher });
+    const publicResult = toPublicExtractionResult(result);
     expect(result.source).toBe('x');
     expect(result.author).toBe('jack (@jack)');
     expect(result.content).toContain('just setting up my twttr');
+    expect(publicResult.attributes.authorImageUrl).toBe('https://pbs.twimg.com/profile_images/jack_normal.jpg');
+    expect(publicResult).not.toHaveProperty('method');
     expect(result.method).toBe('x-oembed');
-    expect(fetchTweetMock).not.toHaveBeenCalled();
+    expect(fetchTweetMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the official X result when avatar enrichment is unavailable', async () => {
+    fetchTweetMock.mockRejectedValue(new Error('Syndication unavailable'));
+    const fetcher = mockFetch(JSON.stringify({
+      author_name: 'jack',
+      author_url: 'https://x.com/jack',
+      html: '<blockquote><p>just setting up my twttr</p>— jack (@jack)</blockquote>',
+    }), 'application/json');
+
+    const result = await extractUrl('https://x.com/jack/status/20', { fetcher });
+    expect(result.method).toBe('x-oembed');
+    expect(result.attributes).not.toHaveProperty('authorImageUrl');
   });
 
   it('keeps the server-side X adapter as an oEmbed fallback', async () => {
@@ -282,16 +372,23 @@ describe('extractUrl', () => {
         id_str: '20',
         text: 'just setting up my twttr',
         created_at: '2006-03-21T20:50:14.000Z',
-        user: { name: 'jack', screen_name: 'jack' },
+        user: {
+          name: 'jack',
+          screen_name: 'jack',
+          profile_image_url_https: 'https://pbs.twimg.com/profile_images/jack_normal.jpg',
+        },
       },
     });
 
     const result = await extractUrl('https://x.com/jack/status/20', {
       fetcher: mockFetch('Not found', 'text/plain', 404),
     });
+    const publicResult = toPublicExtractionResult(result);
     expect(result.source).toBe('x');
     expect(result.author).toBe('jack (@jack)');
     expect(result.content).toContain('just setting up my twttr');
+    expect(publicResult.attributes.authorImageUrl).toBe('https://pbs.twimg.com/profile_images/jack_normal.jpg');
+    expect(publicResult).not.toHaveProperty('method');
     expect(result.method).toBe('react-tweet');
   });
 

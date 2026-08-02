@@ -72,7 +72,7 @@ The public website pages also support HTTP content negotiation. Send `Accept: te
 
 ### Web
 
-Public HTTP and HTTPS articles, documentation, blogs, and other content pages. If direct page extraction fails, extractor.sh may follow structured post, embed, or feed endpoints advertised by the publisher in the page HTML. Clients still submit the ordinary page URL.
+Public HTTP and HTTPS articles, documentation, blogs, and other content pages. Submit the ordinary public page URL; extractor.sh handles supported pages automatically and returns a consistent response shape.
 
 ### Amazon
 
@@ -128,7 +128,7 @@ Example: `https://www.reddit.com/r/CloudFlare/`
 
 ### Shopify
 
-Public Shopify product pages return one product entity. Public storefront and collection pages return a feed with up to 50 product entities. Submit the ordinary HTML page URL rather than a JSON endpoint. Stores may disable or protect their public product data; those pages continue through regular webpage extraction.
+Public Shopify product pages return one product entity. Public storefront and collection pages return a feed with up to 50 product entities. Submit the ordinary public storefront page. Protected or unavailable storefront data may produce an incomplete result or an error.
 
 Example: `https://store.example/products/black-shirt`
 
@@ -169,7 +169,7 @@ Example: `https://www.youtube.com/@Cloudflare`
 ## Limits and caching
 
 - General limit: 30 extraction requests per client per 60 seconds.
-- Browser-rendering fallback: 5 requests per client per 60 seconds.
+- High-cost extraction limit: 5 requests per client per 60 seconds.
 - Product, profile, and feed results may be cached for 1 hour.
 - Other single-entity results may be cached for 30 days.
 - Maximum extracted result size: 2 MB.

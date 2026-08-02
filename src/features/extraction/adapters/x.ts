@@ -33,6 +33,23 @@ async function extractOfficialOembed(
   const postMarkdown = htmlFragmentToMarkdown(html, url.toString());
   if (!postMarkdown) throw new Error('X oEmbed returned no post content.');
 
+  // oEmbed is the cheapest and most stable source for the post itself, but it
+  // does not include the author's avatar. Enrich it from X's public syndication
+  // response without making that optional request a reason to fail extraction.
+  let authorImageUrl: string | undefined;
+  try {
+    const syndication = await fetchTweet(id, {
+      signal: AbortSignal.timeout(5_000),
+      headers: {
+        Accept: 'application/json',
+        'User-Agent': 'Mozilla/5.0 (compatible; extractor.sh/1.0; +https://extractor.mcb-software.workers.dev)',
+      },
+    });
+    authorImageUrl = syndication.data?.user.profile_image_url_https;
+  } catch {
+    // The post data from oEmbed is still useful when avatar enrichment fails.
+  }
+
   const canonicalUrl = `https://x.com/${screenName}/status/${id}`;
   const author = authorName ? `${authorName} (@${screenName})` : `@${screenName}`;
   return {
@@ -46,7 +63,10 @@ async function extractOfficialOembed(
     publishedAt: null,
     content: [`# Post by ${escapeMarkdown(author)}`, postMarkdown, `[View on X](${canonicalUrl})`].join('\n\n'),
     media: [],
-    attributes: { handle: `@${screenName}` },
+    attributes: {
+      handle: `@${screenName}`,
+      ...(authorImageUrl ? { authorImageUrl } : {}),
+    },
     method: 'x-oembed',
   };
 }
@@ -114,6 +134,7 @@ export async function extractTweet(
       media,
       attributes: {
         handle: `@${tweet.user.screen_name}`,
+        ...(tweet.user.profile_image_url_https ? { authorImageUrl: tweet.user.profile_image_url_https } : {}),
         ...(mediaTypes.size > 1 ? { mediaType: 'mixed' as const }
           : mediaTypes.has('photo') ? { mediaType: 'image' as const }
             : mediaTypes.has('video') || mediaTypes.has('animated_gif') ? { mediaType: 'video' as const } : {}),
