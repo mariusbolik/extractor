@@ -30,6 +30,7 @@ describe('agent-readable site Markdown', () => {
       '/docs/limits/',
       '/docs/limitations/',
       '/pricing/',
+      '/contact/',
       '/alternatives/',
       '/blog/',
       ...alternativePages.map((page) => `/alternatives/${page.slug}/`),

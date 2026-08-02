@@ -47,6 +47,7 @@ ${apiExample}
 - [JSON Schema](${ORIGIN}/schemas/extraction-v1.json)
 - [Full agent documentation](${ORIGIN}/llms-full.txt)
 - [Pricing](${ORIGIN}/pricing/)
+- [Contact](${ORIGIN}/contact/)
 `,
   '/amazon/': `# Amazon product and search extraction with extractor.sh
 
@@ -280,7 +281,15 @@ extractor.sh is designed for straightforward extraction of public content throug
 
 > Simple pay-as-you-go pricing: €0.49 / 1,000 extractions.
 
-There are no subscriptions or tiers, and credits never expire. Checkout is coming soon and is not currently available. During the public preview, usage is free at up to 30 extraction requests per minute. Test extractor.sh with your intended URLs before purchasing, and contact us if you need help evaluating a specific use case. API usage is documented at \`GET ${ORIGIN}/api/extract\`.
+There are no subscriptions or tiers, and credits never expire. Checkout is coming soon and is not currently available. During the public preview, usage is free at up to 30 extraction requests per minute. Test extractor.sh with your intended URLs before purchasing, and [contact us](${ORIGIN}/contact/) if you need help evaluating a specific use case. API usage is documented at \`GET ${ORIGIN}/api/extract\`.
+`,
+  '/contact/': `# Contact extractor.sh
+
+> Ask a question or get help evaluating extractor.sh for a specific public URL.
+
+Use the contact form at ${ORIGIN}/contact/. Include a public example URL and describe the Markdown or JSON result you need. Do not send credentials, private URLs, or sensitive data.
+
+For technical details before contacting us, see the [developer documentation](${ORIGIN}/docs/) for \`GET ${ORIGIN}/api/extract\`.
 `,
 };
 

@@ -9,6 +9,7 @@
 - Keep generated blog and alternatives content in `src/features/marketing/content.ts`; derive article years at build time rather than hard-coding a calendar year.
 - Prefer small source adapters over shared abstractions that only have one consumer.
 - The public API contract is `GET /api/extract?url=<url>&format=json|markdown`.
+- Keep the contact form as the only non-extraction POST endpoint. It must use a fixed Cloudflare Email binding destination, validate every field, preserve the honeypot and same-origin check, use its dedicated rate limiter, and never store messages or accept caller-controlled mail headers.
 
 ## Required behavior
 

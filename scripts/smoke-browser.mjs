@@ -354,7 +354,7 @@ try {
 
   const contentRoutes = [
     '/amazon/', '/app-store/', '/bluesky/', '/google-news/', '/google-play/', '/instagram/', '/mastodon/', '/shopify/', '/soundcloud/', '/spotify/', '/tiktok/', '/vimeo/',
-    '/docs/mcp/', '/docs/api/', '/docs/schema/', '/docs/sources/', '/docs/limitations/', '/pricing/',
+    '/docs/mcp/', '/docs/api/', '/docs/schema/', '/docs/sources/', '/docs/limitations/', '/pricing/', '/contact/',
     '/alternatives/', '/blog/',
     ...alternativePages.map((item) => `/alternatives/${item.slug}/`),
     ...platformArticles.map((item) => `/blog/${item.slug}/`),
@@ -374,7 +374,7 @@ try {
     if (route === '/pricing/') {
       assert.match(
         await page.locator('main').textContent() || '',
-        /Free during the public preview: 30 extraction requests per minute\./,
+        /Free\s+During the public preview: 30 extraction requests per minute\./,
         'Pricing does not explain the current free usage allowance',
       );
       assert.match(
@@ -382,6 +382,24 @@ try {
         /Please test extractor\.sh with your intended URLs before purchasing\./,
         'Pricing does not include the pre-purchase testing disclaimer',
       );
+      const freePreview = page.locator('[data-free-preview]');
+      assert.equal(await freePreview.count(), 1, 'Pricing free-preview copy is not in a separate box');
+      assert.equal(await freePreview.locator('strong').textContent(), 'Free', 'Free is not highlighted');
+      assert.equal(await freePreview.locator('strong').evaluate((element) => getComputedStyle(element).backgroundColor), 'rgb(0, 0, 0)', 'Free highlight is not black');
+      assert.equal(await freePreview.locator('strong').evaluate((element) => getComputedStyle(element).color), 'rgb(255, 255, 255)', 'Free highlight text is not white');
+      assert.equal(await freePreview.locator('a[href="/contact/"]').count(), 1, 'Pricing contact link is missing');
+    }
+    if (route === '/contact/') {
+      assert.equal(await page.locator('form[data-contact-form][action="/api/contact"][method="post"]').count(), 1, 'Contact form is missing');
+      assert.equal(await page.locator('input[name="email"][required]').count(), 1, 'Contact email field is not required');
+      assert.equal(await page.locator('textarea[name="message"][required]').count(), 1, 'Contact message field is not required');
+      assert.equal(await page.locator('input[name="website"]').count(), 1, 'Contact form honeypot is missing');
+      const invalidContact = await page.request.post(`${origin}/api/contact`, {
+        headers: { Accept: 'application/json', Origin: origin },
+        form: { email: 'invalid', topic: 'extraction', message: 'This is long enough to pass the message length check.', website: '' },
+      });
+      assert.equal(invalidContact.status(), 400, 'Invalid contact submission is not rejected');
+      assert.deepEqual((await invalidContact.json()).error?.code, 'invalid_request');
     }
     await assertNoHorizontalOverflow(route);
   }
@@ -396,7 +414,7 @@ try {
   assert.equal(sitemapResponse.status(), 200, '/sitemap.xml is unavailable');
   assert.match(sitemapResponse.headers()['content-type'] || '', /^application\/xml/i);
   const sitemap = await sitemapResponse.text();
-  assert.equal((sitemap.match(/<loc>/g) || []).length, 48, 'Sitemap does not contain every public page');
+  assert.equal((sitemap.match(/<loc>/g) || []).length, 49, 'Sitemap does not contain every public page');
   for (const route of contentRoutes) {
     assert.ok(sitemap.includes(`${origin}${route}`), `${route} is missing from sitemap.xml`);
   }
@@ -414,7 +432,7 @@ try {
   assert.ok(submitWidth >= formWidth - 2, 'Mobile submit button does not span the form width');
 
   assert.deepEqual(browserErrors, [], `Chromium reported errors:\n${browserErrors.join('\n')}`);
-  process.stdout.write('Chromium production smoke passed: extraction adapters, alternatives, all platform articles, sitemap.xml, docs, pricing, and desktop/mobile layouts.\n');
+  process.stdout.write('Chromium production smoke passed: extraction adapters, alternatives, all platform articles, sitemap.xml, docs, pricing, contact, and desktop/mobile layouts.\n');
 } finally {
   await mcpClient.close().catch(() => {});
   await context.close();

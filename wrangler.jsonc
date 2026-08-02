@@ -28,6 +28,20 @@
         "limit": 5,
         "period": 60
       }
+    },
+    {
+      "name": "CONTACT_RATE_LIMITER",
+      "namespace_id": "2026080201",
+      "simple": {
+        "limit": 3,
+        "period": 60
+      }
+    }
+  ],
+  "send_email": [
+    {
+      "name": "CONTACT_EMAIL",
+      "allowed_destination_addresses": ["sideprojects@eyloo.com"]
     }
   ],
   "observability": {
