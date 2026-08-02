@@ -371,6 +371,18 @@ try {
       assert.equal(await page.locator('[data-provider-choice]').count(), 1, `${route} is missing the provider-fit card`);
       assert.equal(await page.locator('#advantages-heading').count(), 1, `${route} is missing extractor.sh advantages`);
     }
+    if (route === '/pricing/') {
+      assert.match(
+        await page.locator('main').textContent() || '',
+        /Free during the public preview: 30 extraction requests per minute\./,
+        'Pricing does not explain the current free usage allowance',
+      );
+      assert.match(
+        await page.locator('main').textContent() || '',
+        /Please test extractor\.sh with your intended URLs before purchasing\./,
+        'Pricing does not include the pre-purchase testing disclaimer',
+      );
+    }
     await assertNoHorizontalOverflow(route);
   }
 
