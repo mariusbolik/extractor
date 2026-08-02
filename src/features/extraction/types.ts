@@ -10,6 +10,8 @@ export type ExtractionMethod =
   | 'amazon-html'
   | 'amazon-search-html'
   | 'app-store-lookup'
+  | 'app-store-html'
+  | 'app-store-chart'
   | 'bluesky-api'
   | 'bluesky-rss'
   | 'discovered-feed'

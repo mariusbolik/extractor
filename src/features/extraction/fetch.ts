@@ -43,6 +43,7 @@ export async function fetchPublicPage(
   fetcher: typeof fetch = fetch,
   accept = 'text/markdown, text/html;q=0.9, application/xhtml+xml;q=0.8, */*;q=0.1',
   additionalHeaders: Record<string, string> = {},
+  cf?: RequestInitCfProperties,
 ): Promise<FetchedPage> {
   let current = initialUrl;
 
@@ -53,6 +54,7 @@ export async function fetchPublicPage(
         method: 'GET',
         redirect: 'manual',
         signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+        ...(cf ? { cf } : {}),
         headers: {
           Accept: accept,
           'User-Agent': 'extractor.sh/1.0 (+https://extractor.mcb-software.workers.dev)',

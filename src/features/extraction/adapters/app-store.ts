@@ -1,3 +1,4 @@
+import { parseHTML } from 'linkedom';
 import { ExtractionError } from '../errors';
 import { fetchPublicPage } from '../fetch';
 import { escapeMarkdown } from '../markdown';
@@ -28,7 +29,19 @@ interface AppStoreLookupResult {
   contentAdvisoryRating?: string;
   primaryGenreName?: string;
   releaseDate?: string;
+  operatingSystem?: string;
 }
+
+interface AppleChartResult {
+  artistName?: string;
+  id?: string;
+  name?: string;
+  releaseDate?: string;
+  artworkUrl100?: string;
+  url?: string;
+}
+
+type JsonObject = Record<string, unknown>;
 
 const APPLE_API_HEADERS = {
   'Accept-Encoding': 'gzip, deflate, br',
@@ -37,6 +50,50 @@ const APPLE_API_HEADERS = {
   // bot. This is the same browser-compatible API identity used by ClickYourApp.
   'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.3 Safari/605.1.15',
 };
+
+// Apple asks larger Search API consumers to cache lookups. Cache successful
+// app metadata at the Cloudflare subrequest layer so different extractor URLs
+// and formats do not repeatedly consume Apple's small global request budget.
+const APPLE_APP_CACHE: RequestInitCfProperties = {
+  cacheEverything: true,
+  cacheTtl: 60 * 60 * 24 * 7,
+  cacheTtlByStatus: { '200-299': 60 * 60 * 24 * 7, '300-599': 0 },
+};
+
+const APPLE_CHART_CACHE: RequestInitCfProperties = {
+  cacheEverything: true,
+  cacheTtl: 60 * 60,
+  cacheTtlByStatus: { '200-299': 60 * 60, '300-599': 0 },
+};
+
+function objectValue(value: unknown): JsonObject | null {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value as JsonObject : null;
+}
+
+function textValue(value: unknown): string | null {
+  return typeof value === 'string' && value.trim() ? value.trim() : null;
+}
+
+function numberValue(value: unknown): number | null {
+  if (typeof value !== 'number' && (typeof value !== 'string' || !value.trim())) return null;
+  const number = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(number) && number >= 0 ? number : null;
+}
+
+function findSoftwareApplication(value: unknown): JsonObject | null {
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const match = findSoftwareApplication(item);
+      if (match) return match;
+    }
+    return null;
+  }
+  const object = objectValue(value);
+  if (!object) return null;
+  const types = Array.isArray(object['@type']) ? object['@type'] : [object['@type']];
+  if (types.includes('SoftwareApplication') || types.includes('MobileApplication')) return object;
+  return findSoftwareApplication(object['@graph']);
+}
 
 function publicUrl(value: unknown): string | null {
   if (typeof value !== 'string') return null;
@@ -106,6 +163,7 @@ async function fetchAppleResults(
     dependencies.fetcher ?? fetch,
     'application/json',
     APPLE_API_HEADERS,
+    APPLE_APP_CACHE,
   );
 
   try {
@@ -115,6 +173,120 @@ async function fetchAppleResults(
   } catch {
     throw new ExtractionError('extraction_failed', 'Apple returned an invalid app API response.', 502);
   }
+}
+
+function appleRateLimited(error: unknown): boolean {
+  return error instanceof ExtractionError
+    && error.code === 'upstream_error'
+    && error.message.includes('HTTP 429');
+}
+
+function formattedPrice(value: number, currency: string, locale: string): string | undefined {
+  if (value === 0) return 'Free';
+  try {
+    return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(value);
+  } catch {
+    return undefined;
+  }
+}
+
+async function fetchAppleHtmlResult(
+  url: URL,
+  trackId: string,
+  dependencies: ExtractionDependencies,
+): Promise<AppStoreLookupResult | undefined> {
+  const endpoint = new URL(url.toString());
+  endpoint.search = '';
+  endpoint.hash = '';
+  const response = await fetchPublicPage(
+    endpoint,
+    dependencies.fetcher ?? fetch,
+    'text/html, application/xhtml+xml;q=0.9',
+    APPLE_API_HEADERS,
+    APPLE_APP_CACHE,
+  );
+  const { document } = parseHTML(response.body);
+  let app: JsonObject | null = null;
+  for (const script of document.querySelectorAll('script[type="application/ld+json"]')) {
+    try {
+      app = findSoftwareApplication(JSON.parse(script.textContent || ''));
+      if (app) break;
+    } catch {
+      // Ignore unrelated malformed JSON-LD and continue to the app block.
+    }
+  }
+  if (!app) return undefined;
+
+  const author = objectValue(app.author);
+  const rating = objectValue(app.aggregateRating);
+  const offers = (Array.isArray(app.offers) ? app.offers : [app.offers])
+    .map(objectValue)
+    .find(Boolean) ?? null;
+  const price = numberValue(offers?.price);
+  const currency = textValue(offers?.priceCurrency)?.toUpperCase();
+  const canonical = document.querySelector('link[rel="canonical"]')?.getAttribute('href') ?? endpoint.toString();
+  try {
+    if (appStoreTrackId(new URL(canonical, endpoint)) !== trackId) return undefined;
+  } catch {
+    return undefined;
+  }
+
+  return {
+    trackId: Number(trackId),
+    trackName: textValue(app.name) ?? undefined,
+    trackViewUrl: canonical,
+    artistName: textValue(author?.name) ?? undefined,
+    artistViewUrl: textValue(author?.url) ?? undefined,
+    description: textValue(app.description) ?? undefined,
+    artworkUrl512: textValue(app.image) ?? undefined,
+    price: price ?? undefined,
+    currency,
+    formattedPrice: price !== null && currency
+      ? formattedPrice(price, currency, appStoreCountry(url))
+      : undefined,
+    averageUserRating: numberValue(rating?.ratingValue) ?? undefined,
+    userRatingCount: numberValue(rating?.reviewCount) ?? undefined,
+    version: textValue(app.softwareVersion) ?? undefined,
+    contentAdvisoryRating: textValue(app.contentRating) ?? undefined,
+    primaryGenreName: textValue(app.applicationSubCategory) ?? textValue(app.applicationCategory) ?? undefined,
+    releaseDate: textValue(app.datePublished) ?? undefined,
+    operatingSystem: textValue(app.operatingSystem) ?? undefined,
+  };
+}
+
+async function fetchAppleChartResult(
+  country: string,
+  trackId: string,
+  dependencies: ExtractionDependencies,
+): Promise<AppStoreLookupResult | undefined> {
+  for (const chart of ['top-free', 'top-paid']) {
+    const endpoint = new URL(`https://rss.marketingtools.apple.com/api/v2/${country}/apps/${chart}/100/apps.json`);
+    try {
+      const response = await fetchPublicPage(
+        endpoint,
+        dependencies.fetcher ?? fetch,
+        'application/json',
+        APPLE_API_HEADERS,
+        APPLE_CHART_CACHE,
+      );
+      const payload = JSON.parse(response.body) as { feed?: { results?: AppleChartResult[] } };
+      const item = payload.feed?.results?.find((entry) => entry.id === trackId);
+      if (!item?.name) continue;
+      return {
+        trackId: Number(trackId),
+        trackName: item.name,
+        trackViewUrl: item.url,
+        artistName: item.artistName,
+        artworkUrl100: item.artworkUrl100,
+        releaseDate: item.releaseDate,
+        ...(chart === 'top-free' ? { price: 0, formattedPrice: 'Free' } : {}),
+      };
+    } catch {
+      // Chart metadata is a final cheap rescue path; preserve the more useful
+      // Lookup/Search/HTML error if this feed is unavailable too.
+    }
+  }
+  return undefined;
 }
 
 function canonicalAppUrl(value: unknown, fallback: URL): string {
@@ -141,6 +313,7 @@ export async function extractAppStoreApp(
   let result: AppStoreLookupResult | undefined;
   let lookupError: unknown;
   let receivedAppleResponse = false;
+  let method: ExtractionResult['method'] = 'app-store-lookup';
   try {
     const results = await fetchAppleResults(endpoint, dependencies);
     receivedAppleResponse = true;
@@ -153,7 +326,7 @@ export async function extractAppStoreApp(
   // Its public Search API remains available, so use the human-readable app slug
   // and accept only an exact numeric ID match. Users always submit the normal
   // apps.apple.com page; this fallback stays entirely internal.
-  if (!result) {
+  if (!result && !appleRateLimited(lookupError)) {
     for (const term of appStoreSearchTerms(url)) {
       const searchEndpoint = new URL('https://itunes.apple.com/search');
       searchEndpoint.searchParams.set('term', term);
@@ -168,7 +341,34 @@ export async function extractAppStoreApp(
         if (result) break;
       } catch (error) {
         lookupError = error;
+        if (appleRateLimited(error)) break;
       }
+    }
+  }
+
+  // The normal App Store page publishes localized SoftwareApplication JSON-LD.
+  // It is independent from the tightly limited Search API and retains useful
+  // metadata even while lookup requests are returning 429.
+  if (!result) {
+    try {
+      result = await fetchAppleHtmlResult(url, trackId, dependencies);
+      if (result) {
+        receivedAppleResponse = true;
+        method = 'app-store-html';
+      }
+    } catch (error) {
+      lookupError = error;
+    }
+  }
+
+  // Apple's public Marketing Tools chart feeds are small and separately
+  // cached. They provide a basic product result for ranked apps if both the
+  // lookup service and the storefront page are temporarily blocked.
+  if (!result) {
+    result = await fetchAppleChartResult(appStoreCountry(url), trackId, dependencies);
+    if (result) {
+      receivedAppleResponse = true;
+      method = 'app-store-chart';
     }
   }
 
@@ -220,16 +420,18 @@ export async function extractAppStoreApp(
       productType: 'software',
       ...(author ? { brand: author } : {}),
       ...(result.primaryGenreName ? { category: result.primaryGenreName } : {}),
-      ...(price !== null && currency ? { price, currency } : {}),
+      ...(price !== null ? { price, ...(currency ? { currency } : {}) } : {}),
       ...(result.formattedPrice ? { priceDisplay: result.formattedPrice } : {}),
       availability: 'available',
       ...(typeof result.averageUserRating === 'number' ? { rating: result.averageUserRating, ratingScale: 5 } : {}),
       ...(Number.isSafeInteger(result.userRatingCount) && result.userRatingCount! >= 0 ? { reviewCount: result.userRatingCount } : {}),
       ...(result.version ? { softwareVersion: result.version } : {}),
-      ...(result.minimumOsVersion ? { operatingSystem: `iOS ${result.minimumOsVersion} or later` } : {}),
+      ...(result.operatingSystem
+        ? { operatingSystem: result.operatingSystem }
+        : result.minimumOsVersion ? { operatingSystem: `iOS ${result.minimumOsVersion} or later` } : {}),
       ...(result.contentAdvisoryRating ? { contentRating: result.contentAdvisoryRating } : {}),
       ...(developerUrl ? { developerUrl } : {}),
     },
-    method: 'app-store-lookup',
+    method,
   };
 }

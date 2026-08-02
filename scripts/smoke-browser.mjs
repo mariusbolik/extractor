@@ -323,11 +323,11 @@ try {
     text: /Amazon search: mechanical keyboard/i,
   });
   await submitExtraction({
-    url: 'https://apps.apple.com/at/app/btc-echo-bitcoin-krypto-news/id1600917142',
+    url: 'https://apps.apple.com/de/app/chatgpt/id6448311069',
     format: 'json',
     source: 'app-store',
     type: 'product',
-    text: /"title": "BTC-ECHO Bitcoin & Krypto News"/,
+    text: /"title": "ChatGPT"/,
   });
   await submitExtraction({
     url: 'https://play.google.com/store/apps/details?id=com.openai.chatgpt',

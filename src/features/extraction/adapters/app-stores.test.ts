@@ -114,6 +114,104 @@ describe('app marketplace adapters', () => {
     expect(allowBrowser).not.toHaveBeenCalled();
   });
 
+  it('uses localized App Store JSON-LD when Apple rate-limits lookup', async () => {
+    const fetcher = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      expect((init?.cf as RequestInitCfProperties | undefined)?.cacheTtl).toBe(604800);
+      if (input.toString().startsWith('https://itunes.apple.com/lookup?')) {
+        return new Response('Too Many Requests', { status: 429, statusText: 'Too Many Requests' });
+      }
+
+      expect(input.toString()).toBe('https://apps.apple.com/de/app/chatgpt/id6448311069');
+      return new Response(`<!doctype html><html><head>
+        <link rel="canonical" href="https://apps.apple.com/de/app/chatgpt/id6448311069">
+        <script type="application/ld+json">${JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'SoftwareApplication',
+          name: 'ChatGPT',
+          description: 'The official ChatGPT app in German.',
+          image: 'https://is1-ssl.mzstatic.com/image/icon.png',
+          operatingSystem: 'Requires iOS 17.0 or later.',
+          applicationCategory: 'ProductivityApplication',
+          aggregateRating: { '@type': 'AggregateRating', ratingValue: 4.7, reviewCount: 1460814 },
+          offers: { '@type': 'Offer', price: 0, priceCurrency: 'EUR' },
+          author: {
+            '@type': 'Organization',
+            name: 'OpenAI OpCo, LLC',
+            url: 'https://apps.apple.com/de/developer/openai-opco-llc/id1684349733',
+          },
+        })}</script>
+      </head><body></body></html>`, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+    }) as unknown as typeof fetch;
+    const allowBrowser = vi.fn(async () => true);
+
+    const result = await extractUrl(
+      'https://apps.apple.com/de/app/chatgpt/id6448311069',
+      { fetcher, allowBrowser },
+    );
+
+    expect(result).toMatchObject({
+      source: 'app-store',
+      type: 'product',
+      id: '6448311069',
+      title: 'ChatGPT',
+      author: 'OpenAI OpCo, LLC',
+      method: 'app-store-html',
+      attributes: {
+        productType: 'software',
+        price: 0,
+        currency: 'EUR',
+        priceDisplay: 'Free',
+        rating: 4.7,
+        reviewCount: 1460814,
+        operatingSystem: 'Requires iOS 17.0 or later.',
+      },
+    });
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    expect(ExtractionResponseSchema.safeParse(toPublicExtractionResult(result)).success).toBe(true);
+    expect(allowBrowser).not.toHaveBeenCalled();
+  });
+
+  it('uses Apple chart metadata as a final non-browser fallback', async () => {
+    const fetcher = vi.fn(async (input: RequestInfo | URL) => {
+      if (input.toString().startsWith('https://itunes.apple.com/lookup?')) {
+        return new Response('Too Many Requests', { status: 429, statusText: 'Too Many Requests' });
+      }
+      if (input.toString() === 'https://apps.apple.com/de/app/chatgpt/id6448311069') {
+        return new Response('Forbidden', { status: 403, statusText: 'Forbidden' });
+      }
+      expect(input.toString()).toBe('https://rss.marketingtools.apple.com/api/v2/de/apps/top-free/100/apps.json');
+      return new Response(JSON.stringify({
+        feed: {
+          results: [{
+            id: '6448311069',
+            name: 'ChatGPT',
+            artistName: 'OpenAI OpCo, LLC',
+            releaseDate: '2023-05-24',
+            artworkUrl100: 'https://is1-ssl.mzstatic.com/image/icon.png',
+            url: 'https://apps.apple.com/de/app/chatgpt/id6448311069',
+          }],
+        },
+      }), { headers: { 'Content-Type': 'application/json' } });
+    }) as unknown as typeof fetch;
+    const allowBrowser = vi.fn(async () => true);
+
+    const result = await extractUrl(
+      'https://apps.apple.com/de/app/chatgpt/id6448311069',
+      { fetcher, allowBrowser },
+    );
+
+    expect(result).toMatchObject({
+      source: 'app-store',
+      type: 'product',
+      title: 'ChatGPT',
+      method: 'app-store-chart',
+      attributes: { productType: 'software', price: 0, priceDisplay: 'Free' },
+    });
+    expect(fetcher).toHaveBeenCalledTimes(3);
+    expect(ExtractionResponseSchema.safeParse(toPublicExtractionResult(result)).success).toBe(true);
+    expect(allowBrowser).not.toHaveBeenCalled();
+  });
+
   it('extracts a Google Play app from public structured metadata', async () => {
     const fetcher = vi.fn(async (input: RequestInfo | URL) => {
       expect(input.toString()).toBe('https://play.google.com/store/apps/details?id=com.openai.chatgpt&hl=en&gl=US');
