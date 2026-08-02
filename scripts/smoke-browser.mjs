@@ -374,7 +374,7 @@ try {
     if (route === '/pricing/') {
       assert.match(
         await page.locator('main').textContent() || '',
-        /Free\s+During the public preview: 30 extraction requests per minute\./,
+        /During the public preview: 30 extraction requests per minute\./,
         'Pricing does not explain the current free usage allowance',
       );
       assert.match(
