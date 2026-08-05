@@ -1,0 +1,86 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+
+export const prerender = true;
+const title = 'Web search API — extractor.sh docs';
+const description = 'Search the public web for AI agents through a cacheable GET endpoint that returns Markdown or normalized JSON.';
+---
+
+<DocsLayout {title} {description} path="/docs/search/">
+  <p class="!mt-0 font-mono text-[0.78rem] font-extrabold uppercase tracking-[0.14em]">Web search</p>
+  <h1>Find the right page first.</h1>
+  <p class="text-[1.08rem]">Discover relevant public pages with one cacheable GET request. Results contain ordered titles, URLs, and concise snippets ready for an agent to evaluate.</p>
+
+  <h2>Request</h2>
+  <pre><code>curl --get 'https://extractor.sh/api/search' \
+  --data-urlencode 'q=Cloudflare Workers documentation' \
+  --data-urlencode 'format=json'</code></pre>
+
+  <div class="overflow-x-auto">
+    <table>
+      <thead><tr><th>Parameter</th><th>Required</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>q</code></td><td>Yes</td><td>A search query of up to 200 characters.</td></tr>
+        <tr><td><code>limit</code></td><td>No</td><td>An integer from <code>1</code> to <code>10</code>. Default: <code>10</code>.</td></tr>
+        <tr><td><code>language</code></td><td>No</td><td>Canonical BCP 47 language tag. Default: <code>en-US</code>.</td></tr>
+        <tr><td><code>country</code></td><td>No</td><td>Two-letter ISO country code. Default: <code>US</code>.</td></tr>
+        <tr><td><code>site</code></td><td>No</td><td>A hostname such as <code>github.com</code> or <code>linkedin.com</code>. Results are restricted to that hostname and its subdomains; do not include a scheme or path.</td></tr>
+        <tr><td><code>format</code></td><td>No</td><td><code>json</code> (default) or <code>markdown</code>.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>JSON response</h2>
+  <p>JSON uses schema version 1 with <code>type: "feed"</code> and <code>source: "web-search"</code>. The ordered <code>items</code> are <code>document</code> entities. Each item’s <code>content</code> contains its search snippet; fetch its <code>url</code> with <a href="/docs/api/"><code>/api/extract</code></a> when full page content is needed.</p>
+  <pre><code>{`{
+  "schemaVersion": 1,
+  "type": "feed",
+  "source": "web-search",
+  "id": "Cloudflare Workers documentation",
+  "url": "https://extractor.sh/api/search?q=Cloudflare+Workers+documentation&format=json",
+  "title": "Search results for Cloudflare Workers documentation",
+  "author": null,
+  "publishedAt": null,
+  "content": "# Search results for Cloudflare Workers documentation\\n\\n...",
+  "media": [],
+  "attributes": {
+    "feedType": "web-search",
+    "query": "Cloudflare Workers documentation",
+    "language": "en-US",
+    "country": "US",
+    "resultCount": 1
+  },
+  "items": [
+    {
+      "type": "document",
+      "source": "web-search",
+      "id": null,
+      "url": "https://developers.cloudflare.com/workers/",
+      "title": "Cloudflare Workers docs",
+      "author": null,
+      "publishedAt": null,
+      "content": "Build serverless applications...",
+      "media": [],
+      "attributes": {}
+    }
+  ]
+}`}</code></pre>
+
+  <h2>Behavior</h2>
+  <ul>
+    <li>Results are ordered by estimated relevance. Their order is their rank.</li>
+    <li>Successful searches are cached for up to one hour. Identical cache hits are not billed and bypass search work.</li>
+    <li>Search uses the standard 60 requests per client per minute limit.</li>
+    <li>Search snippets are discovery metadata, not full page content.</li>
+    <li>Language and country controls affect result selection. Safe search remains strict and cannot be disabled.</li>
+    <li>Use <code>site=linkedin.com</code> to discover indexed public profile and company URLs. Results are search metadata and source links, not native LinkedIn records or full page extraction.</li>
+    <li>Result availability, freshness, and ranking can change. Pagination is not currently supported.</li>
+  </ul>
+
+  <h2>Agent workflow</h2>
+  <ol>
+    <li>Call <code>/api/search</code> to discover candidate URLs.</li>
+    <li>Select only the relevant results.</li>
+    <li>Call <code>/api/extract</code> for full Markdown or typed page data.</li>
+  </ol>
+</DocsLayout>

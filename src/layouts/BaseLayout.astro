@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import archivoBlackLatinUrl from '@fontsource/archivo-black/files/archivo-black-latin-400-normal.woff2?url';
 
 interface Props {
   title: string;
@@ -8,6 +9,8 @@ interface Props {
   keywords?: string[];
   pageType?: 'website' | 'article';
   schema?: Record<string, unknown>;
+  robots?: string;
+  agentReadable?: boolean;
 }
 
 const {
@@ -17,6 +20,8 @@ const {
   keywords = [],
   pageType = 'website',
   schema,
+  robots,
+  agentReadable = true,
 } = Astro.props;
 const canonical = new URL(path, Astro.site);
 const structuredData = schema ?? {
@@ -37,6 +42,7 @@ const structuredData = schema ?? {
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
     <meta name="description" content={description} />
+    {robots && <meta name="robots" content={robots} />}
     {keywords.length > 0 && <meta name="keywords" content={keywords.join(', ')} />}
     <meta name="theme-color" content="#ffffff" />
     <meta property="og:type" content={pageType} />
@@ -45,23 +51,36 @@ const structuredData = schema ?? {
     <meta property="og:url" content={canonical} />
     <meta name="twitter:card" content="summary" />
     <link rel="canonical" href={canonical} />
-    <link rel="alternate" type="text/markdown" href={canonical} />
+    {agentReadable && <link rel="alternate" type="text/markdown" href={canonical} />}
     <link rel="describedby" type="text/markdown" href="/llms.txt" />
     <link rel="api-catalog" type="application/linkset+json" href="/.well-known/api-catalog" />
     <link rel="service-desc" type="application/vnd.oai.openapi+json" href="/openapi.json" />
     <link rel="describedby" type="application/schema+json" href="/schemas/extraction-v1.json" />
     <link rel="describedby" type="application/json" href="/.well-known/mcp/server-card.json" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preload" href={archivoBlackLatinUrl} as="font" type="font/woff2" crossorigin="anonymous" />
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Extractor" />
+    <link rel="manifest" href="/site.webmanifest" />
     <title>{title}</title>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+    <script is:inline defer src="https://api.pirsch.io/pa.js"
+      id="pianjs"
+      data-code="HtWyEgcWVShOy1wxwPv6D7V4XsX0GuKk"></script>
   </head>
   <body>
     <header class="mx-auto flex w-[calc(100%-2rem)] max-w-[1120px] items-center justify-between gap-6 border-b-2 border-black py-6 max-[760px]:flex-col max-[760px]:items-start">
-      <a class="font-mono text-[1.15rem] font-extrabold no-underline" href="/" aria-label="extractor.sh home">extractor.sh<span class="animate-[blink_1.1s_steps(1)_infinite]" aria-hidden="true">_</span></a>
-      <nav class="flex flex-wrap justify-end gap-4 text-[0.92rem] font-bold max-[760px]:justify-start" aria-label="Primary navigation">
+      <a class="inline-flex items-center gap-1 font-mono text-[1.15rem] font-extrabold no-underline" href="/" aria-label="extractor.sh home">
+        <svg class="size-5 shrink-0" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><title>terminal-line</title><path fill="currentColor" d="M13 19v-3h8v3zm-4.5-6L2.47 7h4.24l4.96 4.95c.58.59.58 1.55 0 2.12L6.74 19H2.5z"></path></svg>
+        <span>extractor.sh</span>
+      </a>
+      <nav class="flex flex-wrap items-center justify-end gap-4 text-[0.92rem] font-bold max-[760px]:justify-start" aria-label="Primary navigation">
         <a href="/docs/">Docs</a>
         <a href="/pricing/">Pricing</a>
         <a href="/contact/">Contact</a>
+        <a class="inline-flex min-h-[40px] items-center border-[2px_4px_4px_2px] border-black bg-white px-3 py-1.5 no-underline transition-transform hover:translate-x-0.5 hover:translate-y-0.5 hover:border-2 hover:no-underline" href="/dashboard/">Dashboard</a>
       </nav>
     </header>
     <main class="mx-auto w-[calc(100%-2rem)] max-w-[1120px] py-[72px] pb-24 max-[760px]:py-12 max-[760px]:pb-[72px]">
@@ -76,6 +95,9 @@ const structuredData = schema ?? {
         <a href="/docs/mcp/">MCP Server</a>
         <a href="/contact/">Contact</a>
         <a href="/pricing/">Pricing</a>
+        <a href="/privacy/">Privacy</a>
+        <a href="/legal/">Legal Notice</a>
+        <a href="/terms/">Terms</a>
       </nav>
     </footer>
   </body>

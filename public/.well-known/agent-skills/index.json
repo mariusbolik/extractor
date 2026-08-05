@@ -6,7 +6,21 @@
       "type": "skill-md",
       "description": "Extract a public webpage or supported platform page as clean Markdown or normalized JSON using extractor.sh.",
       "url": "/.well-known/agent-skills/extract-public-url/SKILL.md",
-      "digest": "sha256:bddc246e20c42c40f20885be7971fc5e238ae7a450f86b631bfc96505d5e243c"
+      "digest": "sha256:7549d913ed6158f01cf50a985043d894ebc44384390e8416d149b3f29137def2"
+    },
+    {
+      "name": "search-web",
+      "type": "skill-md",
+      "description": "Search public webpages, news, images, videos, places, and market data as Markdown or normalized JSON using extractor.sh.",
+      "url": "/.well-known/agent-skills/search-web/SKILL.md",
+      "digest": "sha256:c199f6e220214a36dc85b069d19c75addb11f753ff4d09f09def62a52c893e89"
+    },
+    {
+      "name": "search-videos",
+      "type": "skill-md",
+      "description": "Search public video pages as typed JSON or readable Markdown using extractor.sh.",
+      "url": "/.well-known/agent-skills/search-videos/SKILL.md",
+      "digest": "sha256:d99a58f8ae380653532fd2ac7446928692236780b3e2daec4b4051f6c8a0696a"
     }
   ]
 }

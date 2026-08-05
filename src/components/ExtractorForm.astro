@@ -2,18 +2,121 @@
 import { Icon } from 'astro-icon/components';
 ---
 
-<section class="mb-12 border-2 border-black bg-white p-[clamp(22px,4vw,44px)] shadow-[10px_10px_0_#000] max-[660px]:shadow-[6px_6px_0_#000]" aria-label="URL extractor">
+<section class="mb-12 border-2 border-black bg-white p-[clamp(22px,4vw,44px)] shadow-[10px_10px_0_#000] max-[660px]:shadow-[6px_6px_0_#000]" aria-label="Web extraction, search, and finance">
   <form id="extract-form" action="/api/extract" method="get">
-    <label class="text-[0.88rem] font-extrabold" for="url">Website URL</label>
+    <div class="mb-5 inline-flex max-w-full overflow-x-auto border-2 border-black" aria-label="Choose an action">
+      <button class="inline-flex min-h-10 shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap border-0 border-r-2 border-black bg-white px-4 py-2 text-[0.85rem] font-extrabold aria-pressed:bg-black aria-pressed:text-white" type="button" data-form-mode="extract" aria-pressed="true">
+        <Icon class="size-[17px] shrink-0" name="heroicons:link" aria-hidden="true" /> Extract
+      </button>
+      <button class="inline-flex min-h-10 shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap border-0 border-r-2 border-black bg-white px-4 py-2 text-[0.85rem] font-extrabold aria-pressed:bg-black aria-pressed:text-white" type="button" data-form-mode="search" aria-pressed="false">
+        <Icon class="size-[17px] shrink-0" name="heroicons:magnifying-glass" aria-hidden="true" /> Web Search
+      </button>
+      <button class="inline-flex min-h-10 shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap border-0 border-r-2 border-black bg-white px-4 py-2 text-[0.85rem] font-extrabold aria-pressed:bg-black aria-pressed:text-white" type="button" data-form-mode="news" aria-pressed="false">
+        <Icon class="size-[17px] shrink-0" name="heroicons:newspaper" aria-hidden="true" /> News
+      </button>
+      <button class="inline-flex min-h-10 shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap border-0 border-r-2 border-black bg-white px-4 py-2 text-[0.85rem] font-extrabold aria-pressed:bg-black aria-pressed:text-white" type="button" data-form-mode="images" aria-pressed="false">
+        <Icon class="size-[17px] shrink-0" name="heroicons:photo" aria-hidden="true" /> Images
+      </button>
+      <button class="inline-flex min-h-10 shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap border-0 border-r-2 border-black bg-white px-4 py-2 text-[0.85rem] font-extrabold aria-pressed:bg-black aria-pressed:text-white" type="button" data-form-mode="videos" aria-pressed="false">
+        <Icon class="size-[17px] shrink-0" name="heroicons:video-camera" aria-hidden="true" /> Videos
+      </button>
+      <button class="inline-flex min-h-10 shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap border-0 border-r-2 border-black bg-white px-4 py-2 text-[0.85rem] font-extrabold aria-pressed:bg-black aria-pressed:text-white" type="button" data-form-mode="places" aria-pressed="false">
+        <Icon class="size-[17px] shrink-0" name="heroicons:map-pin" aria-hidden="true" /> Places
+      </button>
+      <button class="inline-flex min-h-10 shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap border-0 bg-white px-4 py-2 text-[0.85rem] font-extrabold aria-pressed:bg-black aria-pressed:text-white" type="button" data-form-mode="finance" aria-pressed="false">
+        <Icon class="size-[17px] shrink-0" name="heroicons:chart-bar" aria-hidden="true" /> Finance
+      </button>
+    </div>
+    <div>
+      <label id="form-input-label" class="text-[0.88rem] font-extrabold" for="url">Website URL</label>
+    </div>
     <div class="mt-[9px] grid grid-cols-[1fr_auto] gap-[14px] max-[660px]:grid-cols-1">
-      <input class="min-h-[52px] min-w-0 border-2 border-black bg-white px-[15px] py-3 text-black placeholder:text-black/50" id="url" name="url" type="url" inputmode="url" autocomplete="url" required maxlength="2048" placeholder="https://www.amazon.com/dp/B09B8V1LZ3" />
-      <button class="inline-flex min-h-[52px] cursor-pointer items-center justify-center gap-[9px] border-[2px_5px_5px_2px] border-black bg-white px-[22px] py-[10px] font-[850] transition-[transform,border-width] duration-100 hover:translate-x-[2px] hover:translate-y-[2px] hover:border-[4px_3px_3px_4px] active:translate-x-[3px] active:translate-y-[3px] active:border-[5px_2px_2px_5px] max-[660px]:w-full" type="submit">Extract <Icon class="size-[19px] shrink-0" name="heroicons:arrow-right" aria-hidden="true" /></button>
+      <input class="min-h-[52px] min-w-0 border-2 border-black bg-white px-[15px] py-3 text-black outline-none placeholder:text-black/50 focus:outline-none focus-visible:!outline-none" id="url" name="url" type="url" inputmode="url" autocomplete="url" required maxlength="2048" placeholder="https://www.amazon.com/dp/B09B8V1LZ3" />
+      <button class="inline-flex min-h-[52px] cursor-pointer items-center justify-center gap-[9px] border-[2px_5px_5px_2px] border-black bg-white px-[22px] py-[10px] font-[850] transition-[transform,border-width] duration-100 hover:translate-x-[2px] hover:translate-y-[2px] hover:border-[4px_3px_3px_4px] active:translate-x-[3px] active:translate-y-[3px] active:border-[5px_2px_2px_5px] disabled:cursor-wait disabled:opacity-60 max-[660px]:w-full" type="submit"><span id="form-submit-label">Extract</span> <Icon class="size-[19px] shrink-0" name="heroicons:arrow-right" aria-hidden="true" /></button>
     </div>
     <fieldset class="mt-[18px] flex items-center gap-5 border-0 p-0 max-[660px]:flex-col max-[660px]:items-start max-[660px]:gap-[10px]">
       <legend class="float-left mr-2 text-[0.88rem] font-extrabold max-[660px]:mb-2">Output format</legend>
       <label class="inline-flex cursor-pointer items-center gap-[7px]"><input class="m-0 size-[17px] appearance-none border-2 border-black bg-white checked:bg-black checked:shadow-[inset_0_0_0_3px_#fff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black" type="radio" name="format" value="markdown" checked /> Markdown</label>
       <label class="inline-flex cursor-pointer items-center gap-[7px]"><input class="m-0 size-[17px] appearance-none border-2 border-black bg-white checked:bg-black checked:shadow-[inset_0_0_0_3px_#fff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black" type="radio" name="format" value="json" /> JSON</label>
     </fieldset>
+    <details class="mt-5 border-t-2 border-black pt-4" id="form-options">
+      <summary class="cursor-pointer font-extrabold">Options</summary>
+      <div class="mt-4 grid gap-4 sm:grid-cols-2">
+        <div data-options-mode="extract">
+          <label class="text-[0.82rem] font-extrabold" for="extract-focus">Focus topic</label>
+          <input class="mt-2 min-h-11 w-full border-2 border-black px-3 py-2" id="extract-focus" name="focus" type="text" maxlength="80" placeholder="pricing, features, FAQ" />
+        </div>
+        <div data-options-mode="search news videos" hidden>
+          <label class="text-[0.82rem] font-extrabold" for="search-locale">Language and country</label>
+          <select class="mt-2 min-h-11 w-full border-2 border-black bg-white px-3 py-2" id="search-locale" data-locale-preset disabled>
+            <option value="en-US|US">English · United States</option>
+            <option value="en-GB|GB">English · United Kingdom</option>
+            <option value="de-DE|DE">Deutsch · Deutschland</option>
+            <option value="fr-FR|FR">Français · France</option>
+            <option value="es-ES|ES">Español · España</option>
+            <option value="ja-JP|JP">日本語 · 日本</option>
+          </select>
+          <input name="language" value="en-US" type="hidden" data-locale-language disabled />
+          <input name="country" value="US" type="hidden" data-locale-country disabled />
+        </div>
+        <div data-options-mode="videos" hidden>
+          <label class="text-[0.82rem] font-extrabold" for="video-creator">Exact creator (optional)</label>
+          <input class="mt-2 min-h-11 w-full border-2 border-black px-3 py-2" id="video-creator" name="creator" type="text" maxlength="80" placeholder="Taylor Swift" disabled />
+          <label class="mt-3 block text-[0.82rem] font-extrabold" for="video-platform">Video source</label>
+          <select class="mt-2 min-h-11 w-full border-2 border-black bg-white px-3 py-2" id="video-platform" name="platform" disabled>
+            <option value="any">Any supported source</option>
+            <option value="youtube">YouTube</option>
+          </select>
+          <label class="mt-3 block text-[0.82rem] font-extrabold" for="video-sort">Order</label>
+          <select class="mt-2 min-h-11 w-full border-2 border-black bg-white px-3 py-2" id="video-sort" name="sort" disabled>
+            <option value="relevance">Most relevant</option>
+            <option value="date">Newest first</option>
+          </select>
+        </div>
+        <div data-options-mode="search" hidden>
+          <label class="text-[0.82rem] font-extrabold" for="search-site">Only this site (optional)</label>
+          <input class="mt-2 min-h-11 w-full border-2 border-black px-3 py-2" id="search-site" name="site" type="text" maxlength="253" placeholder="linkedin.com" disabled />
+        </div>
+        <div data-options-mode="news" hidden>
+          <label class="text-[0.82rem] font-extrabold" for="news-timeframe">Published within</label>
+          <select class="mt-2 min-h-11 w-full border-2 border-black bg-white px-3 py-2" id="news-timeframe" name="timeframe" disabled>
+            <option value="any">Any time</option><option value="1h">1 hour</option><option value="1d">1 day</option><option value="7d">7 days</option><option value="30d">30 days</option>
+          </select>
+        </div>
+        <div data-options-mode="images" hidden>
+          <label class="text-[0.82rem] font-extrabold" for="image-usage">Usage rights</label>
+          <select class="mt-2 min-h-11 w-full border-2 border-black bg-white px-3 py-2" id="image-usage" name="usage" disabled>
+            <option value="all">All open licenses</option><option value="commercial">Commercial use</option><option value="modify">Modifications allowed</option><option value="commercial-and-modify">Commercial + modify</option>
+          </select>
+          <label class="mt-3 block text-[0.82rem] font-extrabold" for="image-orientation">Orientation</label>
+          <select class="mt-2 min-h-11 w-full border-2 border-black bg-white px-3 py-2" id="image-orientation" name="orientation" disabled>
+            <option value="any">Any</option><option value="landscape">Landscape</option><option value="portrait">Portrait</option><option value="square">Square</option>
+          </select>
+        </div>
+        <div class="sm:col-span-2" data-options-mode="places" hidden>
+          <div class="grid gap-4 sm:grid-cols-3">
+            <label class="text-[0.82rem] font-extrabold">Language<input class="mt-2 min-h-11 w-full border-2 border-black px-3 py-2" name="language" value="en" maxlength="35" disabled /></label>
+            <label class="text-[0.82rem] font-extrabold">Country filter<input class="mt-2 min-h-11 w-full border-2 border-black px-3 py-2 uppercase" name="country" maxlength="2" placeholder="DE" disabled /></label>
+            <label class="text-[0.82rem] font-extrabold">Place type<select class="mt-2 min-h-11 w-full border-2 border-black bg-white px-3 py-2" name="type" disabled><option value="any">Any</option><option value="house">House</option><option value="street">Street</option><option value="locality">Locality</option><option value="city">City</option><option value="county">County</option><option value="state">State</option><option value="country">Country</option><option value="other">Other</option></select></label>
+          </div>
+          <p class="mt-4 mb-2 text-[0.82rem] font-extrabold">Nearby bias (optional pair)</p>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <label class="text-[0.8rem]">Latitude<input class="mt-2 min-h-11 w-full border-2 border-black px-3 py-2" name="lat" type="number" min="-90" max="90" step="any" placeholder="52.52" disabled /></label>
+            <label class="text-[0.8rem]">Longitude<input class="mt-2 min-h-11 w-full border-2 border-black px-3 py-2" name="lon" type="number" min="-180" max="180" step="any" placeholder="13.405" disabled /></label>
+          </div>
+        </div>
+        <div data-options-mode="finance" hidden>
+          <label class="text-[0.82rem] font-extrabold" for="finance-timeframe">History timeframe</label>
+          <select class="mt-2 min-h-11 w-full border-2 border-black bg-white px-3 py-2" id="finance-timeframe" name="timeframe" disabled>
+            <option value="1d">1 day</option><option value="5d">5 days</option><option value="1mo" selected>1 month</option><option value="3mo">3 months</option><option value="6mo">6 months</option><option value="1y">1 year</option><option value="5y">5 years</option><option value="max">Maximum</option>
+          </select>
+          <label class="mt-3 block text-[0.82rem] font-extrabold" for="finance-quote">Output currency</label>
+          <select class="mt-2 min-h-11 w-full border-2 border-black bg-white px-3 py-2" id="finance-quote" name="quote" disabled>
+            <option value="">Native listing currency</option><option value="EUR">EUR</option><option value="USD">USD</option><option value="GBP">GBP</option><option value="JPY">JPY</option><option value="CHF">CHF</option><option value="CAD">CAD</option><option value="AUD">AUD</option>
+          </select>
+        </div>
+      </div>
+    </details>
   </form>
 
   <div id="result" class="result mt-[34px] border-t-2 border-black pt-6 data-[state=error]:[&_.result-content]:border-dashed" hidden aria-live="polite">
@@ -36,8 +139,165 @@ import { Icon } from 'astro-icon/components';
   const rawResult = document.querySelector<HTMLAnchorElement>('#raw-result');
   const copyResult = document.querySelector<HTMLButtonElement>('#copy-result');
   const submit = form?.querySelector<HTMLButtonElement>('button[type="submit"]');
+  const submitLabel = document.querySelector<HTMLElement>('#form-submit-label');
+  const input = document.querySelector<HTMLInputElement>('#url');
+  const inputLabel = document.querySelector<HTMLLabelElement>('#form-input-label');
+  const modeButtons = [...document.querySelectorAll<HTMLButtonElement>('[data-form-mode]')];
+  const modeOptionGroups = [...document.querySelectorAll<HTMLElement>('[data-options-mode]')];
+  const localePreset = document.querySelector('[data-locale-preset]') as (HTMLElement & { value: string }) | null;
   let jsonHighlighter: ReturnType<typeof createJsonHighlighter> | undefined;
   let copyValue = '';
+
+  type FormMode = 'extract' | 'search' | 'news' | 'images' | 'videos' | 'places' | 'finance';
+  const modes = {
+    extract: {
+      action: '/api/extract',
+      inputName: 'url',
+      inputType: 'url',
+      inputMode: 'url',
+      autocomplete: 'url',
+      maximumLength: 2_048,
+      label: 'Website URL',
+      placeholder: 'https://www.amazon.com/dp/B09B8V1LZ3',
+      submit: 'Extract',
+      loading: 'Extracting…',
+      errorLabel: 'Could not extract',
+      errorMessage: 'Extraction failed.',
+    },
+    search: {
+      action: '/api/search',
+      inputName: 'q',
+      inputType: 'text',
+      inputMode: 'search',
+      autocomplete: 'off',
+      maximumLength: 200,
+      label: 'Search query',
+      placeholder: 'best web data tools for AI agents',
+      submit: 'Search',
+      loading: 'Searching…',
+      errorLabel: 'Could not search',
+      errorMessage: 'Search failed.',
+    },
+    news: {
+      action: '/api/news',
+      inputName: 'q',
+      inputType: 'text',
+      inputMode: 'search',
+      autocomplete: 'off',
+      maximumLength: 200,
+      label: 'News query',
+      placeholder: 'latest AI infrastructure news',
+      submit: 'Search news',
+      loading: 'Searching news…',
+      errorLabel: 'Could not search news',
+      errorMessage: 'News search failed.',
+    },
+    images: {
+      action: '/api/images',
+      inputName: 'q',
+      inputType: 'text',
+      inputMode: 'search',
+      autocomplete: 'off',
+      maximumLength: 200,
+      label: 'Image query',
+      placeholder: 'coral reef',
+      submit: 'Search images',
+      loading: 'Searching images…',
+      errorLabel: 'Could not search images',
+      errorMessage: 'Image search failed.',
+    },
+    videos: {
+      action: '/api/videos',
+      inputName: 'q',
+      inputType: 'text',
+      inputMode: 'search',
+      autocomplete: 'off',
+      maximumLength: 200,
+      label: 'Video query',
+      placeholder: 'Cloudflare Workers tutorial',
+      submit: 'Search videos',
+      loading: 'Searching videos…',
+      errorLabel: 'Could not search videos',
+      errorMessage: 'Video search failed.',
+    },
+    places: {
+      action: '/api/places',
+      inputName: 'q',
+      inputType: 'text',
+      inputMode: 'search',
+      autocomplete: 'off',
+      maximumLength: 200,
+      label: 'Place or address',
+      placeholder: 'Brandenburg Gate Berlin',
+      submit: 'Search places',
+      loading: 'Searching places…',
+      errorLabel: 'Could not search places',
+      errorMessage: 'Place search failed.',
+    },
+    finance: {
+      action: '/api/finance',
+      inputName: 'symbol',
+      inputType: 'text',
+      inputMode: 'text',
+      autocomplete: 'off',
+      maximumLength: 32,
+      label: 'Market symbol',
+      placeholder: 'AAPL, ^GSPC, BTC-USD, EURUSD=X',
+      submit: 'Get market data',
+      loading: 'Loading market data…',
+      errorLabel: 'Could not load market data',
+      errorMessage: 'Market data request failed.',
+    },
+  } as const;
+  let mode: FormMode = 'extract';
+
+  /**
+   * Reconfigure the single public input instead of maintaining two forms.
+   * This keeps the interaction compact and guarantees that only the parameter
+   * accepted by the selected GET endpoint is submitted.
+   */
+  function selectMode(nextMode: FormMode) {
+    if (!form || !input || !inputLabel || !submitLabel || nextMode === mode) return;
+    mode = nextMode;
+    const config = modes[mode];
+    form.action = config.action;
+    input.name = config.inputName;
+    input.type = config.inputType;
+    input.inputMode = config.inputMode;
+    input.setAttribute('autocomplete', config.autocomplete);
+    input.maxLength = config.maximumLength;
+    input.placeholder = config.placeholder;
+    input.value = '';
+    inputLabel.textContent = config.label;
+    submitLabel.textContent = config.submit;
+    modeButtons.forEach((button) => {
+      button.setAttribute('aria-pressed', String(button.dataset.formMode === mode));
+    });
+    modeOptionGroups.forEach((group) => {
+      const active = (group.dataset.optionsMode ?? '').split(' ').includes(mode);
+      group.hidden = !active;
+      group.querySelectorAll('input, select').forEach((control) => {
+        (control as HTMLElement & { disabled: boolean }).disabled = !active;
+      });
+    });
+    // A result belongs to the mode that produced it. Hide stale output when
+    // the endpoint changes so its raw link cannot be mistaken for a new result.
+    if (result) result.hidden = true;
+    copyValue = '';
+    input.focus();
+  }
+
+  modeButtons.forEach((button) => {
+    button.addEventListener('click', () => selectMode(button.dataset.formMode as FormMode));
+  });
+
+  localePreset?.addEventListener('change', () => {
+    const [language, country] = localePreset.value.split('|');
+    const languageInput = form?.querySelector<HTMLInputElement>('[data-locale-language]');
+    const countryInput = form?.querySelector<HTMLInputElement>('[data-locale-country]');
+    if (languageInput && language) languageInput.value = language;
+    if (countryInput && country) countryInput.value = country;
+  });
 
   // Shiki is only needed after a successful JSON request. Keeping its single
   // grammar and light theme in a lazy chunk avoids slowing the initial form.
@@ -64,24 +324,33 @@ import { Icon } from 'astro-icon/components';
     event.preventDefault();
     if (!form.reportValidity() || !result || !resultContent || !resultLabel || !rawResult || !submit) return;
 
+    const requestedMode = mode;
+    const config = modes[requestedMode];
     const endpoint = new URL(form.action, window.location.origin);
     endpoint.search = new URLSearchParams(new FormData(form) as unknown as Record<string, string>).toString();
+    for (const [key, value] of [...endpoint.searchParams]) {
+      if (!value) endpoint.searchParams.delete(key);
+    }
     const format = endpoint.searchParams.get('format') || 'json';
 
     result.hidden = false;
     result.dataset.state = 'loading';
-    resultLabel.textContent = 'Extracting…';
+    resultLabel.textContent = config.loading;
     resultContent.replaceChildren();
     submit.disabled = true;
+    modeButtons.forEach((button) => { button.disabled = true; });
     rawResult.href = endpoint.toString();
 
     try {
-      const response = await fetch(endpoint);
+      const response = await fetch(endpoint, {
+        credentials: 'same-origin',
+        headers: { 'X-Extractor-Web-Client': '1' },
+      });
       if (!response.ok) {
-        const payload = await response.json().catch(() => ({ error: { message: 'Extraction failed.' } })) as {
+        const payload = await response.json().catch(() => ({ error: { message: config.errorMessage } })) as {
           error?: { message?: string };
         };
-        throw new Error(payload.error?.message || 'Extraction failed.');
+        throw new Error(payload.error?.message || config.errorMessage);
       }
 
       if (format === 'json') {
@@ -104,12 +373,13 @@ import { Icon } from 'astro-icon/components';
     } catch (error) {
       copyValue = '';
       result.dataset.state = 'error';
-      resultLabel.textContent = 'Could not extract';
+      resultLabel.textContent = config.errorLabel;
       const message = document.createElement('p');
-      message.textContent = error instanceof Error ? error.message : 'Extraction failed.';
+      message.textContent = error instanceof Error ? error.message : config.errorMessage;
       resultContent.replaceChildren(message);
     } finally {
       submit.disabled = false;
+      modeButtons.forEach((button) => { button.disabled = false; });
     }
   });
 

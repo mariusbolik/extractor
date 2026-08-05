@@ -1,0 +1,21 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { platformPageSchema, type PlatformPageConfig } from '../features/marketing/platform-pages';
+import SocialLanding from './SocialLanding.astro';
+
+interface Props {
+  page: PlatformPageConfig;
+}
+
+const { page } = Astro.props;
+---
+
+<BaseLayout
+  title={page.title}
+  description={page.description}
+  path={`/${page.slug}/`}
+  keywords={page.keywords}
+  schema={platformPageSchema(page)}
+>
+  <SocialLanding page={page} />
+</BaseLayout>

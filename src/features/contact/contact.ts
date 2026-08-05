@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const CONTACT_DESTINATION = 'sideprojects@eyloo.com';
+const CONTACT_DESTINATION = 'marius@eyloo.com';
 const CONTACT_SENDER = 'contact@extractor.eyloo.com';
 
 const singleLine = z.string().trim().refine(

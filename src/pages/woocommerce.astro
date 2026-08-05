@@ -1,0 +1,6 @@
+---
+import PlatformPage from '../components/PlatformPage.astro';
+import { platformPages } from '../features/marketing/platform-pages';
+export const prerender = true;
+---
+<PlatformPage page={platformPages.woocommerce} />

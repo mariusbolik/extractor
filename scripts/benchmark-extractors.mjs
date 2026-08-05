@@ -2,8 +2,8 @@ import { mkdir } from 'node:fs/promises';
 import { inflateRawSync } from 'node:zlib';
 import { Defuddle } from 'defuddle/node';
 import { parseHTML } from 'linkedom';
-import { fetchPublicPage } from '../src/features/extraction/fetch.ts';
-import { extractMarkdownFromHtml } from '../src/features/extraction/markdown.ts';
+import { fetchPublicPage } from '@extractor/core/fetch';
+import { extractMarkdownFromHtml } from '@extractor/core/markdown';
 
 const REPORT_DIRECTORY = '.benchmark-reports';
 const MIN_USEFUL_CONTENT = 80;

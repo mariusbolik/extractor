@@ -13,10 +13,12 @@ const description = 'Rate limits, cache behavior, maximum sizes, and safe usage 
 
   <h2>Rate limits</h2>
   <ul>
-    <li>30 extraction requests per client per 60 seconds.</li>
+    <li>10 successful uncached operations per anonymous IP per UTC day.</li>
+    <li>1,000 non-expiring welcome credits once for each new account.</li>
+    <li>60 uncached search or extraction requests per client per 60 seconds.</li>
     <li>5 high-cost extraction requests per client per 60 seconds.</li>
   </ul>
-  <p>A rate-limited response uses HTTP <code>429</code> and may include a <code>Retry-After</code> header. Reuse identical request URLs so cached responses can be served efficiently.</p>
+  <p>An exhausted anonymous allowance or rate limit uses HTTP <code>429</code> and may include a <code>Retry-After</code> header. Signed-in website tools and account keys use the account credit balance; when it is empty, the response uses <code>402</code>. Errors consume neither the anonymous allowance nor account credits. Reuse identical request URLs so cached responses can be served efficiently.</p>
   <p>Successful API responses include <code>X-Extractor-Cache: MISS</code> when extraction work ran and <code>X-Extractor-Cache: HIT</code> when the versioned edge cache served the result.</p>
 
   <h2>Cache lifetimes</h2>
@@ -26,6 +28,14 @@ const description = 'Rate limits, cache behavior, maximum sizes, and safe usage 
       <tbody>
         <tr><td>Single entities and pages</td><td>Up to 30 days</td></tr>
         <tr><td>Products, profiles, and feeds</td><td>Up to 1 hour</td></tr>
+        <tr><td>Yahoo Finance market documents</td><td>Up to 5 minutes</td></tr>
+        <tr><td>Stock-symbol search feeds</td><td>Up to 1 hour</td></tr>
+        <tr><td>Finance API requests</td><td>Up to 5 minutes</td></tr>
+        <tr><td>Web searches</td><td>Up to 1 hour</td></tr>
+        <tr><td>News searches</td><td>Up to 1 hour</td></tr>
+        <tr><td>Image searches</td><td>Up to 1 hour</td></tr>
+        <tr><td>Video searches</td><td>Up to 1 hour</td></tr>
+        <tr><td>Place searches</td><td>Up to 1 hour</td></tr>
         <tr><td>Errors</td><td>Not cached</td></tr>
       </tbody>
     </table>
@@ -40,5 +50,6 @@ const description = 'Rate limits, cache behavior, maximum sizes, and safe usage 
   </ul>
 
   <h2>Authentication</h2>
-  <p>The public preview currently requires no account or API key. Never place credentials, cookies, authorization tokens, or private data in the <code>url</code> parameter.</p>
+  <p>No account is required for the 10-request daily allowance. New accounts receive 1,000 welcome credits once, used automatically in the homepage form and platform playgrounds after sign-in. External integrations add <code>Authorization: Bearer ext_live_…</code> to use the same balance after the cache lookup. Invalid keys return <code>401</code>; an account with no credits returns <code>402</code>. Never place credentials, cookies, authorization tokens, or private data in the <code>url</code> parameter.</p>
+  <p>Prepaid credits cost $0.49 per 1,000 credits and never expire. One-time pay-as-you-go top-ups are available in the <a href="/dashboard/">dashboard</a>.</p>
 </DocsLayout>

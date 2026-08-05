@@ -2,7 +2,7 @@ import type { APIRoute } from 'astro';
 
 export const prerender = false;
 
-const origin = 'https://extractor.mcb-software.workers.dev';
+const origin = 'https://extractor.sh';
 const links = [
   '</.well-known/api-catalog>; rel="api-catalog"; type="application/linkset+json"',
   '</openapi.json>; rel="service-desc"; type="application/vnd.oai.openapi+json"',
@@ -22,9 +22,54 @@ const catalog = {
           type: 'application/json',
         },
         {
-          href: `${origin}/mcp`,
-          title: 'Hosted MCP extraction server with optional topic focus',
+          href: `${origin}/api/search`,
+          title: 'Public web search API',
           type: 'application/json',
+        },
+        {
+          href: `${origin}/api/news`,
+          title: 'Public news search API',
+          type: 'application/json',
+        },
+        {
+          href: `${origin}/api/images`,
+          title: 'Public image search API',
+          type: 'application/json',
+        },
+        {
+          href: `${origin}/api/videos`,
+          title: 'Public video search API',
+          type: 'application/json',
+        },
+        {
+          href: `${origin}/api/places`,
+          title: 'Public place search API',
+          type: 'application/json',
+        },
+        {
+          href: `${origin}/api/finance`,
+          title: 'Public finance API',
+          type: 'application/json',
+        },
+        {
+          href: `${origin}/api/finance/search`,
+          title: 'Public stock-symbol search API',
+          type: 'application/json',
+        },
+        {
+          href: `${origin}/api/finance/movers`,
+          title: 'Public daily market movers API',
+          type: 'application/json',
+        },
+        {
+          href: `${origin}/mcp`,
+          title: 'Hosted MCP search, extraction, and rich finance chart server',
+          type: 'application/json',
+        },
+        {
+          href: `${origin}/auth.md`,
+          title: 'Optional Bearer API-key authentication, welcome credits, and prepaid credits',
+          type: 'text/markdown',
         },
       ],
       'service-desc': [

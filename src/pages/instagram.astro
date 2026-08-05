@@ -1,35 +1,6 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import SocialLanding from '../components/SocialLanding.astro';
-
+import PlatformPage from '../components/PlatformPage.astro';
+import { platformPages } from '../features/marketing/platform-pages';
 export const prerender = true;
-const title = 'Instagram posts and profiles to Markdown or JSON — extractor.sh';
-const description = 'Convert public Instagram posts, reels, and profiles into clean Markdown or normalized JSON.';
 ---
-
-<BaseLayout {title} {description} path="/instagram/">
-  <SocialLanding
-    platform="Instagram"
-    eyebrow="Instagram extractor"
-    headline="Public Instagram content, made reusable."
-    {description}
-    outcome="Posts and profiles in one consistent format."
-    capabilities={[
-      { label: 'Input', value: 'One public Instagram post, reel, or profile URL.' },
-      { label: 'Returns', value: 'One post entity, or a profile entity with recent items.' },
-      { label: 'Includes', value: 'Caption, author, media type, timestamp, profile counts, and recent profile posts when exposed.' },
-      { label: 'Caching', value: 'Profiles may be cached for one hour; posts for up to 30 days.' },
-    ]}
-    supported={[
-      'Public Instagram post and reel pages',
-      'Public Instagram profile pages',
-      'Recent public profile posts as a normalized feed',
-    ]}
-    limitations={[
-      'No private, deleted, or login-only content',
-      'No stories, comments, transcripts, or media downloads',
-      'Public profile feeds may contain only the most recent posts',
-    ]}
-    exampleUrl="https://www.instagram.com/instagram/"
-  />
-</BaseLayout>
+<PlatformPage page={platformPages.instagram} />

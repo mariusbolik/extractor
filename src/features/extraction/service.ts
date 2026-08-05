@@ -1,18 +1,26 @@
-import { ExtractionError } from './errors';
-import { extractUrl } from './extract';
-import { extractionTtl } from './cache';
 import {
+  ExtractionError,
+  extractUrl,
+  extractionTtl,
   toPublicExtractionResult,
   type ExtractionDependencies,
   type PublicExtractionResult,
-} from './types';
+} from '@extractor/core';
+import { renderPageHtml } from './browser';
 
-type ExtractionRuntime = Pick<Env, 'BROWSER' | 'BROWSER_RATE_LIMITER' | 'EXTRACT_RATE_LIMITER'>;
+type ExtractionRuntime = Pick<Env, 'BROWSER_RATE_LIMITER' | 'EXTRACT_RATE_LIMITER'> & {
+  BROWSER?: BrowserRun;
+};
 
 export interface PublicExtraction {
   result: PublicExtractionResult;
   ttl: number;
 }
+
+const workerGoogleNewsFetcher: typeof fetch = async (input, init) => {
+  const { fetchGoogleNewsRss } = await import('./google-news-transport');
+  return fetchGoogleNewsRss(input, init);
+};
 
 /**
  * Run one cache miss through the shared limits and extraction pipeline.
@@ -23,7 +31,7 @@ export async function runPublicExtraction(
   rawUrl: string,
   clientKey: string,
   runtime: ExtractionRuntime,
-  options: Pick<ExtractionDependencies, 'focus'> = {},
+  options: Pick<ExtractionDependencies, 'fetcher' | 'focus' | 'googleNewsFetcher'> = {},
 ): Promise<PublicExtraction> {
   const rate = await runtime.EXTRACT_RATE_LIMITER.limit({ key: clientKey });
   if (!rate.success) {
@@ -31,7 +39,13 @@ export async function runPublicExtraction(
   }
 
   const extracted = await extractUrl(rawUrl, {
-    browser: runtime.BROWSER,
+    ...(options.fetcher ? { fetcher: options.fetcher } : {}),
+    googleNewsFetcher: options.googleNewsFetcher
+      ?? options.fetcher
+      ?? workerGoogleNewsFetcher,
+    ...(runtime.BROWSER
+      ? { renderPageHtml: (url: URL) => renderPageHtml(url, runtime.BROWSER!) }
+      : {}),
     allowBrowser: async () => {
       const browserRate = await runtime.BROWSER_RATE_LIMITER.limit({ key: clientKey });
       return browserRate.success;

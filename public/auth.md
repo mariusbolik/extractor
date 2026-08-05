@@ -1,9 +1,17 @@
-# Auth.md — extractor.sh
+# Authentication — extractor.sh
 
-extractor.sh currently requires no account, API key, OAuth flow, cookie, or authorization header.
+Authentication is optional and is evaluated only after the shared edge-cache lookup.
 
-Call the public `GET /api/extract` endpoint with an absolute public URL and `format=json` or `format=markdown`, or connect an MCP client to `/mcp` and call `extract_public_url`.
+- Without an account, successful uncached operations use the free allowance of 10 per IP each UTC day.
+- New accounts receive a one-time welcome bonus of 1,000 non-expiring credits.
+- Signed-in homepage and platform-playground requests automatically use the account's credit balance.
+- External integrations use that same balance with `Authorization: Bearer ext_live_…`.
+- Cache hits, invalid requests, upstream failures, and rate-limited work use neither the anonymous allowance nor account credits.
 
-Do not send credentials, cookies, authorization tokens, private URLs, or private data. Requests are subject to the published rate limits.
+Create and revoke up to two active API keys in the private [dashboard](https://extractor.sh/dashboard/). Keys are stored only as hashes and the complete value is shown once at creation. Never copy the Hanko browser-session cookie into an integration.
 
-See the [developer documentation](https://extractor.mcb-software.workers.dev/docs/) and [limits](https://extractor.mcb-software.workers.dev/docs/limits/) for details.
+An invalid or revoked key returns HTTP `401` on an uncached request. An account with insufficient credits returns `402`. Anonymous daily or protective rate limits return `429`.
+
+Use the same optional Bearer header with the hosted `/mcp` endpoint. Never put API keys, cookies, credentials, private URLs, or confidential data in query parameters.
+
+See the [API reference](https://extractor.sh/docs/api/), [limits](https://extractor.sh/docs/limits/), and [pricing](https://extractor.sh/pricing/).

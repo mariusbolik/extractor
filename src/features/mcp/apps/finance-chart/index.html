@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Market price chart</title>
+    <script type="module" src="./finance-chart.ts"></script>
+  </head>
+  <body>
+    <main class="market-card" aria-live="polite" aria-busy="true">
+      <header class="market-header">
+        <div class="instrument-block">
+          <p class="eyebrow">Market data</p>
+          <h1 id="instrument">Loading market data…</h1>
+          <p id="market-meta" class="market-meta"></p>
+        </div>
+        <div class="quote-block">
+          <p id="price" class="price">—</p>
+          <p id="change" class="change">—</p>
+        </div>
+      </header>
+
+      <section id="chart-section" class="chart-section" hidden>
+        <div class="chart-heading">
+          <span>Price trend</span>
+          <strong id="range-label">—</strong>
+        </div>
+        <div id="chart-wrap" class="chart-wrap">
+          <svg id="chart" viewBox="0 0 720 260" preserveAspectRatio="none" role="img" aria-labelledby="chart-title chart-description">
+            <title id="chart-title">Market price history</title>
+            <desc id="chart-description">A line chart of the available closing prices.</desc>
+            <defs>
+              <linearGradient id="area-positive" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#0b8f55" stop-opacity="0.28" />
+                <stop offset="1" stop-color="#0b8f55" stop-opacity="0" />
+              </linearGradient>
+              <linearGradient id="area-negative" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#c52a35" stop-opacity="0.25" />
+                <stop offset="1" stop-color="#c52a35" stop-opacity="0" />
+              </linearGradient>
+            </defs>
+            <g class="grid" aria-hidden="true">
+              <line x1="18" x2="702" y1="18" y2="18" />
+              <line x1="18" x2="702" y1="93" y2="93" />
+              <line x1="18" x2="702" y1="168" y2="168" />
+              <line x1="18" x2="702" y1="243" y2="243" />
+            </g>
+            <path id="area" class="chart-area" aria-hidden="true" />
+            <path id="line" class="chart-line" aria-hidden="true" />
+            <line id="crosshair" class="crosshair" y1="18" y2="243" aria-hidden="true" />
+            <circle id="active-point" class="active-point" r="5" aria-hidden="true" />
+            <rect id="chart-hitbox" class="chart-hitbox" x="0" y="0" width="720" height="260" tabindex="0" aria-label="Explore price history" />
+          </svg>
+          <div id="tooltip" class="tooltip" hidden>
+            <strong id="tooltip-price">—</strong>
+            <span id="tooltip-time">—</span>
+          </div>
+        </div>
+        <div class="axis-labels" aria-hidden="true">
+          <span id="start-label">—</span>
+          <span id="end-label">—</span>
+        </div>
+      </section>
+
+      <p id="empty-state" class="empty-state" hidden>No price history is available for this range.</p>
+      <p id="error-state" class="error-state" hidden>Market data could not be displayed.</p>
+
+      <dl id="stats" class="stats" hidden>
+        <div><dt>Previous close</dt><dd id="previous-close">—</dd></div>
+        <div><dt>Day range</dt><dd id="day-range">—</dd></div>
+        <div><dt>52-week range</dt><dd id="year-range">—</dd></div>
+        <div><dt>Volume</dt><dd id="volume">—</dd></div>
+      </dl>
+
+      <footer>
+        <span>Native or converted values</span>
+        <span>Data may be delayed</span>
+      </footer>
+    </main>
+  </body>
+</html>

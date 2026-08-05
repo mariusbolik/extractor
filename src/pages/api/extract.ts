@@ -41,6 +41,7 @@ function errorResponse(error: unknown): Response {
 export const GET: APIRoute = async ({ request, url }) => {
   const rawUrl = url.searchParams.get('url')?.trim() ?? '';
   const formatValue = url.searchParams.get('format') ?? 'json';
+  const focusValue = url.searchParams.get('focus');
 
   if (!rawUrl) return errorResponse(new ExtractionError('invalid_request', 'The url query parameter is required.', 400));
   if (formatValue !== 'json' && formatValue !== 'markdown') {
@@ -56,12 +57,16 @@ export const GET: APIRoute = async ({ request, url }) => {
       },
     );
   }
+  const focus = focusValue?.trim();
+  if (focusValue !== null && (!focus || focus.length > 80)) {
+    return errorResponse(new ExtractionError('invalid_request', 'Focus must be 1 to 80 characters.', 400));
+  }
 
   const format = formatValue as OutputFormat;
   const clientKey = request.headers.get('cf-connecting-ip') || 'local-development';
 
   try {
-    const { result, ttl } = await runPublicExtraction(rawUrl, clientKey, env);
+    const { result, ttl } = await runPublicExtraction(rawUrl, clientKey, env, { ...(focus ? { focus } : {}) });
     if (format === 'markdown') {
       return new Response(result.content, {
         headers: successHeaders(ttl, 'text/markdown; charset=utf-8'),

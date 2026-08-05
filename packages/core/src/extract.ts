@@ -1,0 +1,59 @@
+import { extractAmazonList, extractAmazonProduct, extractAmazonSearch } from './adapters/amazon';
+import { extractAppStoreApp } from './adapters/app-store';
+import { extractBlueskyPost, extractBlueskyProfile } from './adapters/bluesky';
+import { extractGoogleNews } from './adapters/google-news';
+import { extractGooglePlayApp } from './adapters/google-play';
+import { extractInstagram } from './adapters/instagram';
+import { extractMastodon } from './adapters/mastodon';
+import { extractReddit } from './adapters/reddit';
+import { extractSoundCloud } from './adapters/soundcloud';
+import { extractSpotify } from './adapters/spotify';
+import { extractTikTok } from './adapters/tiktok';
+import { extractVimeo } from './adapters/vimeo';
+import { extractWebPage } from './adapters/web';
+import { extractTweet } from './adapters/x';
+import { extractYahooFinanceQuote } from './adapters/yahoo-finance';
+import { extractYouTube } from './adapters/youtube';
+import { ExtractionError } from './errors';
+import { toPublicExtractionResult, type ExtractionDependencies, type ExtractionResult } from './types';
+import { amazonProductAsin, amazonPublicListInfo, amazonSearchQuery, appStoreTrackId, googlePlayPackageId, isBlueskyPostUrl, isBlueskyProfileUrl, isGoogleNewsUrl, isInstagramUrl, isPossibleMastodonStatusUrl, isRedditUrl, isSoundCloudUrl, isSpotifyUrl, isTikTokUrl, isVimeoUrl, isXUrl, isYouTubeUrl, validateTargetUrl, yahooFinanceSymbol } from './url';
+
+const MAX_OUTPUT_BYTES = 2 * 1024 * 1024;
+
+export async function extractUrl(
+  rawUrl: string,
+  dependencies: ExtractionDependencies = {},
+): Promise<ExtractionResult> {
+  const url = validateTargetUrl(rawUrl);
+  let result: ExtractionResult;
+
+  if (amazonProductAsin(url)) result = await extractAmazonProduct(url, dependencies);
+  else if (amazonSearchQuery(url)) result = await extractAmazonSearch(url, dependencies);
+  else if (amazonPublicListInfo(url)) result = await extractAmazonList(url, dependencies);
+  else if (appStoreTrackId(url)) result = await extractAppStoreApp(url, dependencies);
+  else if (googlePlayPackageId(url)) result = await extractGooglePlayApp(url, dependencies);
+  else if (isGoogleNewsUrl(url)) result = await extractGoogleNews(url, dependencies);
+  else if (isBlueskyPostUrl(url)) result = await extractBlueskyPost(url, dependencies);
+  else if (isBlueskyProfileUrl(url)) result = await extractBlueskyProfile(url, dependencies);
+  else if (isInstagramUrl(url)) result = await extractInstagram(url, dependencies);
+  else if (isVimeoUrl(url)) result = await extractVimeo(url, dependencies);
+  else if (isSoundCloudUrl(url)) result = await extractSoundCloud(url, dependencies);
+  else if (isSpotifyUrl(url)) result = await extractSpotify(url, dependencies);
+  else if (isTikTokUrl(url)) result = await extractTikTok(url, dependencies);
+  else if (isXUrl(url)) result = await extractTweet(url, dependencies);
+  else if (yahooFinanceSymbol(url)) result = await extractYahooFinanceQuote(url, dependencies);
+  else if (isRedditUrl(url)) result = await extractReddit(url, dependencies);
+  else if (isYouTubeUrl(url)) result = await extractYouTube(url, dependencies);
+  else if (isPossibleMastodonStatusUrl(url)) result = await extractMastodon(url, dependencies) ?? await extractWebPage(url, dependencies);
+  else result = await extractWebPage(url, dependencies);
+
+  // Validate every adapter result before it can power either JSON or Markdown.
+  // This keeps source-specific parsing bugs from silently changing the public contract.
+  toPublicExtractionResult(result);
+
+  if (new TextEncoder().encode(JSON.stringify(result)).byteLength > MAX_OUTPUT_BYTES) {
+    throw new ExtractionError('content_too_large', 'The extracted result is larger than 2 MB.', 413);
+  }
+
+  return result;
+}

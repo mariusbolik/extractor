@@ -1,0 +1,126 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SecurityCheckLoader from './SecurityCheckLoader.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  path: '/legal/' | '/privacy/' | '/terms/';
+  eyebrow: string;
+  heading: string;
+  introduction: string;
+  updated: string;
+  accessGranted: boolean;
+  turnstileSiteKey: string;
+  gateFailed?: boolean;
+}
+
+const {
+  title,
+  description,
+  path,
+  eyebrow,
+  heading,
+  introduction,
+  updated,
+  accessGranted,
+  turnstileSiteKey,
+  gateFailed = false,
+} = Astro.props;
+const navigation = [
+  { href: '/privacy/', label: 'Privacy' },
+  { href: '/legal/', label: 'Legal Notice' },
+  { href: '/terms/', label: 'Terms' },
+] as const;
+const renderedTitle = accessGranted ? title : 'Protected Legal Information — extractor.sh';
+const renderedDescription = accessGranted
+  ? description
+  : 'Complete a Cloudflare Turnstile check to view the legal pages for extractor.sh.';
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  name: accessGranted ? heading : 'Protected legal information',
+  url: new URL(path, Astro.site).toString(),
+  description: renderedDescription,
+  dateModified: '2026-08-03',
+};
+---
+
+<BaseLayout title={renderedTitle} description={renderedDescription} {path} {schema} robots="noindex, nofollow, noarchive" agentReadable={false}>
+  {!accessGranted ? (
+    <section class="mx-auto max-w-[680px] border-2 border-black bg-white p-[clamp(26px,6vw,58px)] shadow-[10px_10px_0_#000] max-[660px]:shadow-[6px_6px_0_#000]" data-legal-gate>
+      <p class="mb-4 font-mono text-[0.78rem] font-extrabold uppercase tracking-[0.14em]">Protected information</p>
+      <h1 class="font-heading text-[clamp(2rem,5vw,3.6rem)] font-normal leading-[1.04] tracking-[-0.045em]">Confirm you are human.</h1>
+      <p class="mt-6 max-w-[580px] leading-[1.7]">The page opens automatically after the privacy-preserving Cloudflare check. One successful check unlocks all legal pages for 30 minutes.</p>
+      {gateFailed && (
+        <p class="mt-6 border-2 border-black p-4 text-[0.9rem] font-bold leading-relaxed" role="alert">The verification was not accepted. Please complete a fresh check and try again.</p>
+      )}
+      <form class="mt-8" action="/api/legal-access" method="post" data-legal-gate-form aria-describedby="legal-gate-status">
+        <input type="hidden" name="next" value={path} />
+        <SecurityCheckLoader id="legal-gate-status" />
+        <div
+          class="cf-turnstile mt-5 min-h-[65px]"
+          data-sitekey={turnstileSiteKey}
+          data-theme="light"
+          data-size="flexible"
+          data-action="legal_access"
+          data-appearance="interaction-only"
+          data-callback="onLegalAccessVerified"
+          data-error-callback="onLegalAccessError"
+          data-refresh-expired="auto"
+        ></div>
+      </form>
+      <p class="mt-6 text-[0.78rem] leading-relaxed text-black/65">Turnstile processes browser and interaction signals to distinguish people from automated access. After verification, extractor.sh sets a strictly necessary, signed access cookie. Read <a class="font-bold text-black underline" href="https://www.cloudflare.com/privacypolicy/" rel="noreferrer">Cloudflare's Privacy Policy</a> or <a class="font-bold text-black underline" href="/">return home</a>.</p>
+      <script is:inline>
+        window.onLegalAccessVerified = () => {
+          const form = document.querySelector('[data-legal-gate-form]');
+          if (!(form instanceof HTMLFormElement)) return;
+          form.setAttribute('aria-busy', 'true');
+          const status = form.querySelector('[data-security-check-status]');
+          if (status instanceof HTMLElement) status.textContent = 'Opening legal information…';
+          form.requestSubmit();
+        };
+        window.onLegalAccessError = () => {
+          const status = document.querySelector('[data-security-check-status]');
+          if (status instanceof HTMLElement) status.textContent = 'The security check could not be loaded. Please try again.';
+        };
+      </script>
+      <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    </section>
+  ) : (
+    <>
+      <section class="border-b-2 border-black pb-9">
+        <p class="mb-4 font-mono text-[0.78rem] font-extrabold uppercase tracking-[0.14em]">{eyebrow}</p>
+        <h1 class="max-w-[850px] font-heading text-[clamp(2.1rem,5vw,4rem)] font-normal leading-[1.03] tracking-[-0.045em]">{heading}</h1>
+        <p class="mt-6 max-w-[760px] text-[clamp(1rem,2vw,1.16rem)] leading-[1.7]">{introduction}</p>
+        <p class="mt-5 font-mono text-[0.74rem] font-bold uppercase tracking-[0.1em]">Last updated {updated}</p>
+      </section>
+
+      <div class="mt-10 grid items-start gap-8 lg:grid-cols-[220px_minmax(0,1fr)]">
+        <nav class="border-2 border-black bg-white p-4 lg:sticky lg:top-5" aria-label="Legal pages">
+          <p class="mb-3 font-mono text-[0.7rem] font-extrabold uppercase tracking-[0.13em]">Legal</p>
+          <ul class="list-none divide-y-2 divide-black border-y-2 border-black p-0">
+            {navigation.map((item) => (
+              <li>
+                <a
+                  class:list={[
+                    'block px-3 py-3 text-[0.86rem] font-extrabold no-underline hover:bg-black hover:text-white hover:no-underline',
+                    item.href === path && 'bg-black !text-white',
+                  ]}
+                  href={item.href}
+                  aria-current={item.href === path ? 'page' : undefined}
+                >
+                  {item.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        <article class="min-w-0 border-2 border-black bg-white p-[clamp(24px,5vw,52px)] [&_a]:font-bold [&_h2]:mt-12 [&_h2]:font-heading [&_h2]:text-[clamp(1.35rem,2.7vw,1.85rem)] [&_h2]:font-normal [&_h2]:leading-[1.12] [&_h2]:tracking-[-0.035em] [&_h2:first-child]:mt-0 [&_h3]:mt-8 [&_h3]:font-heading [&_h3]:text-[1.08rem] [&_h3]:font-normal [&_h3]:leading-[1.25] [&_li]:pl-1 [&_p]:mt-4 [&_p]:leading-[1.75] [&_ul]:mt-4 [&_ul]:list-[square] [&_ul]:space-y-3 [&_ul]:pl-6">
+          <slot />
+        </article>
+      </div>
+    </>
+  )}
+</BaseLayout>

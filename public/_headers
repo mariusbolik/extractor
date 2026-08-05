@@ -1,44 +1,51 @@
 /*
   Link: </sitemap.xml>; rel="sitemap"; type="application/xml", </llms.txt>; rel="describedby"; type="text/markdown", </.well-known/api-catalog>; rel="api-catalog"; type="application/linkset+json", </openapi.json>; rel="service-desc"; type="application/vnd.oai.openapi+json", </schemas/extraction-v1.json>; rel="describedby"; type="application/schema+json", </.well-known/mcp/server-card.json>; rel="describedby"; type="application/json"
+  Cache-Control: no-store
   X-Content-Type-Options: nosniff
 
 /llms.txt
   Content-Type: text/markdown; charset=utf-8
-  Cache-Control: public, max-age=3600
 
 /llms-full.txt
   Content-Type: text/markdown; charset=utf-8
-  Cache-Control: public, max-age=3600
 
 /AGENTS.md
   Content-Type: text/markdown; charset=utf-8
-  Cache-Control: public, max-age=3600
 
 /auth.md
   Content-Type: text/markdown; charset=utf-8
-  Cache-Control: public, max-age=3600
 
 /.well-known/agent-skills/index.json
   Content-Type: application/json; charset=utf-8
   Access-Control-Allow-Origin: *
-  Cache-Control: public, max-age=3600
 
 /.well-known/agent-skills/*/SKILL.md
   Content-Type: text/markdown; charset=utf-8
   Access-Control-Allow-Origin: *
-  Cache-Control: public, max-age=3600
 
 /.well-known/mcp/server-card.json
   Content-Type: application/json; charset=utf-8
   Access-Control-Allow-Origin: *
-  Cache-Control: public, max-age=3600
 
 /openapi.json
   Content-Type: application/vnd.oai.openapi+json;version=3.1
   Access-Control-Allow-Origin: *
-  Cache-Control: public, max-age=3600
 
 /schemas/*
   Content-Type: application/schema+json; charset=utf-8
   Access-Control-Allow-Origin: *
-  Cache-Control: public, max-age=3600
+
+/legal/
+  X-Robots-Tag: noindex, nofollow, noarchive
+
+/privacy/
+  X-Robots-Tag: noindex, nofollow, noarchive
+
+/terms/
+  X-Robots-Tag: noindex, nofollow, noarchive
+
+/login/
+  X-Robots-Tag: noindex, nofollow, noarchive
+
+/dashboard/
+  X-Robots-Tag: noindex, nofollow, noarchive

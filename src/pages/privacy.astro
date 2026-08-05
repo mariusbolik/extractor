@@ -1,0 +1,94 @@
+---
+import LegalPage from '../components/LegalPage.astro';
+import { LEGAL_LAST_UPDATED, legalOperator } from '../features/legal/operator';
+import { hasLegalAccess } from '../features/legal/access';
+import { env } from 'cloudflare:workers';
+
+export const prerender = false;
+const title = 'Privacy Policy — extractor.sh';
+const description = 'How extractor.sh processes API inputs, contact messages, technical request data, rate-limit counters, and cached public results.';
+const accessGranted = await hasLegalAccess(Astro.request, env.TURNSTILE_SECRET_KEY);
+const gateFailed = Astro.url.searchParams.get('gate') === 'failed';
+---
+
+<LegalPage
+  {title}
+  {description}
+  path="/privacy/"
+  eyebrow="Privacy policy"
+  heading="Built to collect less."
+  introduction="extractor.sh avoids advertising trackers and cross-site behavioral profiles. This policy explains the limited data needed for accounts, prepaid billing, security, audience measurement, and cache-first requests."
+  updated={LEGAL_LAST_UPDATED}
+  {accessGranted}
+  turnstileSiteKey={env.TURNSTILE_SITE_KEY}
+  {gateFailed}
+>
+  <section class="border-2 border-black bg-black p-6 text-white" aria-labelledby="privacy-summary">
+    <h2 class="!mt-0 !text-[1.25rem]" id="privacy-summary">Privacy at a glance</h2>
+    <ul class="!mb-0">
+      <li>No account is required for the anonymous daily allowance.</li>
+      <li>We use cookie-free, privacy-focused audience measurement and no advertising trackers.</li>
+      <li>We do not sell personal data.</li>
+      <li>Do not submit private URLs, credentials, personal data, or confidential search queries.</li>
+    </ul>
+  </section>
+
+  <h2>1. Controller</h2>
+  <p>
+    <strong>{legalOperator.name}</strong><br />
+    {legalOperator.street}<br />
+    {legalOperator.postalCode} {legalOperator.city}<br />
+    {legalOperator.country}<br />
+    Email: <a href={`mailto:${legalOperator.email}`}>{legalOperator.email}</a>
+  </p>
+
+  <h2>2. Data processed when you use the service</h2>
+  <h3>Website, API, and MCP requests</h3>
+  <p>When you access the website, public GET APIs, or hosted MCP server, we and our infrastructure provider may process your IP address, request time, requested path and query parameters, response status, user agent, and other technical request information. The API also processes the public URL, search term, output format, and limit you submit.</p>
+  <p>We process this information to deliver the requested service, maintain reliability, diagnose errors, prevent abuse, and enforce rate limits. The legal bases are Article 6(1)(b) GDPR where processing is necessary to provide a requested service and Article 6(1)(f) GDPR for our legitimate interests in secure and efficient operation.</p>
+
+  <h3>Public-source requests</h3>
+  <p>To answer an extraction or search request, extractor.sh sends the submitted URL or query to the relevant public website or specialist search, media, news, market-data, or geocoding provider. Those recipients can process the resulting technical request under their own privacy terms. We do not send your account credentials or intentionally forward your end-user IP address to a target website.</p>
+
+  <h3>Edge caching</h3>
+  <p>Successful API results are cached at Cloudflare's edge so repeated identical requests can be answered without repeating extraction work. Cache keys can contain the submitted public URL or search query, and cached values contain the resulting public content.</p>
+  <ul>
+    <li>Most individual pages and entities: up to 30 days.</li>
+    <li>Products, profiles, feeds, and search results: generally up to 1 hour.</li>
+    <li>Yahoo Finance market results: up to 5 minutes.</li>
+    <li>Errors: not cached.</li>
+  </ul>
+  <p>Because inputs are sent in GET query parameters and may be cached or logged, never submit secrets, private URLs, personal data, or confidential queries.</p>
+
+  <h3>Rate limiting and operational logs</h3>
+  <p>We use a client IP address for short protective rate limits. For the daily anonymous allowance, we store a keyed hash of the UTC date and IP address in a strongly consistent counter; the raw IP is not stored in the billing database. Cloudflare Workers may also record invocation, error, and diagnostic logs under the configured infrastructure retention.</p>
+
+  <h2>3. Contact form and email</h2>
+  <p>If you contact us, we process your email address, optional name, selected topic, message, and technical request data. The form is rate-limited using the client IP address. The submission is delivered to our support mailbox and is not written to an extractor.sh customer database.</p>
+  <p>We use this information to answer your request, evaluate a possible business relationship, and prevent contact-form abuse. The legal bases are Article 6(1)(b) GDPR for pre-contractual communication and Article 6(1)(f) GDPR for other support and security communication. We retain correspondence only while needed to resolve and document the request or comply with legal retention duties.</p>
+
+  <h2>4. Turnstile, cookies, accounts, and analytics</h2>
+  <p>Before displaying the legal pages, Cloudflare Turnstile runs browser challenges and processes technical, browser, device, and interaction signals to distinguish people from automated access. After successful server-side verification, extractor.sh sets a signed, HttpOnly, first-party cookie that unlocks the legal pages for 30 minutes. The cookie contains an expiry time and cryptographic signature, and is used only for this access check.</p>
+  <p>A separate Turnstile check protects the sign-in page. After verification, extractor.sh sets a signed, HttpOnly <code>auth_access</code> cookie for 10 minutes before loading Hanko. Hanko then uses its <code>hanko</code> session cookie to authenticate the private dashboard and apply the account credit balance to signed-in website tools. We validate that session with Hanko for metered website requests, dashboard access, and account changes. We store Hanko's user ID, but do not copy Hanko email addresses into the billing database.</p>
+  <p>We use Pirsch Analytics to understand aggregate page usage, referrers, campaigns, devices, and approximate locations so we can evaluate and improve the service. Depending on the visit, Pirsch processes the requested page path, referrer, UTM parameters, language, time, user agent, device and browser information, screen size, and approximate country or city. Pirsch uses the IP address, user agent, date, and a site-specific salt to create a one-way visitor hash. It does not store the IP address, uses no analytics cookies, does not recognize a visitor for longer than 24 hours, and does not track visitors across different websites.</p>
+  <p>The legal basis for this audience measurement is Article 6(1)(f) GDPR and our legitimate interest in understanding use of extractor.sh and improving its content, usability, and operation. We do not use the analytics data for advertising, sell it, or combine it with account, billing, extraction, or search data. We do not build cross-site behavioral profiles or use automated decision-making or profiling with legal or similarly significant effects.</p>
+
+  <h3>API keys, credits, and billing</h3>
+  <p>For account users, we store the Hanko user ID, only a cryptographic hash and display hint for each API key, welcome-credit eligibility and grant time, exact credit balance and usage counters, the Dodo Payments customer and optional payment-mandate references, checkout and automatic-funding intents, automatic-funding limits and status, usage-alert delivery state, webhook idempotency records, and an auditable ledger of welcome bonuses, purchases, grants, refunds, and disputes. The billing system never stores extracted URLs or search queries.</p>
+  <p>Dodo Payments hosts checkout, processes payment and transaction details, calculates applicable taxes, and provides merchant-of-record services. extractor.sh receives customer and transaction identifiers, amounts, payment and mandate status, refunds, disputes, and the billing email needed for transactional usage alerts, but not complete card credentials. We retrieve the billing email from Dodo Payments when an alert is due rather than copying it into our billing database. If you explicitly enable automatic funding, we use the approved mandate only under your selected threshold, top-up amount, and monthly subtotal limit.</p>
+
+  <h2>5. Infrastructure providers and recipients</h2>
+  <p>Cloudflare provides DNS, content delivery, security, Turnstile verification, Worker execution, strongly consistent counters, database storage, rate limiting, edge caching, operational logging, and transactional email delivery. Hanko provides account authentication. Dodo Payments provides checkout, payment processing, tax handling, and merchant-of-record services. Pirsch Analytics, operated by Emvi Software GmbH in Germany, provides cookie-free audience measurement. Other recipient categories are the public source websites and specialist public-data providers needed to answer a request, and professional advisers or authorities where disclosure is legally required.</p>
+  <p>Cloudflare and other providers may process data outside the European Economic Area. Where GDPR applies, such transfers use an adequacy decision, Standard Contractual Clauses, or another legally recognized safeguard as applicable.</p>
+
+  <h2>6. Retention</h2>
+  <p>Cache and log periods are described above. Short rate-limit counters expire with their windows; daily anonymous counters are cleaned after their relevant date. Pirsch visitor hashes cannot recognize a visitor for longer than 24 hours; aggregate analytics are retained only while needed to evaluate and improve the service. The sign-in gate cookie expires after 10 minutes and the legal-page access cookie after 30 minutes. Account, ledger, and transaction records are retained while the account is active and as required for accounting, tax, fraud, refund, dispute, and legal obligations. Revoked API-key hashes may be retained as security evidence. Contact correspondence is deleted when no longer needed, subject to legal duties.</p>
+
+  <h2>7. Your rights</h2>
+  <p>Where GDPR applies, you may request access, rectification, erasure, restriction, and data portability. You may object to processing based on legitimate interests. If processing is based on consent, you may withdraw it for the future. You also have the right to complain to a competent data-protection supervisory authority.</p>
+  <p>Send privacy requests to <a href={`mailto:${legalOperator.email}`}>{legalOperator.email}</a>. We may need enough information to verify that a request concerns you. Anonymous API traffic is intentionally difficult to associate with a person; account and billing records are associated with a Hanko user ID.</p>
+
+  <h2>8. Security and changes</h2>
+  <p>We use proportionate technical and organizational safeguards, including TLS, strict input validation, private-network blocking, response-size limits, timeouts, rate limiting, and short-lived operational logs. No internet service is completely risk-free.</p>
+  <p>We will update this policy when materially changing how personal data is used.</p>
+</LegalPage>

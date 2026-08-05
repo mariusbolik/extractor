@@ -1,0 +1,34 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+
+export const prerender = true;
+const title = 'Billing and credits — extractor.sh docs';
+const description = 'One-time welcome credits, prepaid request credits, pay-as-you-go top-ups, optional automatic funding, usage alerts, and refunds.';
+---
+
+<DocsLayout {title} {description} path="/docs/billing/">
+  <p class="!mt-0 font-mono text-[0.78rem] font-extrabold uppercase tracking-[0.14em]">Billing and credits</p>
+  <h1>Prepaid is the hard cap.</h1>
+  <p class="text-[1.08rem]">New accounts receive a one-time bonus of 1,000 credits. Additional credits cost $0.49 per 1,000 credits. Cache hits and errors are free, and welcome and purchased credits never expire.</p>
+
+  <h2>Exact credit grants</h2>
+  <p>Choose any cent amount from $10.00 to $4,900.00. The grant is:</p>
+  <pre><code>credits = floor(amount_cents × 1,000 / 49)</code></pre>
+  <p>For example, $100.00 grants exactly 204,081 credits. Dashboard presets are $10, $20, $50, $100, and $200.</p>
+
+  <h2>Pay-as-you-go top-ups</h2>
+  <p>Complete Dodo Payments Checkout in the dashboard and credits are granted only after Dodo Payments reports the payment as successful. A checkout return is never treated as payment proof. Manual top-ups are one-time purchases and do not enable automatic charges.</p>
+
+  <h2>Optional automatic funding</h2>
+  <p>Automatic funding is off by default. You choose a balance threshold, a top-up amount, and a maximum automatic-funding subtotal per UTC calendar month, then approve a payment mandate in Dodo Payments' hosted checkout. When a successful paid request leaves the balance at or below the threshold, extractor.sh may purchase one top-up without another checkout. Applicable tax is added separately and does not count toward the configured pre-tax subtotal limit.</p>
+  <p>Only one automatic charge can be pending for an account. Credits are added only after a successful payment webhook. A failed payment creates no credits or debt, existing credits remain usable, and repeated automatic attempts are paused until you review the settings. Automatic funding can be disabled at any time.</p>
+
+  <h2>Usage alerts</h2>
+  <p>After funding succeeds, extractor.sh emails the billing address at 80%, 90%, and 100% usage. Each message includes the remaining balance and a direct dashboard top-up link.</p>
+
+  <h2>Checkout and merchant of record</h2>
+  <p>Purchases and payment authorization use Dodo Payments' secure light-mode hosted checkout. Dodo Payments acts as merchant of record and handles payment details and applicable taxes. extractor.sh never collects complete card credentials.</p>
+
+  <h2>Refunds and disputes</h2>
+  <p>A refund or dispute reverses the complete original credit grant, including credits already used. The exact balance can become negative, which blocks paid cache misses until new credits bring it back above zero.</p>
+</DocsLayout>

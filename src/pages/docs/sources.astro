@@ -12,15 +12,16 @@ const description = 'Supported public webpage, commerce, social, audio, podcast,
   <p class="text-[1.08rem]">Use the same address a person would open in a browser. extractor.sh recognizes the source and returns one consistent response shape.</p>
 
   <h2>Web pages</h2>
-  <p>Public HTTP and HTTPS articles, documentation, blogs, and other content pages.</p>
+  <p>Public HTTP and HTTPS articles, documentation, blogs, product pages, product listings, and other content pages.</p>
   <pre><code>https://example.com/article</code></pre>
-  <p>Submit the ordinary public page URL. extractor.sh handles supported pages automatically and returns the same consistent response shape.</p>
+  <p>Submit the ordinary public page URL. Supported commerce pages can return a product entity with variants and specifications or a feed of repeated product cards, while other pages retain normal document and article extraction.</p>
 
   <h2>Amazon</h2>
-  <p>Public product detail pages return one product entity. Public search results pages return a feed containing up to 20 product entities.</p>
+  <p>Public product detail pages return one product entity. Public search results, storefronts, Idea Lists, and shared Wish Lists return product feeds.</p>
   <pre><code>https://www.amazon.de/product-name/dp/B09B8X9RGM
-https://www.amazon.de/s?k=mechanical+keyboard</code></pre>
-  <p>Submit the ordinary product or search URL. Search feeds include titles, canonical product URLs, prices, ratings, review counts, and images when present. Category browsing, pagination, carts, accounts, reviews, and personalized offers are unavailable. Results may be cached for up to one hour.</p>
+https://www.amazon.de/s?k=mechanical+keyboard
+https://www.amazon.de/hz/wishlist/ls/EXAMPLE</code></pre>
+  <p>Submit the ordinary product, search, storefront, or explicitly shared list URL. Results can include prices, ratings, review counts, seller, category, variants, specifications, and multiple images when present. List discovery, category browsing, pagination, carts, accounts, reviews, and personalized offers are unavailable. Results may be cached for up to one hour.</p>
 
   <h2>Apple App Store</h2>
   <p>Public app detail pages return one software product entity with the numeric App Store ID, app name, developer, description, price, ratings, version, release details, icon, and screenshots when available.</p>
@@ -44,7 +45,7 @@ https://bsky.app/profile/bsky.app/post/3mqcp5qjdfs26</code></pre>
   <p>Submit the ordinary Google Play app page URL. Search, category browsing, reviews, account data, and APK downloads are unavailable. Country restrictions and one-hour caching can affect current price and availability.</p>
 
   <h2>Instagram</h2>
-  <p>Public post and reel pages return one post entity. Public profile pages return a profile entity with recent public post items.</p>
+  <p>Public post and reel pages can include complete exposed carousels, dimensions, coauthors, location, partnership state, and engagement. Public profile pages can include verification, pronouns, an avatar, counts, and recent public post items.</p>
   <pre><code>https://www.instagram.com/instagram/
 https://www.instagram.com/p/DbbY9pdm6Q2/</code></pre>
   <p>Private or login-only content, stories, comments, transcripts, and media downloads are not supported.</p>
@@ -62,6 +63,17 @@ https://www.instagram.com/p/DbbY9pdm6Q2/</code></pre>
   </ul>
   <pre><code>https://store.example/products/black-shirt</code></pre>
   <p>Submit the ordinary public storefront page. Product pages return one product entity. Storefront and collection pages return up to 50 product entities as a feed. Protected or unavailable storefront data may produce an incomplete result or an error.</p>
+
+  <h2><a href="/woocommerce/">WooCommerce</a></h2>
+  <ul>
+    <li>Public product pages</li>
+    <li>Public shop and storefront pages</li>
+    <li>Public product-search result pages</li>
+    <li>Public product-category pages when the store exposes a category identifier</li>
+  </ul>
+  <pre><code>https://store.example/product/blue-shirt/
+https://store.example/?s=blue+shirt&amp;post_type=product</code></pre>
+  <p>Submit the ordinary storefront URL through <code>/api/extract</code>. Product pages return one product entity, while supported shops and searches return up to 50 product entities. Results can include integer minor-unit prices, availability, ratings, categories, brands, attributes, and images.</p>
 
   <h2>SoundCloud</h2>
   <p>Public tracks, playlists, and sets return an audio entity. Creator pages return a profile entity.</p>
@@ -89,6 +101,12 @@ https://www.instagram.com/p/DbbY9pdm6Q2/</code></pre>
   </ul>
   <pre><code>https://x.com/jack/status/20</code></pre>
   <p>Private, deleted, and age-gated posts are not supported.</p>
+
+  <h2>Yahoo Finance</h2>
+  <p>Public quote and price-history pages submitted to the generic extractor return one market document with listing-currency quote values and up to one month of daily OHLCV history. For configurable history, use the provider-neutral <a href="/docs/finance/">finance endpoint</a>.</p>
+  <pre><code>https://finance.yahoo.com/quote/AAPL/
+https://finance.yahoo.com/quote/MSFT/history/</code></pre>
+  <p>Submit the ordinary Yahoo Finance page URL. Market data can be delayed, incomplete, adjusted, or unavailable for some symbols. Results are cached for five minutes. The service does not provide live streams, order books, portfolios, trades, or investment recommendations; verify important values at the source.</p>
 
   <h2>TikTok</h2>
   <ul>

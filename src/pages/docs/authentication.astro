@@ -1,0 +1,35 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+
+export const prerender = true;
+const title = 'API keys — extractor.sh docs';
+const description = 'Create, use, and revoke extractor.sh API keys for welcome and purchased account credits.';
+---
+
+<DocsLayout {title} {description} path="/docs/authentication/">
+  <p class="!mt-0 font-mono text-[0.78rem] font-extrabold uppercase tracking-[0.14em]">API keys</p>
+  <h1>Sign in on the web. Use keys in integrations.</h1>
+  <p class="text-[1.08rem]">The public GET APIs allow 10 successful uncached operations per IP each UTC day without an account. New free accounts receive a one-time welcome bonus of 1,000 credits.</p>
+
+  <h2>Website tools</h2>
+  <p>After signing in, the homepage form and platform playgrounds automatically use your account balance through the secure Hanko session. You do not need to expose an API key to the page.</p>
+
+  <h2>Create a key for integrations</h2>
+  <ol>
+    <li>Sign in to the private <a href="/dashboard/">dashboard</a>.</li>
+    <li>Create a named API key. Each account can have up to two active keys.</li>
+    <li>Copy the complete <code>ext_live_…</code> value immediately. It is shown once and stored only as a cryptographic hash.</li>
+  </ol>
+
+  <h2>Send a key</h2>
+  <pre><code>{`curl --get 'https://extractor.sh/api/extract' \
+  --header 'Authorization: Bearer ext_live_your_key' \
+  --data-urlencode 'url=https://example.com/'`}</code></pre>
+  <p>Use the same optional header for <code>/api/search</code>, <code>/api/news</code>, <code>/api/images</code>, <code>/api/videos</code>, <code>/api/places</code>, and compatible remote MCP clients. Never put a key in a URL or query parameter.</p>
+
+  <h2>Cache-first behavior</h2>
+  <p>The shared cache is checked before authentication. A hit is free and can be returned even when a supplied key has since been revoked. On a miss, an invalid or revoked key returns <code>401</code>. Successful cacheable work uses one account credit; errors refund the reservation. When the balance is empty, the API returns <code>402</code>.</p>
+
+  <h2>Revoke a key</h2>
+  <p>Revoke keys in the dashboard. Revocation applies immediately to uncached requests. Rotate a key whenever it may have been exposed.</p>
+</DocsLayout>

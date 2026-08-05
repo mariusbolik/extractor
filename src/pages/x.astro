@@ -1,35 +1,6 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import SocialLanding from '../components/SocialLanding.astro';
-
+import PlatformPage from '../components/PlatformPage.astro';
+import { platformPages } from '../features/marketing/platform-pages';
 export const prerender = true;
-const title = 'X / Twitter post to Markdown or JSON — extractor.sh';
-const description = 'Convert a public X or Twitter status URL into clean Markdown or normalized JSON through a cacheable GET API.';
 ---
-
-<BaseLayout {title} {description} path="/x/">
-  <SocialLanding
-    platform="X"
-    eyebrow="X extractor"
-    headline="A public post. Just the content."
-    {description}
-    outcome="Public posts in one consistent format."
-    capabilities={[
-      { label: 'Input', value: 'One public x.com or legacy twitter.com status URL.' },
-      { label: 'Returns', value: 'One normalized post entity.' },
-      { label: 'Includes', value: 'Post text, author, timestamp, public media references, and canonical URL when available.' },
-      { label: 'Caching', value: 'Successful post results may be cached at Cloudflare’s edge for up to 30 days.' },
-    ]}
-    supported={[
-      'Public x.com status URLs',
-      'Legacy twitter.com status URLs',
-      'Post text and public media references',
-    ]}
-    limitations={[
-      'No private, deleted, or age-gated posts',
-      'One public post is extracted per request',
-      'Availability depends on the original public post',
-    ]}
-    exampleUrl="https://x.com/jack/status/20"
-  />
-</BaseLayout>
+<PlatformPage page={platformPages.x} />

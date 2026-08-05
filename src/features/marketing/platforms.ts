@@ -5,7 +5,7 @@ export interface SupportedPlatform {
   capabilities: string[];
   href: string;
   icon?: string;
-  brandIcon?: 'amazon' | 'instagram';
+  brandIcon?: 'amazon' | 'instagram' | 'woocommerce' | 'yahoo';
 }
 
 export const supportedPlatforms: SupportedPlatform[] = [
@@ -18,10 +18,12 @@ export const supportedPlatforms: SupportedPlatform[] = [
   { name: 'Mastodon', detail: 'Public posts', description: 'Turn public posts from compatible Mastodon instances into clean, source-linked content.', capabilities: ['Public Posts'], href: '/mastodon/', icon: 'logos:mastodon-icon' },
   { name: 'Reddit', detail: 'Posts + communities', description: 'Turn public posts, communities, and profiles into clean, reusable content.', capabilities: ['Posts', 'Communities', 'Profiles'], href: '/reddit/', icon: 'logos:reddit-icon' },
   { name: 'Shopify', detail: 'Products + catalogs', description: 'Extract public products, collections, and storefront catalogs in one consistent format.', capabilities: ['Product Details', 'Collections', 'Storefront Catalogs'], href: '/shopify/', icon: 'logos:shopify' },
+  { name: 'WooCommerce', detail: 'Products + stores', description: 'Normalize public product pages, shops, categories, and store searches.', capabilities: ['Product Details', 'Store Search', 'Shops + Categories'], href: '/woocommerce/', brandIcon: 'woocommerce' },
   { name: 'SoundCloud', detail: 'Audio + profiles', description: 'Extract public tracks, playlists, sets, and creator profiles as reusable metadata.', capabilities: ['Tracks', 'Playlists + Sets', 'Creator Profiles'], href: '/soundcloud/', icon: 'logos:soundcloud' },
   { name: 'Spotify', detail: 'Music + podcasts', description: 'Normalize public tracks, albums, artists, shows, episodes, and playlists.', capabilities: ['Tracks', 'Albums', 'Artists', 'Shows + Episodes', 'Playlists'], href: '/spotify/', icon: 'logos:spotify-icon' },
   { name: 'TikTok', detail: 'Posts + profiles', description: 'Turn public videos, photo posts, and creator profiles into clean Markdown and JSON.', capabilities: ['Video Posts', 'Photo Posts', 'Profiles'], href: '/tiktok/', icon: 'logos:tiktok-icon' },
   { name: 'Vimeo', detail: 'Public videos', description: 'Extract public Vimeo video metadata, descriptions, authors, dates, and duration.', capabilities: ['Public Videos', 'Creator Metadata'], href: '/vimeo/', icon: 'logos:vimeo-icon' },
   { name: 'X', detail: 'Public posts', description: 'Turn a public X or Twitter status URL into stable Markdown and JSON.', capabilities: ['Public Posts'], href: '/x/', icon: 'logos:x' },
+  { name: 'Yahoo Finance', detail: 'Quotes + history', description: 'Turn public market pages into a snapshot with recent daily price history.', capabilities: ['Market Snapshot', 'Recent OHLCV History'], href: '/yahoo-finance/', brandIcon: 'yahoo' },
   { name: 'YouTube', detail: 'Videos + channels', description: 'Extract public video metadata, channels, and playlists into a consistent format.', capabilities: ['Videos', 'Channels', 'Playlists'], href: '/youtube/', icon: 'logos:youtube-icon' },
 ];

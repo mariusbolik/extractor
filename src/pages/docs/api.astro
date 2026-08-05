@@ -10,6 +10,12 @@ const description = 'Reference for the extractor.sh GET API, including query par
   <p class="!mt-0 font-mono text-[0.78rem] font-extrabold uppercase tracking-[0.14em]">API reference</p>
   <h1>GET /api/extract</h1>
   <p class="text-[1.08rem]">Extract one public URL as normalized JSON or raw Markdown. Only GET requests are supported.</p>
+  <p>To discover URLs from a query first, use <a href="/docs/search/"><code>GET /api/search</code></a>. Dedicated GET endpoints cover <a href="/docs/news/">news</a>, <a href="/docs/images/">images</a>, <a href="/docs/videos/">videos</a>, <a href="/docs/places/">places</a>, and <a href="/docs/finance/">stock search plus market data</a>.</p>
+
+  <h2>Authentication and credits</h2>
+  <p>Authentication is optional. Anonymous successful uncached operations use the free allowance of 10 per IP each UTC day. New accounts receive a one-time 1,000-credit welcome bonus. Signed-in requests from the homepage and platform playgrounds automatically use the account balance, while external integrations use the same balance with <code>Authorization: Bearer ext_live_…</code>. Identical cache hits are always free.</p>
+  <pre><code>Authorization: Bearer ext_live_your_key</code></pre>
+  <p>Create and revoke up to two active keys in the private <a href="/dashboard/">dashboard</a>. Full keys are stored only as hashes and shown once.</p>
 
   <h2>Query parameters</h2>
   <div class="overflow-x-auto">
@@ -18,6 +24,7 @@ const description = 'Reference for the extractor.sh GET API, including query par
       <tbody>
         <tr><td><code>url</code></td><td>Yes</td><td>An absolute public HTTP or HTTPS URL, up to 2,048 characters.</td></tr>
         <tr><td><code>format</code></td><td>No</td><td><code>json</code> (default) or <code>markdown</code>.</td></tr>
+        <tr><td><code>focus</code></td><td>No</td><td>A 1–80 character topic for a relevant section of a generic webpage. Structured platform entities may ignore it.</td></tr>
       </tbody>
     </table>
   </div>
@@ -39,7 +46,7 @@ const description = 'Reference for the extractor.sh GET API, including query par
   <ul>
     <li><code>schemaVersion</code> is currently <code>1</code>.</li>
     <li><code>type</code> is <code>document</code>, <code>article</code>, <code>product</code>, <code>post</code>, <code>profile</code>, <code>video</code>, <code>audio</code>, or <code>feed</code>.</li>
-    <li><code>source</code> identifies the recognized platform or <code>web</code>: <code>amazon</code>, <code>app-store</code>, <code>bluesky</code>, <code>google-news</code>, <code>google-play</code>, <code>instagram</code>, <code>mastodon</code>, <code>reddit</code>, <code>shopify</code>, <code>soundcloud</code>, <code>spotify</code>, <code>tiktok</code>, <code>vimeo</code>, <code>x</code>, or <code>youtube</code>.</li>
+    <li><code>source</code> identifies the recognized platform or provider-neutral capability, including <code>web</code>, <code>web-search</code>, <code>image-search</code>, <code>video-search</code>, <code>place-search</code>, <code>finance</code>, and supported URL platforms.</li>
     <li><code>content</code> is always Markdown, even inside a JSON response.</li>
     <li><code>items</code> is present for <code>feed</code> and <code>profile</code> results and omitted for individual entities.</li>
   </ul>
@@ -59,17 +66,22 @@ const description = 'Reference for the extractor.sh GET API, including query par
       <thead><tr><th>Status</th><th>Meaning</th></tr></thead>
       <tbody>
         <tr><td><code>400</code></td><td>Missing, invalid, or unsupported input.</td></tr>
+        <tr><td><code>401</code></td><td>The Bearer API key is invalid or revoked.</td></tr>
+        <tr><td><code>402</code></td><td>The account has insufficient credits.</td></tr>
         <tr><td><code>404</code></td><td>The public source was not found or is unavailable.</td></tr>
         <tr><td><code>413</code></td><td>The source or extracted result is too large.</td></tr>
         <tr><td><code>415</code></td><td>The source is not an HTML, Markdown, or plain-text page.</td></tr>
         <tr><td><code>422</code></td><td>The page was reachable but useful content could not be extracted.</td></tr>
-        <tr><td><code>429</code></td><td>The per-client rate limit was exceeded.</td></tr>
+        <tr><td><code>429</code></td><td>The daily anonymous allowance or a per-client rate limit was exceeded. Anonymous allowance errors prompt the caller to create an account.</td></tr>
         <tr><td><code>500</code></td><td>The extracted data could not be represented by the public response schema.</td></tr>
         <tr><td><code>502</code></td><td>The public source blocked access, rate-limited the request, or returned an upstream error. The error message includes the source status when available.</td></tr>
         <tr><td><code>504</code></td><td>The source did not respond or finish loading before the timeout.</td></tr>
       </tbody>
     </table>
   </div>
+
+  <h2>Metering headers</h2>
+  <p>Responses expose <code>X-Extractor-Cache: HIT|MISS</code>. An uncached response using either free tier exposes <code>X-Extractor-Free-Remaining</code> for that tier. Once an account uses prepaid balance, responses expose <code>X-Extractor-Credits-Used</code> and <code>X-Extractor-Credits-Remaining</code>. Metering headers are never stored in shared cache entries.</p>
 
   <h2>Machine-readable contract</h2>
   <p>Use the <a href="/schemas/extraction-v1.json">JSON Schema</a> for the versioned entity contract and the <a href="/openapi.json">OpenAPI 3.1 document</a> for the complete endpoint definition. The <a href="/docs/schema/">schema guide</a> explains price units, null values, media, attributes, and nested items.</p>

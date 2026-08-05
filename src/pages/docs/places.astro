@@ -1,0 +1,74 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+
+export const prerender = true;
+const title = 'Places API — extractor.sh docs';
+const description = 'Resolve addresses, businesses, landmarks, and local categories through one cacheable, provider-neutral GET endpoint.';
+---
+
+<DocsLayout {title} {description} path="/docs/places/">
+  <p class="!mt-0 font-mono text-[0.78rem] font-extrabold uppercase tracking-[0.14em]">Places</p>
+  <h1>Local results an AI can use.</h1>
+  <p class="text-[1.08rem]">Resolve addresses, businesses, landmarks, and local-category queries with <code>/api/places</code>. Results include normalized coordinates, address fields, categories, and canonical map links when available.</p>
+
+  <h2>Request</h2>
+  <pre><code>curl --get 'https://extractor.sh/api/places' \
+  --data-urlencode 'q=Brandenburg Gate Berlin' \
+  --data-urlencode 'limit=5' \
+  --data-urlencode 'format=json'</code></pre>
+
+  <div class="overflow-x-auto">
+    <table>
+      <thead><tr><th>Parameter</th><th>Required</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>q</code></td><td>Yes</td><td>A place, address, business, landmark, or local-category query with up to 200 characters. Include a city or country when useful.</td></tr>
+        <tr><td><code>limit</code></td><td>No</td><td>An integer from <code>1</code> to <code>10</code>. Default: <code>5</code>.</td></tr>
+        <tr><td><code>language</code></td><td>No</td><td>Canonical BCP 47 language tag. Default: <code>en</code>.</td></tr>
+        <tr><td><code>country</code></td><td>No</td><td>Optional two-letter ISO country hard filter.</td></tr>
+        <tr><td><code>lat</code> + <code>lon</code></td><td>No</td><td>Optional paired coordinates used as a location bias.</td></tr>
+        <tr><td><code>type</code></td><td>No</td><td><code>any</code>, <code>house</code>, <code>street</code>, <code>locality</code>, <code>city</code>, <code>county</code>, <code>state</code>, <code>country</code>, or <code>other</code>.</td></tr>
+        <tr><td><code>format</code></td><td>No</td><td><code>json</code> or <code>markdown</code>. Default: <code>json</code>.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Response</h2>
+  <p>JSON returns a schema-v1 <code>place-search</code> feed. Items use the existing <code>document</code> entity and can include coordinates, a bounding box, category, country code, structured street, house number, postal code, locality, region, country, website, phone, and opening-hours fields when the public result contains them.</p>
+  <pre><code>{`{
+  "schemaVersion": 1,
+  "type": "feed",
+  "source": "place-search",
+  "attributes": {
+    "feedType": "place-search",
+    "query": "Brandenburg Gate Berlin",
+    "language": "en",
+    "placeType": "any",
+    "resultCount": 1,
+    "attribution": "© OpenStreetMap contributors"
+  },
+  "items": [
+    {
+      "type": "document",
+      "title": "Brandenburg Gate",
+      "attributes": {
+        "latitude": 52.5163,
+        "longitude": 13.3777,
+        "address": "Pariser Platz 1, 10117 Berlin, Germany"
+      }
+    }
+  ]
+}`}</code></pre>
+
+  <h2>Boundaries</h2>
+  <ul>
+    <li>The endpoint runs a submitted search, not autocomplete.</li>
+    <li>Reverse geocoding and caller-provided bounding boxes are not supported.</li>
+    <li>It does not return Google Maps ratings, reviews, photos, traffic, routes, or popularity data.</li>
+    <li>Place search ranks a bounded set of matches; it does not enumerate every business in an area.</li>
+    <li>Results contain OpenStreetMap data and retain its required attribution.</li>
+    <li>Successful searches may be cached for up to one hour.</li>
+  </ul>
+
+  <h2>Compatibility</h2>
+  <p><code>/api/maps</code> remains available as a deprecated alias for existing integrations. It returns the canonical <code>/api/places</code> response and shares the same cache entry. New integrations should use <code>/api/places</code>.</p>
+</DocsLayout>

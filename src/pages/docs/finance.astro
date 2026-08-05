@@ -1,0 +1,79 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+
+export const prerender = true;
+const title = 'Finance API — extractor.sh docs';
+const description = 'Search equity or crypto symbols and retrieve market snapshots in a native or requested quote currency through cacheable GET requests.';
+---
+
+<DocsLayout {title} {description} path="/docs/finance/">
+  <p class="!mt-0 font-mono text-[0.78rem] font-extrabold uppercase tracking-[0.14em]">Finance</p>
+  <h1>Market data.<br />One bounded response.</h1>
+  <p class="text-[1.08rem]">Retrieve a latest available market snapshot and configurable price history for equities, indices, cryptocurrency pairs, and currency pairs. Keep the native listing currency or request a three-letter quote currency such as EUR in the same call. Data may be delayed.</p>
+
+  <h2>Request</h2>
+  <pre><code>curl --get 'https://extractor.sh/api/finance' \
+  --data-urlencode 'symbol=AAPL' \
+  --data-urlencode 'timeframe=3mo' \
+  --data-urlencode 'quote=EUR' \
+  --data-urlencode 'format=json'</code></pre>
+  <div class="overflow-x-auto"><table><thead><tr><th>Parameter</th><th>Required</th><th>Description</th></tr></thead><tbody>
+    <tr><td><code>symbol</code></td><td>Yes</td><td>1–32 characters. Examples: <code>AAPL</code>, <code>^GSPC</code>, <code>BTC-USD</code>, <code>EURUSD=X</code>.</td></tr>
+    <tr><td><code>timeframe</code></td><td>No</td><td><code>1d</code>, <code>5d</code>, <code>1mo</code>, <code>3mo</code>, <code>6mo</code>, <code>1y</code>, <code>5y</code>, or <code>max</code>. Default: <code>1mo</code>.</td></tr>
+    <tr><td><code>quote</code></td><td>No</td><td>Three-letter output currency such as <code>EUR</code>. Omit it to retain the native listing currency.</td></tr>
+    <tr><td><code>format</code></td><td>No</td><td><code>json</code> (default) or <code>markdown</code>.</td></tr>
+  </tbody></table></div>
+
+  <h2>Response</h2>
+  <p>JSON uses schema version 1 with a provider-neutral <code>finance</code> document. Available attributes include the symbol, exchange, effective currency, instrument type, latest price, change, ranges, volume, market state, timezone, selected timeframe and interval, up to 512 OHLCV history points, and bounded dividend or split events. Converted responses additionally expose <code>listingCurrency</code>, <code>quoteCurrency</code>, <code>exchangeRate</code>, and <code>exchangeRateTimestamp</code>.</p>
+  <pre><code>{`{
+  "schemaVersion": 1,
+  "type": "document",
+  "source": "finance",
+  "id": "AAPL",
+  "attributes": {
+    "tickerSymbol": "AAPL",
+    "currency": "EUR",
+    "listingCurrency": "USD",
+    "quoteCurrency": "EUR",
+    "exchangeRate": 0.91,
+    "marketPrice": 200.07,
+    "historyTimeframe": "3mo",
+    "historyInterval": "1d",
+    "history": [{ "timestamp": "2026-08-04T13:30:00.000Z", "close": 219.86 }]
+  }
+}`}</code></pre>
+
+  <h2>Behavior</h2>
+  <ul>
+    <li>The history interval is selected automatically for the requested timeframe.</li>
+    <li>Without <code>quote</code>, every monetary value remains in the instrument’s native listing currency.</li>
+    <li>With <code>quote</code>, the snapshot and chart-ready history are converted in the same public operation. Historical points use corresponding historical exchange rates when available.</li>
+    <li>A converted <code>AAPL&amp;quote=EUR</code> response is a synthetic EUR view of the Nasdaq listing. To request an actual EUR-traded venue, use that listing’s symbol instead.</li>
+    <li>History is capped at 512 points and market events at 128 entries.</li>
+    <li>Successful responses may be cached for up to five minutes. One successful uncached request costs one allowance slot or credit.</li>
+    <li>Use market data for research, not order execution or investment advice.</li>
+  </ul>
+
+  <h2>Search finance symbols</h2>
+  <p>When the company or crypto asset is known but its symbol is not, call <code>GET /api/finance/search</code>. It returns an ordered schema-v1 <code>finance</code> feed without fetching every quote. <code>instrument</code> accepts <code>equity</code> or <code>crypto</code> and defaults to <code>equity</code>.</p>
+  <pre><code>curl --get 'https://extractor.sh/api/finance/search' \
+  --data-urlencode 'q=Apple' \
+  --data-urlencode 'limit=10' \
+  --data-urlencode 'format=json'</code></pre>
+  <pre><code>curl --get 'https://extractor.sh/api/finance/search' \
+  --data-urlencode 'q=Bitcoin' \
+  --data-urlencode 'instrument=crypto' \
+  --data-urlencode 'limit=10' \
+  --data-urlencode 'format=json'</code></pre>
+  <p><code>q</code> accepts an asset name, brand, or partial ticker up to 200 characters. <code>limit</code> is 1–10 and defaults to 10. Successful searches may be cached for one hour; an empty valid search is HTTP 200.</p>
+
+  <h2>Daily market movers</h2>
+  <p>Use <code>GET /api/finance/movers</code> for market-wide questions such as “what stock rose the most today?”, “what fell the most?”, or “what stocks are most active?”. This is a distinct ranked-list operation; finance name search cannot answer those questions honestly.</p>
+  <pre><code>curl --get 'https://extractor.sh/api/finance/movers' \
+  --data-urlencode 'list=gainers' \
+  --data-urlencode 'limit=10' \
+  --data-urlencode 'format=json'</code></pre>
+  <p><code>list</code> accepts <code>gainers</code> (default), <code>losers</code>, or <code>active</code>. JSON returns a schema-v1 <code>market-movers</code> feed with already-ranked equity documents and available symbol, exchange, currency, price, daily change, daily percentage change, volume, ranges, market state, and timestamp fields. Results may be delayed, are cached for up to five minutes, and a successful uncached request costs one credit.</p>
+  <p>Ordinary public Yahoo Finance quote and price-history URLs remain supported by <a href="/docs/api/"><code>/api/extract</code></a> and keep their one-month daily-history default.</p>
+</DocsLayout>

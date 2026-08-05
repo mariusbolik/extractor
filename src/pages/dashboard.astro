@@ -1,0 +1,319 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SecurityCheckAnimation from '../components/SecurityCheckAnimation.astro';
+import { env } from 'cloudflare:workers';
+import { BILLING_ENABLED } from 'astro:env/server';
+import { HANKO_AUTH_DOMAIN } from 'astro:env/client';
+import { validateHankoSession } from '../features/billing/hanko';
+import { getDashboardData } from '../features/billing/d1';
+import { autoTopUpPeriod } from '../features/billing/auto-top-up';
+import { getCreditSnapshot } from '../features/billing/credits-client';
+import { creditsForAmount, PURCHASE_PRESETS_CENTS } from '../features/billing/constants';
+import { ensureWelcomeCredits } from '../features/billing/welcome-credits';
+
+export const prerender = false;
+const session = await validateHankoSession(Astro.request);
+if (!session) return Astro.redirect('/login/', 303);
+await ensureWelcomeCredits(env.DB, env, session.userId);
+const [credits, dashboard] = await Promise.all([
+  getCreditSnapshot(env, session.userId),
+  getDashboardData(env.DB, session.userId, autoTopUpPeriod()),
+]);
+const { apiKeys, ledger, autoTopUp, autoTopUpSpentCents } = dashboard;
+const formatDate = (timestamp: number | null | undefined) => timestamp ? new Intl.DateTimeFormat('en', { dateStyle: 'medium' }).format(timestamp) : '—';
+const title = 'Dashboard — extractor.sh';
+const description = 'Manage extractor.sh prepaid credits, usage, purchases, and API keys.';
+const autoTopUpEnabled = autoTopUp?.enabled === 1;
+const autoTopUpStatus = autoTopUp?.status ?? 'disabled';
+const defaultTriggerCredits = autoTopUp?.trigger_credits ?? 4_000;
+const defaultAutoTopUpAmount = autoTopUp?.amount_cents ?? 2_000;
+const defaultMonthlyLimit = autoTopUp?.monthly_limit_cents ?? 5_000;
+const autoTopUpStatusLabel: Record<string, string> = {
+  active: 'Active',
+  authorizing: 'Authorization pending',
+  authorization_failed: 'Authorization failed',
+  on_hold: 'Payment needs attention',
+  retry_wait: 'Payment retry paused',
+  requires_attention: 'Payment needs attention',
+  scheduled_cancel: 'Cancellation pending',
+  cancelled: 'Disabled',
+  expired: 'Disabled',
+  failed: 'Disabled',
+  disabled: 'Off',
+};
+---
+
+<BaseLayout {title} {description} path="/dashboard/" robots="noindex, nofollow, noarchive" agentReadable={false}>
+  <section class="mb-10 flex flex-wrap items-end justify-between gap-6">
+    <div>
+      <p class="mb-3 font-mono text-[0.78rem] font-extrabold uppercase tracking-[0.14em]">Private account</p>
+      <h1 class="font-heading text-[clamp(2.5rem,7vw,5rem)] font-normal leading-none tracking-[-0.05em]">Dashboard</h1>
+    </div>
+    <button class="border-[2px_5px_5px_2px] border-black bg-white px-5 py-3 font-extrabold hover:translate-x-[3px] hover:translate-y-[3px] hover:border-[2px]" data-logout data-domain={HANKO_AUTH_DOMAIN}>Sign out</button>
+  </section>
+
+  {!BILLING_ENABLED && <p class="mb-8 border-2 border-black bg-white p-4 font-bold" role="status">Checkout is paused while billing finishes configuration. Existing credits and API keys remain visible.</p>}
+
+  <div class="grid gap-7 lg:grid-cols-2">
+    <section class="border-2 border-black bg-white p-7 shadow-[6px_6px_0_#000]" aria-labelledby="balance-heading">
+      <p class="font-mono text-xs font-extrabold uppercase tracking-[0.14em]">Account balance</p>
+      <h2 class="mt-3 font-heading text-3xl" id="balance-heading">Available credits</h2>
+      <p class="mt-7 break-all font-mono text-[clamp(2.4rem,7vw,4.5rem)] font-bold leading-none">{credits.balance.toLocaleString('en-US')}</p>
+      <p class="mt-4 text-sm text-black/70">One credit covers one successful uncached request. Credits never expire.</p>
+      <div class="mt-5 border-t-2 border-black pt-5">
+        <strong class="font-mono text-2xl">{credits.usage30Days.toLocaleString('en-US')}</strong>
+        <span class="ml-2">successful operations in the last 30 days</span>
+      </div>
+    </section>
+
+    <section class="scroll-mt-6 border-2 border-black bg-white p-7 shadow-[6px_6px_0_#000]" id="add-credits" aria-labelledby="topup-heading">
+      <p class="font-mono text-xs font-extrabold uppercase tracking-[0.14em]">Pay as you go</p>
+      <h2 class="mt-3 font-heading text-3xl" id="topup-heading">Add credits</h2>
+      <p class="mt-3 leading-relaxed">Credits never expire. Dodo Payments handles payment and tax on its secure hosted checkout, then returns you to the dashboard.</p>
+      <form class="mt-6" data-checkout-form>
+        <label class="mb-2 block font-bold" for="amount">Amount in USD</label>
+        <input class="min-h-[48px] w-full border-2 border-black px-4 font-mono" id="amount" name="amount" type="number" min="10" max="4900" step="0.01" value="20.00" required />
+        <div class="mt-3 flex flex-wrap gap-2">
+          {PURCHASE_PRESETS_CENTS.map((amount) => <button class="border-2 border-black px-3 py-2 text-sm font-bold" type="button" data-amount={amount}>${(amount / 100).toFixed(2)}</button>)}
+        </div>
+        <p class="mt-3 font-mono text-sm" data-credit-preview>{creditsForAmount(2000).toLocaleString('en-US')} credits</p>
+        <button class="mt-5 inline-flex min-h-[52px] w-full items-center justify-center border-[2px_5px_5px_2px] border-black bg-white px-7 py-3 font-extrabold disabled:cursor-not-allowed disabled:opacity-50" type="submit" disabled={!BILLING_ENABLED} data-checkout-button>
+          <span data-checkout-label>Buy credits</span>
+          <SecurityCheckAnimation class="hidden size-8" data-checkout-loader />
+        </button>
+      </form>
+      <p class="mt-4 hidden border-2 border-black p-3 font-bold" role="alert" data-dashboard-error></p>
+    </section>
+  </div>
+
+  <section class="mt-8 scroll-mt-6 border-2 border-black bg-white p-7 shadow-[6px_6px_0_#000]" id="automatic-funding" aria-labelledby="automatic-funding-heading">
+    <div class="flex flex-wrap items-start justify-between gap-4">
+      <div class="max-w-3xl">
+        <p class="font-mono text-xs font-extrabold uppercase tracking-[0.14em]">Optional · off by default</p>
+        <h2 class="mt-3 font-heading text-3xl" id="automatic-funding-heading">Auto top-up</h2>
+        <p class="mt-3 leading-relaxed">Keep a production integration funded without monthly scheduled purchases. A charge starts only after a successful paid request leaves the prepaid balance at or below your threshold.</p>
+      </div>
+      <strong class="border-2 border-black px-3 py-2 font-mono text-xs uppercase tracking-[0.08em]" data-auto-top-up-status>{autoTopUpStatusLabel[autoTopUpStatus] ?? autoTopUpStatus}</strong>
+    </div>
+
+    <form class="mt-7 grid gap-5 lg:grid-cols-3" data-auto-top-up-form>
+      <label class="block font-bold">
+        Trigger at or below
+        <span class="mt-2 flex min-h-[48px] items-center border-2 border-black focus-within:outline-3 focus-within:outline-offset-3">
+          <input class="min-w-0 flex-1 px-4 font-mono outline-none" name="triggerCredits" type="number" min="0" step="1" value={defaultTriggerCredits} required />
+          <span class="border-l-2 border-black px-3 py-3 font-mono text-xs uppercase">credits</span>
+        </span>
+      </label>
+      <label class="block font-bold">
+        Add each time
+        <span class="mt-2 flex min-h-[48px] items-center border-2 border-black focus-within:outline-3 focus-within:outline-offset-3">
+          <span class="border-r-2 border-black px-3 py-3 font-mono">$</span>
+          <input class="min-w-0 flex-1 px-4 font-mono outline-none" name="amount" type="number" min="10" max="4900" step="0.01" value={(defaultAutoTopUpAmount / 100).toFixed(2)} required />
+        </span>
+      </label>
+      <label class="block font-bold">
+        Spend cap / UTC month
+        <span class="mt-2 flex min-h-[48px] items-center border-2 border-black focus-within:outline-3 focus-within:outline-offset-3">
+          <span class="border-r-2 border-black px-3 py-3 font-mono">$</span>
+          <input class="min-w-0 flex-1 px-4 font-mono outline-none" name="monthlyLimit" type="number" min="10" max="4900" step="0.01" value={(defaultMonthlyLimit / 100).toFixed(2)} required />
+        </span>
+      </label>
+
+      <div class="flex flex-wrap items-center gap-3 lg:col-span-3">
+        <button class="inline-flex min-h-[52px] flex-1 items-center justify-center border-[2px_5px_5px_2px] border-black bg-white px-7 py-3 font-extrabold disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none" type="submit" disabled={!BILLING_ENABLED} data-auto-top-up-button>
+          <span data-auto-top-up-label>{autoTopUpEnabled ? 'Save auto top-up' : 'Enable auto top-up'}</span>
+          <SecurityCheckAnimation class="hidden size-8" data-auto-top-up-loader />
+        </button>
+        {autoTopUpEnabled && <button class="min-h-[48px] border-2 border-black px-5 py-3 font-bold" type="button" data-disable-auto-top-up>Disable</button>}
+        <p class="font-mono text-sm" data-auto-top-up-spend>${(autoTopUpSpentCents / 100).toFixed(2)} of ${(defaultMonthlyLimit / 100).toFixed(2)} used for auto top-ups this UTC month, before tax.</p>
+      </div>
+    </form>
+  </section>
+
+  <section class="mt-8 border-2 border-black bg-white p-7 shadow-[6px_6px_0_#000]" aria-labelledby="keys-heading">
+    <div class="flex flex-wrap items-start justify-between gap-4">
+      <div><h2 class="font-heading text-3xl" id="keys-heading">API keys</h2><p class="mt-2 text-sm">Up to two active keys. The full secret is shown only once.</p></div>
+      <button class="border-[2px_5px_5px_2px] border-black bg-white px-5 py-3 font-extrabold disabled:opacity-50" data-create-key disabled={apiKeys.length >= 2}>Create key</button>
+    </div>
+    <div class="mt-6 hidden border-2 border-black bg-white p-4" data-new-key aria-live="polite"></div>
+    <ul class="mt-6 divide-y-2 divide-black border-y-2 border-black" data-key-list>
+      {apiKeys.length === 0 && <li class="py-5" data-empty>No active API keys.</li>}
+      {apiKeys.map((key: any) => (
+        <li class="flex flex-wrap items-center justify-between gap-4 py-5" data-key-id={key.id}>
+          <div><strong>{key.name}</strong><p class="mt-1 font-mono text-sm">{key.key_hint}</p><p class="mt-1 text-xs text-black/60">Created {formatDate(key.created_at)}</p></div>
+          <button class="border-2 border-black px-4 py-2 font-bold" data-revoke-key={key.id}>Revoke</button>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <section class="mt-8 border-2 border-black bg-white p-7 shadow-[6px_6px_0_#000]" aria-labelledby="activity-heading">
+    <h2 class="font-heading text-3xl" id="activity-heading">Billing activity</h2>
+    <p class="mt-2 text-sm">Purchases, grants, refunds, and disputes. Extracted URLs are never recorded.</p>
+    <div class="mt-6 overflow-x-auto">
+      <table class="w-full min-w-[560px] border-collapse text-left"><thead><tr class="border-b-2 border-black"><th class="p-3">Event</th><th class="p-3">Date</th><th class="p-3 text-right">Credits</th><th class="p-3 text-right">Amount</th></tr></thead>
+        <tbody>{ledger.length === 0 ? <tr><td class="p-3" colspan="4">No billing activity yet.</td></tr> : ledger.map((entry: any) => <tr class="border-b border-black"><td class="p-3 font-bold">{entry.description}</td><td class="p-3">{formatDate(entry.occurred_at)}</td><td class="p-3 text-right font-mono">{entry.credits > 0 ? '+' : ''}{entry.credits.toLocaleString('en-US')}</td><td class="p-3 text-right font-mono">{entry.amount_cents == null ? '—' : `$${(entry.amount_cents / 100).toFixed(2)}`}</td></tr>)}</tbody>
+      </table>
+    </div>
+  </section>
+
+  <script>
+    const errorBox = document.querySelector<HTMLElement>('[data-dashboard-error]');
+    const showError = (message: string) => { if (errorBox) { errorBox.textContent = message; errorBox.classList.remove('hidden'); } };
+    document.querySelector<HTMLElement>('[data-logout]')?.addEventListener('click', async (event) => {
+      const button = event.currentTarget as HTMLButtonElement;
+      const domain = (event.currentTarget as HTMLElement).dataset.domain;
+      if (!domain) return;
+      button.disabled = true;
+      try {
+        const { Hanko } = await import('@teamhanko/hanko-frontend-sdk');
+        await new Hanko(domain).logout();
+        window.location.assign('/login/');
+      } catch {
+        button.disabled = false;
+        showError('Sign out could not be completed.');
+      }
+    });
+    const amountInput = document.querySelector<HTMLInputElement>('#amount');
+    const preview = document.querySelector<HTMLElement>('[data-credit-preview]');
+    const updatePreview = () => {
+      const cents = Math.round(Number(amountInput?.value ?? 0) * 100);
+      if (preview) preview.textContent = `${Math.floor(cents * 1000 / 49).toLocaleString('en-US')} credits`;
+    };
+    amountInput?.addEventListener('input', updatePreview);
+    document.querySelectorAll<HTMLButtonElement>('[data-amount]').forEach((button) => button.addEventListener('click', () => {
+      if (amountInput) amountInput.value = (Number(button.dataset.amount) / 100).toFixed(2);
+      updatePreview();
+    }));
+    document.querySelector<HTMLFormElement>('[data-checkout-form]')?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const form = event.currentTarget as HTMLFormElement;
+      const button = form.querySelector<HTMLButtonElement>('[data-checkout-button]');
+      const label = button?.querySelector<HTMLElement>('[data-checkout-label]');
+      const loader = button?.querySelector<SVGElement>('[data-checkout-loader]');
+      let leaving = false;
+      if (button) { button.dataset.busy = 'true'; button.disabled = true; }
+      label?.classList.add('hidden');
+      loader?.classList.remove('hidden');
+      const data = new FormData(form);
+      try {
+        const response = await fetch('/api/billing/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amountCents: Math.round(Number(data.get('amount')) * 100) }) });
+        const result = await response.json() as { url?: string; error?: string };
+        if (!response.ok || !result.url) throw new Error(result.error ?? 'Checkout could not be created.');
+        leaving = true;
+        window.location.assign(result.url);
+      } catch (error) {
+        showError(error instanceof Error ? error.message : 'Checkout could not be created.');
+      } finally {
+        if (!leaving) {
+          if (button) { delete button.dataset.busy; button.disabled = false; }
+          label?.classList.remove('hidden');
+          loader?.classList.add('hidden');
+        }
+      }
+    });
+    document.querySelector<HTMLFormElement>('[data-auto-top-up-form]')?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const form = event.currentTarget as HTMLFormElement;
+      const button = form.querySelector<HTMLButtonElement>('[data-auto-top-up-button]');
+      const label = button?.querySelector<HTMLElement>('[data-auto-top-up-label]');
+      const loader = button?.querySelector<SVGElement>('[data-auto-top-up-loader]');
+      let leaving = false;
+      if (button) { button.dataset.busy = 'true'; button.disabled = true; }
+      label?.classList.add('hidden');
+      loader?.classList.remove('hidden');
+      const data = new FormData(form);
+      const amountCents = Math.round(Number(data.get('amount')) * 100);
+      const monthlyLimitCents = Math.round(Number(data.get('monthlyLimit')) * 100);
+      if (monthlyLimitCents < amountCents) {
+        showError('The monthly automatic-funding limit must be at least one top-up amount.');
+        if (button) { delete button.dataset.busy; button.disabled = false; }
+        label?.classList.remove('hidden');
+        loader?.classList.add('hidden');
+        return;
+      }
+      try {
+        const response = await fetch('/api/billing/auto-top-up', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            triggerCredits: Math.round(Number(data.get('triggerCredits'))),
+            amountCents,
+            monthlyLimitCents,
+          }),
+        });
+        const result = await response.json() as { url?: string; error?: string };
+        if (!response.ok) throw new Error(result.error ?? 'Auto top-up could not be saved.');
+        if (result.url) {
+          leaving = true;
+          window.location.assign(result.url);
+        } else {
+          window.location.reload();
+        }
+      } catch (error) {
+        showError(error instanceof Error ? error.message : 'Auto top-up could not be saved.');
+      } finally {
+        if (!leaving) {
+          if (button) { delete button.dataset.busy; button.disabled = false; }
+          label?.classList.remove('hidden');
+          loader?.classList.add('hidden');
+        }
+      }
+    });
+    document.querySelector<HTMLButtonElement>('[data-disable-auto-top-up]')?.addEventListener('click', async (event) => {
+      if (!window.confirm('Disable auto top-up? Existing credits remain available.')) return;
+      const button = event.currentTarget as HTMLButtonElement;
+      button.disabled = true;
+      try {
+        const response = await fetch('/api/billing/auto-top-up', { method: 'DELETE' });
+        const result = await response.json() as { error?: string };
+        if (!response.ok && response.status !== 202) throw new Error(result.error ?? 'Auto top-up could not be disabled.');
+        window.location.reload();
+      } catch (error) {
+        button.disabled = false;
+        showError(error instanceof Error ? error.message : 'Auto top-up could not be disabled.');
+      }
+    });
+    const dashboardParams = new URLSearchParams(window.location.search);
+    if (dashboardParams.get('checkout') === 'success') {
+      showError('Payment submitted. Credits appear after Dodo Payments confirms it.');
+    }
+    if (dashboardParams.get('auto_top_up') === 'authorized') {
+      showError('Authorization submitted. Auto top-up starts after Dodo Payments confirms the mandate.');
+      document.querySelector<HTMLElement>('#automatic-funding')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    if (new URLSearchParams(window.location.search).get('topup') === '1') {
+      document.querySelector<HTMLElement>('#add-credits')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      amountInput?.focus({ preventScroll: true });
+    }
+    document.querySelector<HTMLElement>('[data-create-key]')?.addEventListener('click', async () => {
+      const name = window.prompt('Name this API key:', 'Default key');
+      if (!name) return;
+      const response = await fetch('/api/account/keys', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
+      const result = await response.json() as { apiKey?: string; error?: string };
+      const output = document.querySelector<HTMLElement>('[data-new-key]');
+      if (response.ok && output) {
+        const apiKey = result.apiKey ?? '';
+        output.innerHTML = '<strong>Copy this key now. It will not be shown again.</strong><div class="mt-3 grid grid-cols-[minmax(0,1fr)_auto] items-stretch gap-2"><code class="block overflow-x-auto rounded-[3px] border-2 border-black p-3"></code><button class="border-[2px_4px_4px_2px] border-black bg-white px-4 py-2 font-bold hover:translate-x-0.5 hover:translate-y-0.5 hover:border-2" type="button" data-copy-api-key>Copy</button></div>';
+        output.querySelector('code')!.textContent = apiKey;
+        output.querySelector<HTMLButtonElement>('[data-copy-api-key]')?.addEventListener('click', async (event) => {
+          const button = event.currentTarget as HTMLButtonElement;
+          try {
+            await navigator.clipboard.writeText(apiKey);
+            button.textContent = 'Copied';
+            window.setTimeout(() => { button.textContent = 'Copy'; }, 2_000);
+          } catch {
+            showError('The API key could not be copied. Select and copy it manually.');
+          }
+        });
+        output.classList.remove('hidden');
+      } else showError(result.error ?? 'API key could not be created.');
+    });
+    document.querySelectorAll<HTMLElement>('[data-revoke-key]').forEach((button) => button.addEventListener('click', async () => {
+      if (!window.confirm('Revoke this API key? Requests using it will stop immediately.')) return;
+      const response = await fetch('/api/account/keys', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: button.dataset.revokeKey }) });
+      if (response.ok) button.closest('[data-key-id]')?.remove();
+      else showError('API key could not be revoked.');
+    }));
+  </script>
+</BaseLayout>

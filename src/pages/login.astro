@@ -1,0 +1,144 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SecurityCheckLoader from '../components/SecurityCheckLoader.astro';
+import { getSecret, TURNSTILE_SITE_KEY } from 'astro:env/server';
+import { HANKO_AUTH_DOMAIN } from 'astro:env/client';
+import { hasAuthAccess } from '../features/billing/auth-gate';
+import { validateHankoSession } from '../features/billing/hanko';
+
+export const prerender = false;
+const session = await validateHankoSession(Astro.request);
+if (session) return Astro.redirect('/dashboard/', 303);
+const unlocked = await hasAuthAccess(Astro.request, getSecret('TURNSTILE_SECRET_KEY'));
+const title = 'Sign in — extractor.sh';
+const description = 'Sign in to your private extractor.sh dashboard.';
+---
+
+<BaseLayout {title} {description} path="/login/" robots="noindex, nofollow, noarchive" agentReadable={false}>
+  <section class="mx-auto max-w-[620px] border-2 border-black bg-white p-[clamp(24px,5vw,48px)] shadow-[8px_8px_0_#000]">
+    <h1 class="mb-4 font-mono text-[0.78rem] font-extrabold uppercase tracking-[0.14em]">Private account</h1>
+    {unlocked ? (
+      <div data-hanko-shell data-domain={HANKO_AUTH_DOMAIN}>
+        <hanko-auth></hanko-auth>
+      </div>
+    ) : (
+      <div data-auth-gate>
+        <p class="mb-7 leading-relaxed">The account service opens automatically after the security check.</p>
+        {TURNSTILE_SITE_KEY ? (
+          <form class="space-y-5" data-gate-form aria-describedby="auth-gate-status">
+            <SecurityCheckLoader id="auth-gate-status" />
+            <div
+              class="cf-turnstile min-h-[65px]"
+              data-sitekey={TURNSTILE_SITE_KEY}
+              data-theme="light"
+              data-size="flexible"
+              data-action="auth_access"
+              data-appearance="interaction-only"
+              data-callback="onAuthAccessVerified"
+              data-error-callback="onAuthAccessError"
+              data-refresh-expired="auto"
+            ></div>
+            <p class="hidden border-2 border-black bg-white p-3 text-sm font-bold" role="alert" data-gate-error></p>
+          </form>
+        ) : <p class="border-2 border-black p-4 font-bold">Sign-in is temporarily unavailable.</p>}
+      </div>
+    )}
+  </section>
+
+  {unlocked ? (
+    <script>
+      import { register } from '@teamhanko/hanko-elements';
+      const shell = document.querySelector<HTMLElement>('[data-hanko-shell]');
+      if (shell?.dataset.domain) {
+        const { hanko } = await register(shell.dataset.domain);
+        const authElement = shell.querySelector('hanko-auth');
+        if (authElement?.shadowRoot && !authElement.shadowRoot.querySelector('[data-extractor-hanko-theme]')) {
+          const style = document.createElement('style');
+          style.dataset.extractorHankoTheme = '';
+          style.textContent = `
+            .hanko_container { padding: 0 !important; max-width: none !important; }
+            .hanko_headline { font-family: "Archivo Black", Impact, sans-serif !important; letter-spacing: -0.035em !important; }
+            .hanko_button {
+              box-sizing: border-box !important;
+              border: solid #000 !important;
+              border-width: 2px 5px 5px 2px !important;
+              border-radius: 0 !important;
+              color: #000 !important;
+              background: #fff !important;
+              font-weight: 800 !important;
+              cursor: pointer !important;
+              transition: transform 100ms ease, border-width 100ms ease !important;
+            }
+            .hanko_button:not(:disabled):hover {
+              transform: translate(3px, 3px) !important;
+              border-width: 2px !important;
+            }
+            .hanko_button:focus-visible,
+            .hanko_input:focus-visible,
+            .hanko_checkbox:focus-visible {
+              outline: 3px solid #000 !important;
+              outline-offset: 3px !important;
+            }
+            .hanko_input,
+            .hanko_errorBox,
+            .hanko_checkbox,
+            .hanko_label {
+              border: 2px solid #000 !important;
+              border-radius: 0 !important;
+              box-shadow: none !important;
+            }
+            .hanko_input { padding-inline: 0.75rem !important; }
+            .hanko_link { color: #000 !important; font-weight: 800 !important; text-decoration: underline !important; text-underline-offset: 0.2em !important; }
+            .hanko_line { border-color: #000 !important; }
+            .hanko_loadingSpinner,
+            .hanko_checkmark { fill: #000 !important; }
+          `;
+          authElement.shadowRoot.append(style);
+        }
+        hanko.onSessionCreated(() => window.location.assign('/dashboard/'));
+      }
+    </script>
+  ) : TURNSTILE_SITE_KEY ? (
+    <script is:inline>
+      window.onAuthAccessVerified = async (token) => {
+        const form = document.querySelector('[data-gate-form]');
+        if (!(form instanceof HTMLFormElement) || form.dataset.verifying === 'true') return;
+        const error = form.querySelector('[data-gate-error]');
+        const status = form.querySelector('[data-security-check-status]');
+        form.dataset.verifying = 'true';
+        form.setAttribute('aria-busy', 'true');
+        if (error instanceof HTMLElement) error.classList.add('hidden');
+        if (status instanceof HTMLElement) status.textContent = 'Opening account…';
+        try {
+          const response = await fetch('/api/auth/access', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token }),
+          });
+          if (!response.ok) throw new Error('Verification failed');
+          window.location.reload();
+        } catch {
+          delete form.dataset.verifying;
+          form.removeAttribute('aria-busy');
+          if (status instanceof HTMLElement) status.textContent = 'Waiting for a fresh security check…';
+          if (error instanceof HTMLElement) {
+            error.textContent = 'The security check could not be verified. Please try again.';
+            error.classList.remove('hidden');
+          }
+          window.turnstile?.reset();
+        }
+      };
+      window.onAuthAccessError = () => {
+        const form = document.querySelector('[data-gate-form]');
+        const error = form?.querySelector('[data-gate-error]');
+        const status = form?.querySelector('[data-security-check-status]');
+        if (status instanceof HTMLElement) status.textContent = 'Waiting for the security check…';
+        if (error instanceof HTMLElement) {
+          error.textContent = 'The security check could not be loaded. Please try again.';
+          error.classList.remove('hidden');
+        }
+      };
+    </script>
+    <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  ) : null}
+</BaseLayout>

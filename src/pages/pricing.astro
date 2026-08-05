@@ -1,16 +1,59 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { Icon } from 'astro-icon/components';
 
 export const prerender = true;
 const title = 'Simple pay-as-you-go pricing — extractor.sh';
-const description = 'Get 1,000 extractions for €0.49 with simple pay-as-you-go pricing. Billing is coming soon.';
+const description = 'Start with 10 free daily requests or 1,000 welcome credits, then continue with prepaid pay-as-you-go credits.';
+const faq = [
+  {
+    question: 'Is there a free tier?',
+    answer: 'Yes. Use 10 successful uncached requests per IP each UTC day without an account. New free accounts receive a one-time welcome bonus of 1,000 credits with no card required.',
+  },
+  {
+    question: 'How do API credits work?',
+    answer: 'Each successful uncached operation uses one credit. The 1,000-credit welcome bonus and purchased credits share one balance, never expire, and work with signed-in website tools and active API keys.',
+  },
+  {
+    question: 'Do you charge for failed requests?',
+    answer: 'No. A credit is reserved before work starts and released when the request fails. Cache hits do not consume credits or the anonymous daily allowance.',
+  },
+  {
+    question: 'What happens when my API credits run out?',
+    answer: 'Uncached account requests return HTTP 402 until you add credits. Cached responses remain free.',
+  },
+  {
+    question: 'Is there a monthly plan?',
+    answer: 'No scheduled monthly plan is required. Use one-time pay-as-you-go top-ups, or optionally authorize capped automatic funding that runs only when your prepaid balance reaches your chosen threshold. Purchased credits remain available until used.',
+  },
+  {
+    question: 'What are the rate limits, and how can I increase them?',
+    answer: 'The standard limit is 60 uncached requests per client per minute, with a separate limit of 5 high-cost extraction requests per minute. Contact us if you need higher limits.',
+  },
+  {
+    question: 'Why do I see tax, and what payment methods are accepted?',
+    answer: 'Dodo Payments is the merchant of record and adds applicable tax based on the transaction details and local rules. A tax ID does not always make a purchase tax-free. Available payment methods are shown in checkout and can vary by country.',
+  },
+  {
+    question: 'Do you offer discounts for startups or nonprofits?',
+    answer: 'There is no standard discount program today. Contact us with your use case and expected volume if the public pricing does not fit your organization.',
+  },
+  {
+    question: 'Are there extra fees for complex pages?',
+    answer: 'No. Every supported successful uncached operation has the same one-credit cost. Some resource-intensive requests have a separate protective rate limit.',
+  },
+  {
+    question: 'Do all endpoints and features cost the same?',
+    answer: 'Yes. Every supported successful uncached API or MCP operation uses one credit, regardless of endpoint or extraction method. Anonymous access uses the daily allowance instead. Failed requests and cache hits are free.',
+  },
+] as const;
 ---
 
 <BaseLayout {title} {description} path="/pricing/">
   <section class="pb-10 text-center">
     <p class="mb-4 font-mono text-[0.8rem] font-extrabold uppercase tracking-[0.14em]">Simple pricing</p>
     <h1 class="mx-auto mb-6 max-w-[860px] font-heading text-[clamp(2.4rem,6vw,5rem)] font-normal leading-[1.02] tracking-[-0.045em]">Pay only for what you extract.</h1>
-    <p class="mx-auto max-w-[650px] text-[clamp(1.05rem,2vw,1.25rem)] leading-[1.6]">No subscription. No tiers. One price for clean Markdown or JSON.</p>
+    <p class="mx-auto max-w-[650px] text-[clamp(1.05rem,2vw,1.25rem)] leading-[1.6]">Prepaid credits are the hard usage cap. Add funds when you need them, with optional capped automatic funding for production integrations.</p>
   </section>
 
   <section class="mx-auto mt-8 flex max-w-[920px] flex-col border-2 border-black bg-white p-[clamp(26px,5vw,52px)] shadow-[10px_10px_0_#000] max-[660px]:shadow-[6px_6px_0_#000]" aria-labelledby="pricing-heading">
@@ -18,30 +61,61 @@ const description = 'Get 1,000 extractions for €0.49 with simple pay-as-you-go
       <div class="flex min-w-0 flex-col justify-between">
         <div>
           <p class="mb-5 font-mono text-[0.78rem] font-extrabold uppercase tracking-[0.14em]">Pay as you go</p>
-          <p class="mt-8 font-heading text-[clamp(3.4rem,8vw,5.8rem)] font-normal leading-none tracking-[-0.05em]">€0.49</p>
-          <h2 class="mt-4 font-heading text-[clamp(1.15rem,2vw,1.5rem)] font-normal leading-tight" id="pricing-heading">/ 1,000 extractions</h2>
+          <p class="mt-8 font-heading text-[clamp(3.4rem,8vw,5.8rem)] font-normal leading-none tracking-[-0.05em]">$0.49</p>
+          <h2 class="mt-4 font-heading text-[clamp(1.15rem,2vw,1.5rem)] font-normal leading-tight" id="pricing-heading">/ 1,000 credits</h2>
+          <p class="mt-3 max-w-[430px] text-sm leading-relaxed text-black/70">Each extraction, web search, news search, image search, video search, place or map search, or finance request counts as one credit.</p>
         </div>
       </div>
       <div class="border-t-2 border-black pt-7 md:border-t-0 md:border-l-2 md:pt-0 md:pl-10">
         <p class="mb-5 font-mono text-[0.78rem] font-extrabold uppercase tracking-[0.14em]">Included</p>
         <ul class="list-[square] space-y-4 pl-5 leading-relaxed">
           <li>Markdown or normalized JSON</li>
-          <li>Web, Reddit, X, and YouTube URLs</li>
+          <li>Extract data from any supported source</li>
           <li>Cache hits are not billed</li>
           <li>Credits never expire</li>
+          <li>60 API calls per minute</li>
         </ul>
       </div>
     </div>
-    <button class="mt-10 inline-flex min-h-[52px] w-full cursor-not-allowed items-center justify-center border-[2px_5px_5px_2px] border-black bg-white px-6 py-3 font-extrabold opacity-55" type="button" disabled aria-disabled="true">Coming soon</button>
+    <a class="mt-10 inline-flex min-h-[52px] w-full items-center justify-center border-[2px_5px_5px_2px] border-black bg-white px-6 py-3 font-extrabold no-underline hover:translate-x-[3px] hover:translate-y-[3px] hover:border-[2px]" href="/dashboard/">
+      Get started
+      <Icon class="ml-2 size-5 shrink-0 [&_path]:[stroke-width:2.25]" name="heroicons:arrow-up-right" aria-hidden="true" />
+    </a>
+    <p class="mt-5 text-center text-[0.84rem] leading-relaxed text-black/70">Please test extractor.sh with your intended URLs before adding credits.</p>
   </section>
 
-  <aside class="mx-auto mt-8 max-w-[920px] border-2 border-black bg-white p-[clamp(20px,4vw,30px)] shadow-[6px_6px_0_#000]" data-free-preview aria-label="Free public preview">
-    <div class="flex items-start gap-5 max-[660px]:flex-col max-[660px]:gap-4">
-      <strong class="inline-block shrink-0 bg-black px-3 py-2 font-heading text-[1.05rem] font-normal uppercase tracking-[-0.02em] text-white">Free</strong>
-      <div class="space-y-2 leading-relaxed">
-        <p class="text-[0.95rem] font-bold">During the public preview: 30 extraction requests per minute.</p>
-        <p class="text-[0.84rem] text-black/70">Please test extractor.sh with your intended URLs before purchasing. <a class="font-extrabold text-black underline" href="/contact/">Contact us</a> if you need help evaluating a specific use case.</p>
+  <section class="mx-auto mt-8 grid max-w-[920px] gap-6 md:grid-cols-2" aria-label="Free access">
+    <article class="flex flex-col border-2 border-black bg-white p-[clamp(24px,4vw,34px)] shadow-[6px_6px_0_#000]">
+      <strong class="inline-block self-start bg-black px-3 py-2 font-heading text-[0.95rem] font-normal uppercase tracking-[-0.02em] text-white">No account</strong>
+      <div class="mt-7 flex items-baseline gap-3 whitespace-nowrap">
+        <p class="font-heading text-[clamp(2rem,5vw,2.75rem)] leading-none">10</p>
+        <h2 class="font-mono text-[clamp(0.7rem,1.6vw,0.88rem)] font-normal uppercase tracking-[0.06em]">requests / day</h2>
       </div>
+      <p class="mt-4 text-sm leading-relaxed text-black/70">Available per IP each UTC day. Successful uncached requests count; errors and cache hits do not.</p>
+    </article>
+    <article class="flex flex-col border-2 border-black bg-white p-[clamp(24px,4vw,34px)] shadow-[6px_6px_0_#000]">
+      <strong class="inline-block self-start bg-black px-3 py-2 font-heading text-[0.95rem] font-normal uppercase tracking-[-0.02em] text-white">Free account</strong>
+      <div class="mt-7 flex items-baseline gap-3 whitespace-nowrap">
+        <p class="font-heading text-[clamp(2rem,5vw,2.75rem)] leading-none">1,000</p>
+        <h2 class="font-mono text-[clamp(0.7rem,1.6vw,0.88rem)] font-normal uppercase tracking-[0.06em]">welcome credits</h2>
+      </div>
+      <p class="mt-4 text-sm leading-relaxed text-black/70">New accounts receive this bonus once with no card required. It joins the account balance, works with website tools and API keys, and never expires.</p>
+    </article>
+  </section>
+
+  <section class="mx-auto mt-16 max-w-[920px]" aria-labelledby="pricing-faq-heading" data-pricing-faq>
+    <p class="mb-3 font-mono text-[0.74rem] font-extrabold uppercase tracking-[0.14em]">Common questions</p>
+    <h2 class="mb-6 font-heading text-[clamp(1.55rem,3vw,2.25rem)] font-normal leading-[1.05] tracking-[-0.04em]" id="pricing-faq-heading">Pricing FAQ</h2>
+    <div class="border-y-2 border-black">
+      {faq.map((item) => (
+        <details class="border-b-2 border-black last:border-b-0" name="pricing-faq">
+          <summary class="flex cursor-pointer list-none items-center justify-between gap-6 py-5 font-extrabold marker:content-none">
+            {item.question}
+            <Icon class="size-5 shrink-0" name="heroicons:plus" aria-hidden="true" />
+          </summary>
+          <p class="max-w-[820px] pb-5 leading-[1.65]">{item.answer}</p>
+        </details>
+      ))}
     </div>
-  </aside>
+  </section>
 </BaseLayout>

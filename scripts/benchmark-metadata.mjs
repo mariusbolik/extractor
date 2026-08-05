@@ -1,7 +1,7 @@
 import { mkdir } from 'node:fs/promises';
 import { parseHTML as parseLinkMetadata } from 'linkpeek';
-import { fetchPublicPage } from '../src/features/extraction/fetch.ts';
-import { extractMarkdownFromHtml } from '../src/features/extraction/markdown.ts';
+import { fetchPublicPage } from '@extractor/core/fetch';
+import { extractMarkdownFromHtml } from '@extractor/core/markdown';
 
 const REPORT_DIRECTORY = '.benchmark-reports';
 const TARGET_COUNT = 220;

@@ -1,36 +1,6 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import SocialLanding from '../components/SocialLanding.astro';
-
+import PlatformPage from '../components/PlatformPage.astro';
+import { platformPages } from '../features/marketing/platform-pages';
 export const prerender = true;
-const title = 'Amazon products and search results to Markdown or JSON — extractor.sh';
-const description = 'Extract useful public Amazon product details and search results into clean Markdown or normalized JSON.';
 ---
-
-<BaseLayout {title} {description} path="/amazon/">
-  <SocialLanding
-    platform="Amazon"
-    eyebrow="Amazon extractor"
-    headline="Products and search, minus the storefront noise."
-    {description}
-    outcome="Public product details and search results in one consistent format."
-    capabilities={[
-      { label: 'Input', value: 'One public Amazon product detail URL or search results URL containing a search query.' },
-      { label: 'Returns', value: 'One product entity or a feed containing up to 20 product entities.' },
-      { label: 'Includes', value: 'Product titles, canonical URLs, prices, ratings, review counts, images, and available product details.' },
-      { label: 'Caching', value: 'Successful product and search results may be cached at Cloudflare’s edge for up to one hour.' },
-    ]}
-    supported={[
-      'Public product detail URLs from supported Amazon country stores',
-      'Public search results URLs containing the normal k query parameter',
-      'Product title, brand, price, rating, availability, image, and features when present',
-      'Up to 20 normalized products from one search page',
-    ]}
-    limitations={[
-      'No category browsing, pagination, carts, accounts, reviews, or personalized offers',
-      'CAPTCHAs and verification pages are not bypassed',
-      'Price and availability can vary and results may be cached for up to one hour',
-    ]}
-    exampleUrl="https://www.amazon.de/echo-dot-2022/dp/B09B8X9RGM"
-  />
-</BaseLayout>
+<PlatformPage page={platformPages.amazon} />

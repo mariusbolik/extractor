@@ -1,50 +1,130 @@
 User-agent: OAI-SearchBot
 Allow: /
+Disallow: /login/
+Disallow: /dashboard/
+Disallow: /legal/
+Disallow: /privacy/
+Disallow: /terms/
 
 User-agent: ChatGPT-User
 Allow: /
+Disallow: /login/
+Disallow: /dashboard/
+Disallow: /legal/
+Disallow: /privacy/
+Disallow: /terms/
 
 User-agent: GPTBot
 Allow: /
+Disallow: /login/
+Disallow: /dashboard/
+Disallow: /legal/
+Disallow: /privacy/
+Disallow: /terms/
 
 User-agent: ClaudeBot
 Allow: /
+Disallow: /login/
+Disallow: /dashboard/
+Disallow: /legal/
+Disallow: /privacy/
+Disallow: /terms/
 
 User-agent: Claude-SearchBot
 Allow: /
+Disallow: /login/
+Disallow: /dashboard/
+Disallow: /legal/
+Disallow: /privacy/
+Disallow: /terms/
 
 User-agent: Claude-User
 Allow: /
+Disallow: /login/
+Disallow: /dashboard/
+Disallow: /legal/
+Disallow: /privacy/
+Disallow: /terms/
 
 User-agent: PerplexityBot
 Allow: /
+Disallow: /login/
+Disallow: /dashboard/
+Disallow: /legal/
+Disallow: /privacy/
+Disallow: /terms/
 
 User-agent: Perplexity-User
 Allow: /
+Disallow: /login/
+Disallow: /dashboard/
+Disallow: /legal/
+Disallow: /privacy/
+Disallow: /terms/
 
 User-agent: Google-Extended
 Allow: /
+Disallow: /login/
+Disallow: /dashboard/
+Disallow: /legal/
+Disallow: /privacy/
+Disallow: /terms/
 
 User-agent: Amazonbot
 Allow: /
+Disallow: /login/
+Disallow: /dashboard/
+Disallow: /legal/
+Disallow: /privacy/
+Disallow: /terms/
 
 User-agent: Applebot-Extended
 Allow: /
+Disallow: /login/
+Disallow: /dashboard/
+Disallow: /legal/
+Disallow: /privacy/
+Disallow: /terms/
 
 User-agent: Bytespider
 Allow: /
+Disallow: /login/
+Disallow: /dashboard/
+Disallow: /legal/
+Disallow: /privacy/
+Disallow: /terms/
 
 User-agent: CCBot
 Allow: /
+Disallow: /login/
+Disallow: /dashboard/
+Disallow: /legal/
+Disallow: /privacy/
+Disallow: /terms/
 
 User-agent: cohere-ai
 Allow: /
+Disallow: /login/
+Disallow: /dashboard/
+Disallow: /legal/
+Disallow: /privacy/
+Disallow: /terms/
 
 User-agent: Meta-ExternalAgent
 Allow: /
+Disallow: /login/
+Disallow: /dashboard/
+Disallow: /legal/
+Disallow: /privacy/
+Disallow: /terms/
 
 User-agent: *
 Allow: /
+Disallow: /login/
+Disallow: /dashboard/
+Disallow: /legal/
+Disallow: /privacy/
+Disallow: /terms/
 Content-Signal: ai-train=no, search=yes, ai-input=yes
 
-Sitemap: https://extractor.mcb-software.workers.dev/sitemap.xml
+Sitemap: https://extractor.sh/sitemap.xml

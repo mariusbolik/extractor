@@ -1,0 +1,75 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+
+export const prerender = true;
+const title = 'Video search API — extractor.sh';
+const description = 'Find relevant or newest public videos and receive playable source-page links plus available creator, duration, date, description, and thumbnail metadata.';
+---
+
+<DocsLayout {title} {description} path="/docs/videos/">
+  <p class="!mt-0 font-mono text-[0.78rem] font-extrabold uppercase tracking-[0.14em]">Video search</p>
+  <h1>Find public videos.</h1>
+  <p>Use one provider-neutral GET endpoint to discover public video pages. Results can be ordered by relevance or newest first and are returned as readable Markdown or schema-v1 JSON.</p>
+
+  <pre><code>curl --get 'https://extractor.sh/api/videos' \
+  --data-urlencode 'q=Cloudflare Workers tutorial' \
+  --data-urlencode 'limit=10' \
+  --data-urlencode 'platform=youtube' \
+  --data-urlencode 'format=json'</code></pre>
+
+  <h2>Query parameters</h2>
+  <table>
+    <thead><tr><th>Parameter</th><th>Required</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>q</code></td><td>Yes</td><td>Search query, from 1 to 200 characters.</td></tr>
+      <tr><td><code>limit</code></td><td>No</td><td>1–20 ordered results. Default: 10.</td></tr>
+      <tr><td><code>language</code></td><td>No</td><td>Canonical BCP 47 language tag. Default: <code>en-US</code>.</td></tr>
+      <tr><td><code>country</code></td><td>No</td><td>Two-letter country code. Default: <code>US</code>.</td></tr>
+      <tr><td><code>platform</code></td><td>No</td><td><code>any</code> finds public video pages from supported sources. Use <code>youtube</code> for YouTube-only results. Default: <code>any</code>.</td></tr>
+      <tr><td><code>sort</code></td><td>No</td><td><code>relevance</code> or newest-first <code>date</code>. Default: <code>relevance</code>. Use <code>date</code> when the user asks for the latest video.</td></tr>
+      <tr><td><code>creator</code></td><td>No</td><td>Exact public creator name, 1–80 characters. Combine with <code>sort=date</code> and <code>limit=1</code> for that creator’s latest matching upload.</td></tr>
+      <tr><td><code>format</code></td><td>No</td><td><code>json</code> or <code>markdown</code>. Default: <code>json</code>.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>JSON response</h2>
+  <p>JSON returns a <code>video-search</code> <code>feed</code>. Every item is a semantic <code>video</code> entity with a public source-page URL. Creator, publication time, its displayed relative time, description, duration, view count, and thumbnail fields are included only when the search result exposes them.</p>
+  <pre><code>{`{
+  "schemaVersion": 1,
+  "type": "feed",
+  "source": "video-search",
+  "attributes": {
+    "feedType": "video-search",
+    "query": "Cloudflare Workers tutorial",
+    "language": "en-US",
+    "country": "US",
+    "videoSort": "relevance",
+    "resultCount": 1
+  },
+  "items": [{
+    "type": "video",
+    "source": "video-search",
+    "url": "https://video.example/watch/example",
+    "title": "Cloudflare Workers tutorial",
+    "author": "Example Creator",
+    "publishedAt": "2026-06-23T00:00:00.000Z",
+    "content": "A practical introduction.",
+    "media": [{ "type": "image", "url": "https://video.example/example.jpg", "alt": "Cloudflare Workers tutorial" }],
+    "attributes": { "durationSeconds": 323, "viewCount": 1234 }
+  }]
+}`}</code></pre>
+
+  <h2>Behavior and limits</h2>
+  <ul>
+    <li>Safe search is strict and cannot be disabled.</li>
+    <li>The endpoint searches public video pages; it does not return direct stream or download URLs.</li>
+    <li>Use <code>platform=youtube</code> when the AI specifically needs YouTube watch results.</li>
+    <li>For “give me the latest video of Taylor Swift,” send <code>q=Taylor Swift</code>, <code>creator=Taylor Swift</code>, <code>platform=youtube</code>, <code>sort=date</code>, and <code>limit=1</code>. Omit <code>creator</code> when the user wants any recent video about the subject.</li>
+    <li>Successful searches are cached for up to one hour. A cache hit is free.</li>
+    <li>A successful uncached request uses one anonymous allowance slot or one account credit.</li>
+    <li>Use the returned source page and preview metadata according to the source’s terms and rights.</li>
+  </ul>
+
+  <h2>MCP</h2>
+  <p>Hosted MCP clients can call <code>search_videos</code> with the same query, exact creator constraint, locale, ordering, limit, format, cache, metering, and rate-limit behavior. Agents should set <code>creator</code>, <code>sort=date</code>, and <code>limit=1</code> when the user asks for a named creator’s latest upload.</p>
+</DocsLayout>

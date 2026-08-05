@@ -1,20 +1,20 @@
 # extractor.sh agent documentation
 
-> extractor.sh converts public URLs into reusable Markdown or normalized JSON through one cacheable HTTP GET endpoint.
+> extractor.sh searches webpages, current news, openly licensed images, public videos, places, and market data, then converts known public URLs into reusable Markdown or normalized JSON through cacheable HTTP GET endpoints.
 
-Base URL: `https://extractor.mcb-software.workers.dev`
+Base URL: `https://extractor.sh`
 
-The public preview requires no account, API key, OAuth flow, or payment. Do not send credentials, cookies, private URLs, or non-public data.
+No account is required for 10 successful uncached operations per IP each UTC day. New accounts receive a one-time welcome bonus of 1,000 non-expiring credits. Signed-in homepage and platform-playground requests use the account balance automatically. External integrations use that same balance with `Authorization: Bearer ext_live_…`. One credit is committed only when a cache miss succeeds. Cache hits and errors are free. Do not put credentials, cookies, private URLs, or non-public data in request parameters.
 
 ## Hosted MCP server
 
 Connect an MCP-compatible client to the stateless Streamable HTTP endpoint:
 
-`https://extractor.mcb-software.workers.dev/mcp`
+`https://extractor.sh/mcp`
 
-The server exposes one read-only tool, `extract_public_url`, with a required absolute public `url`, optional `format` of `markdown` (default) or `json`, and optional short `focus` topic. Use `focus` for requests such as pricing, features, or FAQ so the requested landing-page section is selected. Ordinary MCP and GET requests share extraction cache entries; focused MCP requests use topic-aware entries. All requests share rate limits. See `https://extractor.mcb-software.workers.dev/docs/mcp/` for configuration and usage.
+The server exposes nine read-only tools: `extract_public_url`, `search_web`, `search_news`, `search_images`, `search_videos`, `search_places`, `search_stocks`, `get_market_movers`, and `get_market_data`. MCP and GET requests share their corresponding cache entries, anonymous allowance, prepaid metering, and rate limits. MCP clients may forward the optional Bearer key. `search_web` can restrict discovery to one hostname. `search_videos` accepts an exact creator constraint. `search_places` handles addresses, businesses, landmarks, and local categories with optional coordinate bias. `search_stocks` keeps its stable name while resolving equity or crypto asset names into market symbols. `get_market_movers` returns daily gainers, losers, or most-active equities. `get_market_data` accepts an optional quote currency, returns the public schema-v1 entity as structured content, and links a bundled line-chart resource for MCP Apps-capable chats. Other clients receive the same ordinary JSON or Markdown fallback, and the chart does not make a separate market-data request.
 
-## Endpoint
+## Extraction endpoint
 
 `GET /api/extract`
 
@@ -22,19 +22,124 @@ Query parameters:
 
 - `url` — Required absolute public HTTP or HTTPS URL. Maximum length: 2048 characters.
 - `format` — Optional. Use `json` (default) or `markdown`.
+- `focus` — Optional topic from 1 to 80 characters for generic webpages.
 
 Example Markdown request:
 
 ```sh
-curl --get 'https://extractor.mcb-software.workers.dev/api/extract' \
+curl --get 'https://extractor.sh/api/extract' \
   --data-urlencode 'url=https://example.com/article' \
   --data-urlencode 'format=markdown'
 ```
 
-Example JSON request:
+## Search endpoint
+
+`GET /api/search`
+
+- `q` — Required search query. Maximum length: 200 characters.
+- `limit` — Optional integer from 1 to 10. Default: 10.
+- `format` — Optional. Use `json` (default) or `markdown`.
+- `language` — Optional canonical BCP 47 tag. Default: `en-US`.
+- `country` — Optional two-letter country. Default: `US`.
+- `site` — Optional hostname restriction such as `linkedin.com`; omit the scheme and path.
 
 ```sh
-curl --get 'https://extractor.mcb-software.workers.dev/api/extract' \
+curl --get 'https://extractor.sh/api/search' \
+  --data-urlencode 'q=Cloudflare Workers documentation' \
+  --data-urlencode 'format=json'
+```
+
+Search JSON is a schema-v1 `web-search` feed. Its ordered `document` items contain titles, public URLs, and short snippets. Use extraction on a selected URL for full page content.
+
+## News endpoint
+
+`GET /api/news`
+
+- `q` — Required news query. Maximum length: 200 characters.
+- `limit` — Optional integer from 1 to 50. Default: 10.
+- `format` — Optional. Use `json` (default) or `markdown`.
+- `language` and `country` — Optional locale controls.
+- `timeframe` — Optional `any`, `1h`, `1d`, `7d`, or `30d`.
+
+```sh
+curl --get 'https://extractor.sh/api/news' \
+  --data-urlencode 'q=AI infrastructure' \
+  --data-urlencode 'limit=10' \
+  --data-urlencode 'format=json'
+```
+
+News JSON is a schema-v1 `google-news` feed containing `article` items. Results can include public titles, publishers, publication dates, summaries, and links. Complete publisher article bodies and personalized feeds are not included.
+
+## Image endpoint
+
+`GET /api/images`
+
+- `q` — Required image query. Maximum length: 200 characters.
+- `limit` — Optional integer from 1 to 20. Default: 10.
+- `format` — Optional. Use `json` (default) or `markdown`.
+- `usage` — Optional `all`, `commercial`, `modify`, or `commercial-and-modify`.
+- `orientation` — Optional `any`, `landscape`, `portrait`, or `square`.
+
+Image JSON is a schema-v1 `image-search` feed. Document items include source pages and image media, plus creator, dimensions, description, and license metadata when available. Always follow the returned license requirements.
+
+## Video endpoint
+
+`GET /api/videos`
+
+- `q` — Required video query. Maximum length: 200 characters.
+- `limit` — Optional integer from 1 to 20. Default: 10.
+- `format` — Optional. Use `json` (default) or `markdown`.
+- `language` — Optional canonical BCP 47 tag. Default: `en-US`.
+- `country` — Optional two-letter country. Default: `US`.
+- `platform` — Optional `any` (default) or `youtube`. Use `youtube` when the user specifically requests YouTube results.
+- `sort` — Optional `relevance` (default) or newest-first `date`. Use `date` when the user asks for the latest or newest video.
+- `creator` — Optional exact creator name. Combine with `sort=date` and `limit=1` for that creator’s newest matching upload.
+
+Video JSON is a schema-v1 `video-search` feed. Semantic `video` items contain public source-page links and available creator, publication time, displayed relative upload time, description, duration, and thumbnail metadata. For “give me the latest video of Taylor Swift,” send `q=Taylor Swift`, `creator=Taylor Swift`, `platform=youtube`, `sort=date`, and `limit=1`; the first item is the newest matching upload by that exact creator. Omit `creator` when the user wants any recent video about the subject. Safe search is strict, successful results may be cached for one hour, and direct streams or downloads are not returned.
+
+## Place endpoint
+
+`GET /api/places`
+
+- `q` — Required address, business, landmark, or local-category query. Maximum length: 200 characters.
+- `limit` — Optional integer from 1 to 10. Default: 5.
+- `format` — Optional. Use `json` (default) or `markdown`.
+- `language`, optional `country`, paired `lat`/`lon`, and `type` control localization and filtering.
+
+Place JSON is a schema-v1 `place-search` feed. Document items can include coordinates, normalized addresses, categories, country codes, websites, phone numbers, opening hours, and canonical map links. This is submitted lookup rather than autocomplete. Results contain OpenStreetMap data and retain its required attribution.
+
+## Finance endpoint
+
+`GET /api/finance`
+
+- `symbol` — Required market symbol, up to 32 supported characters.
+- `timeframe` — Optional `1d`, `5d`, `1mo`, `3mo`, `6mo`, `1y`, `5y`, or `max`. Default: `1mo`.
+- `quote` — Optional three-letter output currency such as `EUR`. Omit it to preserve the listing currency.
+- `format` — Optional `json` (default) or `markdown`.
+
+Without `quote`, values remain in the instrument listing currency. With `quote`, snapshot fields and chart-ready history are converted in the same operation and expose `listingCurrency`, `quoteCurrency`, `exchangeRate`, and `exchangeRateTimestamp`. The interval is selected automatically, history is capped at 512 points, and successful responses may be cached for five minutes.
+
+`GET /api/finance/search`
+
+- `q` — Required company or asset name, brand, or partial ticker, up to 200 characters.
+- `limit` — Optional integer from 1 to 10. Default: 10.
+- `instrument` — Optional `equity` (default) or `crypto`.
+- `format` — Optional `json` (default) or `markdown`.
+
+Finance search returns a schema-v1 `finance` feed containing the requested equity or crypto listings and may be cached for one hour. MCP clients use `search_stocks`, then pass the selected symbol to `get_market_data`. When a user requests a currency, pass it as `quote` to `get_market_data` instead of making a separate currency-pair call.
+
+`GET /api/finance/movers`
+
+- `list` — Optional `gainers` (default), `losers`, or `active`.
+- `limit` — Optional integer from 1 to 10. Default: 10.
+- `format` — Optional `json` (default) or `markdown`.
+
+Market movers returns one already-ranked daily equity list with available price, daily change, percentage change, volume, range, exchange, currency, market state, and timestamp fields. Use it for “what stock rose or fell the most today?” and most-active questions; do not try to derive a market-wide ranking from company-name search. Results may be delayed and may be cached for five minutes.
+
+Example JSON extraction request:
+
+```sh
+curl --get 'https://extractor.sh/api/extract' \
   --data-urlencode 'url=https://example.com/article' \
   --data-urlencode 'format=json'
 ```
@@ -45,7 +150,7 @@ Successful JSON responses contain:
 
 - `schemaVersion` — Currently `1`.
 - `type` — One of `document`, `article`, `product`, `post`, `profile`, `video`, `audio`, or `feed`.
-- `source` — One of `web`, `amazon`, `app-store`, `bluesky`, `google-news`, `google-play`, `instagram`, `mastodon`, `reddit`, `shopify`, `soundcloud`, `spotify`, `tiktok`, `vimeo`, `x`, or `youtube`.
+- `source` — A recognized platform or provider-neutral capability such as `web`, `web-search`, `image-search`, `video-search`, `place-search`, or `finance`.
 - `id` — Stable source identifier when available, otherwise `null`.
 - `url` — Canonical source URL.
 - `title` — Extracted title or `null`.
@@ -56,11 +161,13 @@ Successful JSON responses contain:
 - `attributes` — Fields specific to the semantic entity type.
 - `items` — Present for feed and profile responses; omitted for individual entities.
 
-Each item follows the same entity shape. Product and variant `price` fields are non-negative integers in the currency's minor unit; for example, `1999` with `EUR` means €19.99. Use `priceDisplay` for presentation. Shared nullable fields are present with `null`, while unavailable optional attributes are omitted.
+Each item follows the same entity shape. Product and variant `price` fields are non-negative integers in the currency's minor unit; for example, `1999` with `EUR` means €19.99. Use `priceDisplay` for presentation. Products and variants can expose SKU, GTIN, seller, category, specifications, stock state, variants, and multiple images when present. Shared nullable fields are present with `null`, while unavailable optional attributes are omitted.
 
 Software products can additionally include `softwareVersion`, `operatingSystem`, `contentRating`, and `developerUrl` attributes.
 
-Machine-readable JSON Schema: `https://extractor.mcb-software.workers.dev/schemas/extraction-v1.json`
+Finance documents can include `tickerSymbol`, exchange, effective `currency`, `listingCurrency`, `quoteCurrency`, `exchangeRate`, `exchangeRateTimestamp`, quote fields, `marketState`, `historyTimeframe`, `historyInterval`, bounded `history`, and dividend or split `events`. Finance search feeds contain equity or crypto documents with the available exchange, listing currency, sector, and industry fields. Generic webpages can include `language`, `modifiedAt`, and `wordCount`; video feeds expose effective `videoPlatform` and `videoSort`, while video items can expose `publishedAtDisplay`; images, products, variants, posts, places, and feeds expose the additional optional fields documented by the JSON Schema.
+
+Machine-readable JSON Schema: `https://extractor.sh/schemas/extraction-v1.json`
 
 ## Markdown response
 
@@ -76,7 +183,7 @@ Public HTTP and HTTPS articles, documentation, blogs, and other content pages. S
 
 ### Amazon
 
-Public product detail pages from supported Amazon country stores return one product entity. Public search results URLs containing a `k` query return a feed with up to 20 product entities. Submit the ordinary product or search URL. Categories, pagination, carts, accounts, reviews, and personalized offers are not supported. Results may be cached for up to one hour.
+Public product detail pages from supported Amazon country stores return one product entity. Public search results, storefronts, Idea Lists, and explicitly shared Wish Lists return product feeds. Results can include seller, category, specifications, variants, multiple images, and integer minor-unit prices when exposed. List discovery, categories, pagination, carts, accounts, reviews, and personalized offers are not supported. Results may be cached for up to one hour.
 
 Example: `https://www.amazon.de/product-name/dp/B09B8X9RGM`
 
@@ -110,9 +217,7 @@ Example: `https://play.google.com/store/apps/details?id=com.openai.chatgpt`
 
 ### Instagram
 
-Public Instagram post and reel pages return one post entity. Public profile pages return a profile entity with recent public post items. Private or login-only content, stories, comments, transcripts, and media downloads are unsupported.
-
-Profile example: `https://www.instagram.com/instagram/`
+Public Instagram post and reel pages return one post entity with exposed carousel media, dimensions, coauthors, location, partnership state, and engagement when available. Public profile pages can include verification, pronouns, an avatar, counts, and recent public post items. Private or login-only content, stories, comments, transcripts, and media downloads are unsupported.
 
 ### Mastodon
 
@@ -132,6 +237,12 @@ Public Shopify product pages return one product entity. Public storefront and co
 
 Example: `https://store.example/products/black-shirt`
 
+### [WooCommerce](https://extractor.sh/woocommerce/)
+
+Public WooCommerce product pages return one product entity. Supported shop, product-search, storefront, and product-category pages return feeds with up to 50 product entities. Results can include integer minor-unit prices, availability, ratings, categories, brands, attributes, and images.
+
+Example: `https://store.example/product/blue-shirt/`
+
 ### SoundCloud
 
 Public tracks, playlists, and sets return an audio entity; creator pages return a profile entity. Comments, waveforms, transcripts, and media downloads are not provided.
@@ -146,7 +257,7 @@ Example: `https://open.spotify.com/episode/7makk4oTQel546B0PZlDM5`
 
 ### TikTok
 
-Public TikTok video and photo post pages return one post entity. Public creator pages return a profile entity. Short links are supported when they resolve to one of these public pages. Private, deleted, or age-restricted content, comments, transcripts, and media downloads are unsupported.
+Public TikTok video and photo post pages return one post entity. Public creator pages return a profile entity with public counts and up to ten recent post items. Short links are supported when they resolve to one of these public pages. Private, deleted, or age-restricted content, comments, transcripts, and media downloads are unsupported.
 
 Example: `https://www.tiktok.com/@scout2015/video/6718335390845095173`
 
@@ -160,6 +271,12 @@ Example: `https://vimeo.com/286898202`
 
 Public `x.com` and legacy `twitter.com` status URLs. Private, deleted, and age-gated posts are unsupported.
 
+### [Yahoo Finance](https://extractor.sh/yahoo-finance/)
+
+The finance API provides company-name stock search, configurable bounded history, and optional requested quote currencies. Ordinary quote and price-history URLs submitted to extraction retain a one-month daily-history default and native listing currency. Market values may be delayed or unavailable.
+
+Example: `https://finance.yahoo.com/quote/AAPL/`
+
 ### YouTube
 
 Public watch, Shorts, and `youtu.be` video pages, plus public channel, handle, legacy user, and playlist pages. Transcripts, captions, and media downloads are not provided.
@@ -168,9 +285,18 @@ Example: `https://www.youtube.com/@Cloudflare`
 
 ## Limits and caching
 
-- General limit: 30 extraction requests per client per 60 seconds.
+- Anonymous allowance: 10 successful uncached operations per IP per UTC day.
+- New-account welcome bonus: 1,000 non-expiring credits granted once.
+- General limit: 60 uncached search or extraction requests per client per 60 seconds.
 - High-cost extraction limit: 5 requests per client per 60 seconds.
 - Product, profile, and feed results may be cached for 1 hour.
+- Yahoo Finance market documents may be cached for 5 minutes.
+- Finance API responses may be cached for 5 minutes.
+- Web search results may be cached for 1 hour.
+- News search results may be cached for 1 hour.
+- Image search results may be cached for 1 hour.
+- Place search results may be cached for 1 hour.
+- Map search results may be cached for 1 hour.
 - Other single-entity results may be cached for 30 days.
 - Maximum extracted result size: 2 MB.
 
@@ -180,20 +306,24 @@ When a source blocks extraction or returns an upstream failure, the error messag
 
 ## Discovery
 
-- OpenAPI: `https://extractor.mcb-software.workers.dev/openapi.json`
-- JSON Schema: `https://extractor.mcb-software.workers.dev/schemas/extraction-v1.json`
-- API catalog: `https://extractor.mcb-software.workers.dev/.well-known/api-catalog`
-- llms.txt: `https://extractor.mcb-software.workers.dev/llms.txt`
-- Developer docs: `https://extractor.mcb-software.workers.dev/docs/`
-- Authentication: `https://extractor.mcb-software.workers.dev/auth.md`
-- Agent Skills index: `https://extractor.mcb-software.workers.dev/.well-known/agent-skills/index.json`
-- Hosted MCP server: `https://extractor.mcb-software.workers.dev/mcp`
-- MCP Server Card: `https://extractor.mcb-software.workers.dev/.well-known/mcp/server-card.json`
-- Limitations: `https://extractor.mcb-software.workers.dev/docs/limitations/`
-- Sitemap: `https://extractor.mcb-software.workers.dev/sitemap.xml`
-- Alternatives: `https://extractor.mcb-software.workers.dev/alternatives/`
-- Blog: `https://extractor.mcb-software.workers.dev/blog/`
+- OpenAPI: `https://extractor.sh/openapi.json`
+- JSON Schema: `https://extractor.sh/schemas/extraction-v1.json`
+- API catalog: `https://extractor.sh/.well-known/api-catalog`
+- llms.txt: `https://extractor.sh/llms.txt`
+- Developer docs: `https://extractor.sh/docs/`
+- Web search docs: `https://extractor.sh/docs/search/`
+- News search docs: `https://extractor.sh/docs/news/`
+- Image search docs: `https://extractor.sh/docs/images/`
+- Places docs: `https://extractor.sh/docs/places/`
+- Authentication: `https://extractor.sh/auth.md`
+- Agent Skills index: `https://extractor.sh/.well-known/agent-skills/index.json`
+- Hosted MCP server: `https://extractor.sh/mcp`
+- MCP Server Card: `https://extractor.sh/.well-known/mcp/server-card.json`
+- Limitations: `https://extractor.sh/docs/limitations/`
+- Sitemap: `https://extractor.sh/sitemap.xml`
+- Alternatives: `https://extractor.sh/alternatives/`
+- Blog: `https://extractor.sh/blog/`
 
 ## Pricing
 
-Pay-as-you-go billing is planned at €0.49 / 1,000 extractions. Credits never expire. Checkout is not yet available.
+Prepaid credits cost $0.49 / 1,000 credits and never expire. Each successful uncached extraction, web search, news search, image search, video search, place or map search, or finance request counts as one credit. One-time pay-as-you-go top-ups accept exact amounts from $10.00 to $4,900.00. Optional capped automatic funding is off by default and requires separate approval. Dodo Payments provides the hosted checkout and acts as merchant of record. Usage alerts are sent at 80%, 90%, and 100% with a direct top-up link.

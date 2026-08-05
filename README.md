@@ -1,22 +1,24 @@
 # extractor.sh
 
-A public, cache-first GET API, hosted MCP server, and small web interface that turns public URLs into clean Markdown or normalized JSON.
+A public, cache-first GET API and hosted MCP server that searches webpages, news, images, videos, and places, retrieves market data, and turns known public URLs into clean Markdown or normalized JSON.
 
 ## Supported sources
 
-- Generic public webpages and articles.
-- Public Amazon product detail pages and search results from supported country stores.
+- Generic public webpages, articles, product details, and repeated product listings.
+- Public Amazon products, search results, storefronts, Idea Lists, and shared Wish Lists from supported country stores.
 - Public Bluesky profile feeds and individual posts.
 - Public Google News searches, topics, and top stories.
-- Public Instagram posts, reels, profiles, and recent profile posts.
+- Public Instagram posts, reels, complete exposed carousels, profiles, and recent profile posts.
 - Public Mastodon statuses from compatible instances.
 - Reddit posts, communities, and public user feeds.
 - Public Shopify products, collections, and storefront catalogs.
+- Public WooCommerce products, shops, store searches, and supported product categories.
 - Public SoundCloud tracks, playlists, sets, and profiles.
 - Public Spotify music and podcast metadata.
-- Public TikTok video and photo posts plus creator profiles.
+- Public TikTok video and photo posts plus creator profiles with up to ten recent posts.
 - Public Vimeo video metadata.
 - Public X and Twitter status URLs.
+- Public Yahoo Finance quote and price-history pages with market snapshots and recent daily prices.
 - YouTube videos, channels, handles, users, and playlists.
 
 The site also includes build-year platform extraction guides under `/blog/`, provider comparisons under `/alternatives/`, and a complete `/sitemap.xml`.
@@ -33,9 +35,21 @@ The API is available at:
 ```text
 GET /api/extract?url=https%3A%2F%2Fexample.com&format=json
 GET /api/extract?url=https%3A%2F%2Fexample.com&format=markdown
+GET /api/search?q=Cloudflare%20Workers&limit=10&format=json
+GET /api/news?q=AI%20infrastructure&limit=10&format=json
+GET /api/images?q=coral%20reef&limit=10&format=json
+GET /api/videos?q=Cloudflare%20Workers%20tutorial&limit=10&format=json
+GET /api/places?q=Brandenburg%20Gate%20Berlin&limit=5&format=json
+GET /api/places?q=coffee%20Berlin&lat=52.52&lon=13.405&limit=5&format=json
+GET /api/finance/search?q=Apple&limit=10&format=json
+GET /api/finance/search?q=Bitcoin&instrument=crypto&limit=10&format=json
+GET /api/finance/movers?list=gainers&limit=10&format=json
+GET /api/finance?symbol=AAPL&quote=EUR&timeframe=1mo&format=json
 ```
 
-MCP clients can connect to the hosted Streamable HTTP endpoint at `/mcp` and call the read-only `extract_public_url` tool. See `/docs/mcp/` for configuration.
+MCP clients can connect to the hosted Streamable HTTP endpoint at `/mcp` and call the read-only `search_web`, `search_news`, `search_images`, `search_videos`, `search_places`, `search_stocks`, `get_market_movers`, `get_market_data`, and `extract_public_url` tools. Web search can be restricted to one hostname, video search can select a named creator’s newest upload, and market movers returns daily gainers, losers, or most-active stocks. `get_market_data` accepts an optional quote currency, returns schema-v1 structured content, and bundles an inline line chart for MCP Apps-capable chats, with ordinary text/JSON fallback everywhere else. See `/docs/mcp/` for configuration.
+
+Anonymous callers receive 10 successful uncached operations per IP each UTC day. New accounts receive a one-time bonus of 1,000 non-expiring credits, shared by signed-in website tools and `ext_live_` Bearer keys; cache hits and errors are free. Hanko protects account sessions, Dodo Payments provides hosted checkout and merchant-of-record billing, D1 stores account and billing references, and SQLite Durable Objects own exact quota, credit, and automatic-funding limits.
 
 Successful JSON responses use the versioned entity contract documented at
 `/docs/schema/` and published as JSON Schema at `/schemas/extraction-v1.json`.
@@ -53,8 +67,10 @@ After deployment, run the production Chromium smoke suite:
 
 ```sh
 npx playwright install chromium
-bun run test:smoke:browser
+EXTRACTOR_API_KEY='ext_live_…' bun run test:smoke:browser
 ```
+
+The Chromium suite uses that key for its authenticated context and creates a separate context for one anonymous MISS/HIT assertion.
 
 Run the production smoke suite against 100 distinct websites sampled from the
 current Tranco list:
@@ -93,16 +109,31 @@ set +a
 CLOUDFLARE_API_TOKEN="$CLOUDFLARE_API_KEY" bun run deploy
 ```
 
-The Worker name is `extractor`, producing `https://extractor.mcb-software.workers.dev` on the configured account.
+The Worker name is `extractor`, producing `https://extractor.sh` on the configured account.
+
+Billing rollout is fail-closed. Apply D1 migrations before deploy, install `DODOPAYMENTS_API_KEY`, `DODOPAYMENTS_BUSINESS_ID`, `DODOPAYMENTS_WEBHOOK_KEY`, and `ANONYMOUS_QUOTA_HMAC_SECRET` with `wrangler secret put`, configure both Dodo Payments product IDs, and keep `BILLING_ENABLED` false until hosted checkout, signed webhook settlement, and automatic-funding authorization pass.
+
+```sh
+CLOUDFLARE_API_TOKEN="$CLOUDFLARE_API_KEY" bunx wrangler d1 migrations apply extractor --remote
+```
 
 ## Cache and limits
 
 - Products, profiles, and feeds: 1 hour at Cloudflare’s edge.
+- Finance requests and Yahoo Finance market documents: 5 minutes at Cloudflare’s edge.
+- Web searches: 1 hour at Cloudflare’s edge.
+- News searches: 1 hour at Cloudflare’s edge.
+- Image searches: 1 hour at Cloudflare’s edge.
+- Video searches: 1 hour at Cloudflare’s edge.
+- Place searches: 1 hour at Cloudflare’s edge.
 - Other single entities and pages: 30 days at the edge.
-- Cache misses: 30 extractions per IP per minute.
+- Cache misses: 60 search or extraction requests per IP per minute.
+- Anonymous successful cache misses: 10 per IP per UTC day.
+- New accounts: a one-time 1,000-credit welcome bonus shared by signed-in website tools and active Bearer keys.
+- Paid successful cache misses: 1 prepaid credit with a valid signed-in session or active Bearer key.
 - Rendered-page fallback: 5 launches per IP per minute.
 
-The current `workers.dev` hostname uses Workers Caching. A zone-level Cache Rule can only be added after `extractor.sh` is purchased and onboarded to Cloudflare.
+These TTLs apply only to the internal API result cache. Website HTML, agent-readable representations, and static assets are returned with `Cache-Control: no-store`, and the Worker's front-cache is disabled so deployments become visible immediately.
 
 ## Icons
 

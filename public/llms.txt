@@ -1,47 +1,68 @@
 # extractor.sh
 
-> extractor.sh is a public, cache-first GET API that turns public webpages and supported platform pages into clean Markdown or normalized JSON.
+> extractor.sh is a public, cache-first GET API that searches webpages, news, images, videos, places, and market data, then turns known public URLs into clean Markdown or normalized JSON.
 
-The public preview requires no account or API key. Call `GET /api/extract` with an absolute public `url` and choose `format=markdown` or `format=json`. Requests are rate-limited to 30 per minute per client. Only public HTTP and HTTPS resources are supported.
+No account is required for 10 successful uncached operations per IP each UTC day. New accounts receive a one-time welcome bonus of 1,000 non-expiring credits. Signed-in website tools use the account balance automatically; external integrations use the same balance with `Authorization: Bearer ext_live_…`. Cache hits are free. All public GET operations return Markdown or schema-versioned JSON and share the 60 uncached requests per minute per-client limit.
 
 ## API
 
-- [Hosted MCP server](https://extractor.mcb-software.workers.dev/docs/mcp/): Connect to the Streamable HTTP endpoint and call `extract_public_url`.
-- [MCP Server Card](https://extractor.mcb-software.workers.dev/.well-known/mcp/server-card.json): Machine-readable MCP discovery metadata.
-- [OpenAPI 3.1 specification](https://extractor.mcb-software.workers.dev/openapi.json): Complete machine-readable contract for the extraction endpoint.
-- [JSON Schema](https://extractor.mcb-software.workers.dev/schemas/extraction-v1.json): Versioned schema for every successful JSON extraction.
-- [API catalog](https://extractor.mcb-software.workers.dev/.well-known/api-catalog): RFC 9727 Linkset for API discovery.
-- [Full agent documentation](https://extractor.mcb-software.workers.dev/llms-full.txt): Inputs, outputs, supported sources, limits, and examples in one Markdown document.
-- [Developer documentation](https://extractor.mcb-software.workers.dev/docs/): Human-readable quickstart, API reference, sources, limits, and caching.
-- [JSON schema guide](https://extractor.mcb-software.workers.dev/docs/schema/): Semantic entity types, shared fields, media, attributes, collection items, and price units.
-- [Limitations](https://extractor.mcb-software.workers.dev/docs/limitations/): CAPTCHAs, access controls, request regions, and source-specific boundaries.
-- [Authentication](https://extractor.mcb-software.workers.dev/auth.md): The public API currently requires no authentication.
-- [Agent skill](https://extractor.mcb-software.workers.dev/.well-known/agent-skills/extract-public-url/SKILL.md): Instructions for extracting one public URL.
-- [Extraction endpoint](https://extractor.mcb-software.workers.dev/api/extract?url=https%3A%2F%2Fexample.com%2F&format=json): Example JSON request.
+- [Web search](https://extractor.sh/docs/search/): Discover relevant public pages through `GET /api/search`.
+- [News search](https://extractor.sh/docs/news/): Find current public coverage through `GET /api/news`.
+- [Image search](https://extractor.sh/docs/images/): Find openly licensed images through `GET /api/images`.
+- [Video search](https://extractor.sh/docs/videos/): Find public videos through `GET /api/videos`, with `platform=youtube` for YouTube-only results.
+- [Places](https://extractor.sh/docs/places/): Resolve addresses, businesses, landmarks, and local categories through `GET /api/places`.
+- [Finance](https://extractor.sh/docs/finance/): Search equity or crypto symbols, retrieve daily market movers, and get native or converted market snapshots through `GET /api/finance/search`, `GET /api/finance/movers`, and `GET /api/finance`.
+- [Hosted MCP server](https://extractor.sh/docs/mcp/): Connect to the Streamable HTTP endpoint for search, extraction, and typed finance results with an inline chart in MCP Apps-capable chats.
+- [MCP Server Card](https://extractor.sh/.well-known/mcp/server-card.json): Machine-readable MCP discovery metadata.
+- [OpenAPI 3.1 specification](https://extractor.sh/openapi.json): Complete machine-readable contract for the search and extraction endpoints.
+- [JSON Schema](https://extractor.sh/schemas/extraction-v1.json): Versioned schema for every successful JSON extraction.
+- [API catalog](https://extractor.sh/.well-known/api-catalog): RFC 9727 Linkset for API discovery.
+- [Full agent documentation](https://extractor.sh/llms-full.txt): Inputs, outputs, supported sources, limits, and examples in one Markdown document.
+- [Developer documentation](https://extractor.sh/docs/): Human-readable quickstart, API reference, sources, limits, and caching.
+- [JSON schema guide](https://extractor.sh/docs/schema/): Semantic entity types, shared fields, media, attributes, collection items, and price units.
+- [Limitations](https://extractor.sh/docs/limitations/): CAPTCHAs, access controls, request regions, and source-specific boundaries.
+- [Authentication](https://extractor.sh/auth.md): Optional Bearer API keys, anonymous allowance, account credits, and error behavior.
+- [API-key guide](https://extractor.sh/docs/authentication/): Key creation, use, revocation, and cache-first behavior.
+- [Billing guide](https://extractor.sh/docs/billing/): Exact credit grants, one-time pay-as-you-go top-ups, and reversals.
+- [Agent skill](https://extractor.sh/.well-known/agent-skills/extract-public-url/SKILL.md): Instructions for extracting one public URL.
+- [Web search agent skill](https://extractor.sh/.well-known/agent-skills/search-web/SKILL.md): Instructions for finding relevant public pages.
+- [Video search agent skill](https://extractor.sh/.well-known/agent-skills/search-videos/SKILL.md): Instructions for finding public videos.
+- [Search endpoint](https://extractor.sh/api/search?q=Cloudflare%20Workers&format=json): Example JSON search request.
+- [News endpoint](https://extractor.sh/api/news?q=AI%20infrastructure&format=json): Example JSON news request.
+- [Image endpoint](https://extractor.sh/api/images?q=coral%20reef&format=json): Example JSON image request.
+- [Video endpoint](https://extractor.sh/api/videos?q=Cloudflare%20Workers%20tutorial&format=json): Example JSON video request.
+- [Place endpoint](https://extractor.sh/api/places?q=Brandenburg%20Gate%20Berlin&format=json): Example JSON place request.
+- [Finance endpoint](https://extractor.sh/api/finance?symbol=AAPL&timeframe=1mo&format=json): Example JSON market request.
+- [Equity search endpoint](https://extractor.sh/api/finance/search?q=Apple&limit=10&format=json): Example JSON equity-symbol search.
+- [Crypto search endpoint](https://extractor.sh/api/finance/search?q=Bitcoin&instrument=crypto&limit=10&format=json): Example JSON crypto-symbol search.
+- [Market movers endpoint](https://extractor.sh/api/finance/movers?list=gainers&limit=10&format=json): Example daily gainers feed; use `losers` or `active` for the other ranked lists.
+- [Extraction endpoint](https://extractor.sh/api/extract?url=https%3A%2F%2Fexample.com%2F&format=json): Example JSON request.
 
 ## Supported sources
 
-- [Web extraction](https://extractor.mcb-software.workers.dev/): Homepage and interactive extractor.
-- [Amazon extraction](https://extractor.mcb-software.workers.dev/amazon/): Public product detail and search results pages from supported country stores.
-- [Apple App Store extraction](https://extractor.mcb-software.workers.dev/app-store/): Public iPhone and iPad app detail pages as software products.
-- [Bluesky extraction](https://extractor.mcb-software.workers.dev/bluesky/): Public profile feeds and individual public posts, without replies or parent threads.
-- [Google News extraction](https://extractor.mcb-software.workers.dev/google-news/): Public searches, topics, and top stories as article feeds.
-- [Google Play extraction](https://extractor.mcb-software.workers.dev/google-play/): Public Android app detail pages as software products.
-- [Instagram extraction](https://extractor.mcb-software.workers.dev/instagram/): Public posts, reels, profiles, and recent profile posts.
-- [Mastodon extraction](https://extractor.mcb-software.workers.dev/mastodon/): Public statuses from compatible federated instances.
-- [Shopify extraction](https://extractor.mcb-software.workers.dev/shopify/): Public product pages, collection pages, and storefront catalogs.
-- [SoundCloud extraction](https://extractor.mcb-software.workers.dev/soundcloud/): Public tracks, playlists, sets, and creator profiles.
-- [Spotify extraction](https://extractor.mcb-software.workers.dev/spotify/): Public music, artist, playlist, and podcast links.
-- [TikTok extraction](https://extractor.mcb-software.workers.dev/tiktok/): Public video and photo posts, short links, and creator profiles.
-- [Reddit extraction](https://extractor.mcb-software.workers.dev/reddit/): Public posts, communities, and user profiles.
-- [X extraction](https://extractor.mcb-software.workers.dev/x/): Public X and Twitter status URLs.
-- [Vimeo extraction](https://extractor.mcb-software.workers.dev/vimeo/): Public video metadata.
-- [YouTube extraction](https://extractor.mcb-software.workers.dev/youtube/): Public video metadata, channels, and playlists.
-- [Pricing](https://extractor.mcb-software.workers.dev/pricing/): Pay-as-you-go pricing planned at €0.49 / 1,000 extractions.
-- [Alternatives](https://extractor.mcb-software.workers.dev/alternatives/): Compare extractor.sh with broader scraping and browser providers.
-- [Blog](https://extractor.mcb-software.workers.dev/blog/): Platform extraction guides for AI agents and RAG pipelines.
+- [Web extraction](https://extractor.sh/): Homepage and interactive extractor.
+- [Amazon extraction](https://extractor.sh/amazon/): Public products, search results, storefronts, Idea Lists, and shared Wish Lists from supported country stores.
+- [Apple App Store extraction](https://extractor.sh/app-store/): Public iPhone and iPad app detail pages as software products.
+- [Bluesky extraction](https://extractor.sh/bluesky/): Public profile feeds and individual public posts, without replies or parent threads.
+- [Google News extraction](https://extractor.sh/google-news/): Public searches, topics, and top stories as article feeds.
+- [Google Play extraction](https://extractor.sh/google-play/): Public Android app detail pages as software products.
+- [Instagram extraction](https://extractor.sh/instagram/): Public posts, reels, profiles, and recent profile posts.
+- [Mastodon extraction](https://extractor.sh/mastodon/): Public statuses from compatible federated instances.
+- [Shopify extraction](https://extractor.sh/shopify/): Public product pages, collection pages, and storefront catalogs.
+- [WooCommerce extraction](https://extractor.sh/woocommerce/): Public product pages, shops, product-search result pages, and supported product categories.
+- [SoundCloud extraction](https://extractor.sh/soundcloud/): Public tracks, playlists, sets, and creator profiles.
+- [Spotify extraction](https://extractor.sh/spotify/): Public music, artist, playlist, and podcast links.
+- [TikTok extraction](https://extractor.sh/tiktok/): Public video and photo posts, short links, and creator profiles with up to ten recent posts.
+- [Reddit extraction](https://extractor.sh/reddit/): Public posts, communities, and user profiles.
+- [X extraction](https://extractor.sh/x/): Public X and Twitter status URLs.
+- [Vimeo extraction](https://extractor.sh/vimeo/): Public video metadata.
+- [Yahoo Finance extraction](https://extractor.sh/yahoo-finance/): Symbol finance playground plus ordinary quote-URL extraction with a one-month default.
+- [YouTube extraction](https://extractor.sh/youtube/): Public video metadata, channels, and playlists.
+- [Pricing](https://extractor.sh/pricing/): Prepaid pay-as-you-go credits at $0.49 / 1,000 credits.
+- [Alternatives](https://extractor.sh/alternatives/): Compare extractor.sh with search, scraping, browser, crawling, and AI web-data providers.
+- [Blog](https://extractor.sh/blog/): Extraction, search API, MCP, platform, AI-agent, and RAG implementation guides.
 
 ## Optional
 
-- [XML sitemap](https://extractor.mcb-software.workers.dev/sitemap.xml): All public human-readable pages.
-- [Agent guidance](https://extractor.mcb-software.workers.dev/AGENTS.md): Concise instructions for agents using the service.
+- [XML sitemap](https://extractor.sh/sitemap.xml): All public human-readable pages.
+- [Agent guidance](https://extractor.sh/AGENTS.md): Concise instructions for agents using the service.

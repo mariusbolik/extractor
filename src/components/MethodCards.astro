@@ -5,7 +5,7 @@ import PlatformIcon from './PlatformIcon.astro';
 
 <section class="relative" aria-labelledby="supported-heading">
   <h2 class="sr-only" id="supported-heading">Works with these supported platforms</h2>
-  <ul id="supported-platforms-grid" class="grid list-none grid-cols-4 gap-[2px] bg-black p-[2px] shadow-[8px_8px_0_#000] sm:grid-cols-8 max-[660px]:shadow-[5px_5px_0_#000]" aria-label="Supported platforms">
+  <ul id="supported-platforms-grid" class="grid list-none grid-cols-4 gap-[2px] bg-black p-[2px] shadow-[8px_8px_0_#000] sm:grid-cols-9 max-[660px]:shadow-[5px_5px_0_#000]" aria-label="Supported platforms">
     <li>
       <div class="flex aspect-square items-center justify-center bg-black p-3 text-center text-white">
         <span class="font-heading text-[clamp(1rem,2vw,1.3rem)] font-normal leading-[1.05] tracking-[-0.04em]">Works<br />with</span>
@@ -26,10 +26,10 @@ import PlatformIcon from './PlatformIcon.astro';
             role="tooltip"
             class:list={[
               'invisible pointer-events-none absolute top-[calc(100%+8px)] left-1/2 z-30 w-[min(230px,calc(100vw-40px))] -translate-x-1/2 border-2 border-black bg-white p-4 text-left text-black opacity-0 shadow-[5px_5px_0_#000] transition-opacity duration-100 group-hover:visible group-hover:opacity-100 group-focus-visible:visible group-focus-visible:opacity-100',
-              (index === 3 || index === 7 || index === 11) && 'max-sm:left-0 max-sm:translate-x-0',
+              (index === 3 || index === 7 || index === 11 || index === 15) && 'max-sm:left-0 max-sm:translate-x-0',
               (index === 2 || index === 6 || index === 10 || index === 14) && 'max-sm:right-0 max-sm:left-auto max-sm:translate-x-0',
-              index === 7 && 'sm:left-0 sm:translate-x-0',
-              (index === 6 || index === 14) && 'sm:right-0 sm:left-auto sm:translate-x-0',
+              index === 8 && 'sm:left-0 sm:translate-x-0',
+              (index === 7 || index === 16) && 'sm:right-0 sm:left-auto sm:translate-x-0',
             ]}
           >
             <strong class="font-heading text-[0.95rem] font-normal leading-none tracking-[-0.035em]">{platform.name}</strong>

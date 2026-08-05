@@ -1,35 +1,6 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import SocialLanding from '../components/SocialLanding.astro';
-
+import PlatformPage from '../components/PlatformPage.astro';
+import { platformPages } from '../features/marketing/platform-pages';
 export const prerender = true;
-const title = 'YouTube videos and channels to Markdown or JSON — extractor.sh';
-const description = 'Extract public YouTube video metadata, channels, and playlists into clean Markdown or normalized JSON.';
 ---
-
-<BaseLayout {title} {description} path="/youtube/">
-  <SocialLanding
-    platform="YouTube"
-    eyebrow="YouTube extractor"
-    headline="YouTube metadata, made usable."
-    {description}
-    outcome="Videos and channels in one consistent format."
-    capabilities={[
-      { label: 'Input', value: 'One public video, Shorts, channel, handle, user, or playlist URL.' },
-      { label: 'Returns', value: 'One video entity or a normalized feed for channels and playlists.' },
-      { label: 'Includes', value: 'Public titles, descriptions, authors, publication dates, thumbnails, and canonical links when available.' },
-      { label: 'Caching', value: 'Feeds may be cached for one hour; videos for up to 30 days.' },
-    ]}
-    supported={[
-      'Public watch, Shorts, and youtu.be video URLs',
-      'Public channel, handle, and legacy user pages',
-      'Public playlist pages',
-    ]}
-    limitations={[
-      'No transcripts, captions, or media downloads',
-      'No private or unlisted channel discovery',
-      'Video output contains metadata, not the spoken content',
-    ]}
-    exampleUrl="https://www.youtube.com/@Cloudflare"
-  />
-</BaseLayout>
+<PlatformPage page={platformPages.youtube} />

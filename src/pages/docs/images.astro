@@ -1,0 +1,59 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+
+export const prerender = true;
+const title = 'Image search API — extractor.sh docs';
+const description = 'Search openly licensed public images through a cacheable GET endpoint and receive normalized Markdown or schema-v1 JSON.';
+---
+
+<DocsLayout {title} {description} path="/docs/images/">
+  <p class="!mt-0 font-mono text-[0.78rem] font-extrabold uppercase tracking-[0.14em]">Image search</p>
+  <h1>Images your agents can use.</h1>
+  <p class="text-[1.08rem]">Search openly licensed public images and receive source links, creators, dimensions, and license metadata through one GET request.</p>
+
+  <h2>Request</h2>
+  <pre><code>curl --get 'https://extractor.sh/api/images' \
+  --data-urlencode 'q=coral reef' \
+  --data-urlencode 'limit=10' \
+  --data-urlencode 'format=json'</code></pre>
+
+  <div class="overflow-x-auto">
+    <table>
+      <thead><tr><th>Parameter</th><th>Required</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>q</code></td><td>Yes</td><td>Image query with up to 200 characters.</td></tr>
+        <tr><td><code>limit</code></td><td>No</td><td>An integer from <code>1</code> to <code>20</code>. Default: <code>10</code>.</td></tr>
+        <tr><td><code>usage</code></td><td>No</td><td><code>all</code>, <code>commercial</code>, <code>modify</code>, or <code>commercial-and-modify</code>. Default: <code>all</code>.</td></tr>
+        <tr><td><code>orientation</code></td><td>No</td><td><code>any</code>, <code>landscape</code>, <code>portrait</code>, or <code>square</code>. Default: <code>any</code>.</td></tr>
+        <tr><td><code>format</code></td><td>No</td><td><code>json</code> or <code>markdown</code>. Default: <code>json</code>.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Response</h2>
+  <p>JSON returns a schema-v1 <code>image-search</code> feed. Every usable item is a <code>document</code> with a source page and an image in <code>media</code>. Creator links, dimensions, file type, tags, computed orientation, description, and license details are included when available.</p>
+  <pre><code>{`{
+  "schemaVersion": 1,
+  "type": "feed",
+  "source": "image-search",
+  "attributes": { "feedType": "image-search", "query": "coral reef", "usage": "all", "orientation": "any", "resultCount": 1 },
+  "items": [
+    {
+      "type": "document",
+      "title": "Coral reef",
+      "author": "Example creator",
+      "url": "https://example.com/image-page",
+      "media": [{ "type": "image", "url": "https://example.com/image.jpg" }],
+      "attributes": { "license": "CC BY 4.0", "licenseUrl": "https://…" }
+    }
+  ]
+}`}</code></pre>
+
+  <h2>Boundaries</h2>
+  <ul>
+    <li>Results cover openly licensed public media rather than the entire visual web.</li>
+    <li>Always inspect and follow the returned license and attribution requirements.</li>
+    <li>No reverse-image search, face recognition, generated images, or binary image proxy is provided.</li>
+    <li>Successful searches may be cached for up to one hour.</li>
+  </ul>
+</DocsLayout>

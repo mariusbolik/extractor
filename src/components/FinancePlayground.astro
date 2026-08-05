@@ -1,0 +1,88 @@
+---
+import { Icon } from 'astro-icon/components';
+
+const presets = [
+  { label: 'Apple', symbol: 'AAPL' },
+  { label: 'S&P 500', symbol: '^GSPC' },
+  { label: 'Bitcoin / USD', symbol: 'BTC-USD' },
+  { label: 'EUR / USD', symbol: 'EURUSD=X' },
+];
+---
+
+<section class="mt-8 border-2 border-black bg-white p-[clamp(22px,4vw,44px)] shadow-[8px_8px_0_#000] max-[660px]:shadow-[5px_5px_0_#000]" aria-labelledby="finance-playground-heading" data-finance-playground>
+  <div class="grid grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] gap-10 max-[800px]:grid-cols-1 max-[800px]:gap-6">
+    <div>
+      <p class="mb-3 font-mono text-[0.76rem] font-extrabold uppercase tracking-[0.14em]">Live playground</p>
+      <h2 class="mb-4 font-heading text-[clamp(1.55rem,3vw,2.25rem)] font-normal leading-[1.05] tracking-[-0.04em]" id="finance-playground-heading">Try the finance API.</h2>
+      <p class="max-w-[500px] leading-[1.65]">Choose a representative symbol or enter another public market symbol. Keep its native currency or request a converted quote such as EUR in the same call.</p>
+      <p class="mt-4 text-[0.9rem] leading-relaxed">Don’t know the symbol? <a class="font-extrabold underline underline-offset-4" href="/api/finance/search?q=Apple&amp;format=json">Search stocks by company name.</a></p>
+    </div>
+    <form action="/api/finance" method="get" data-finance-form>
+      <div class="mb-4 flex max-w-full flex-wrap gap-2" aria-label="Example market symbols">
+        {presets.map((preset, index) => (
+          <button class="cursor-pointer border-2 border-black bg-white px-3 py-2 text-[0.78rem] font-extrabold aria-pressed:bg-black aria-pressed:text-white" type="button" data-symbol={preset.symbol} aria-pressed={index === 0 ? 'true' : 'false'}>{preset.label}</button>
+        ))}
+      </div>
+      <label class="text-[0.86rem] font-extrabold" for="finance-symbol">Market symbol</label>
+      <input class="mt-2 min-h-[52px] w-full border-2 border-black px-[15px] py-3 uppercase" id="finance-symbol" name="symbol" value="AAPL" maxlength="32" required data-finance-symbol />
+      <div class="mt-4 grid gap-4 sm:grid-cols-3">
+        <label class="text-[0.82rem] font-extrabold">Timeframe<select class="mt-2 min-h-11 w-full border-2 border-black bg-white px-3 py-2" name="timeframe"><option value="1d">1 day</option><option value="5d">5 days</option><option value="1mo" selected>1 month</option><option value="3mo">3 months</option><option value="6mo">6 months</option><option value="1y">1 year</option><option value="5y">5 years</option><option value="max">Maximum</option></select></label>
+        <label class="text-[0.82rem] font-extrabold">Output currency<select class="mt-2 min-h-11 w-full border-2 border-black bg-white px-3 py-2" name="quote"><option value="">Native</option><option value="EUR">EUR</option><option value="USD">USD</option><option value="GBP">GBP</option><option value="JPY">JPY</option><option value="CHF">CHF</option></select></label>
+        <fieldset class="border-0 p-0"><legend class="mb-2 text-[0.82rem] font-extrabold">Output format</legend><div class="flex min-h-11 items-center gap-5"><label class="inline-flex items-center gap-2"><input type="radio" name="format" value="markdown" checked /> Markdown</label><label class="inline-flex items-center gap-2"><input type="radio" name="format" value="json" /> JSON</label></div></fieldset>
+      </div>
+      <button class="mt-5 inline-flex min-h-[50px] cursor-pointer items-center justify-center gap-2 border-[2px_5px_5px_2px] border-black bg-white px-5 py-2.5 font-extrabold disabled:cursor-wait disabled:opacity-60" type="submit" data-finance-submit><span data-finance-submit-label>Get market data</span><Icon class="size-5" name="heroicons:arrow-right" aria-hidden="true" /></button>
+    </form>
+  </div>
+  <div class="mt-8 border-t-2 border-black pt-6" data-finance-result hidden aria-live="polite">
+    <div class="flex items-center justify-between gap-4"><span class="font-mono text-[0.76rem] font-extrabold uppercase tracking-[0.14em]" data-finance-result-label>Result</span><a class="font-extrabold underline underline-offset-4" target="_blank" rel="noopener" data-finance-raw>Open raw</a></div>
+    <pre class="mt-4 max-h-[560px] max-w-full overflow-auto rounded-[3px] border-2 border-black bg-white p-[clamp(16px,3vw,26px)] text-[0.8rem] leading-[1.6] whitespace-pre-wrap"><code data-finance-output></code></pre>
+  </div>
+</section>
+
+<script>
+  const playground = document.querySelector<HTMLElement>('[data-finance-playground]');
+  const form = playground?.querySelector<HTMLFormElement>('[data-finance-form]');
+  const symbolInput = playground?.querySelector<HTMLInputElement>('[data-finance-symbol]');
+  const submit = playground?.querySelector<HTMLButtonElement>('[data-finance-submit]');
+  const submitLabel = playground?.querySelector<HTMLElement>('[data-finance-submit-label]');
+  const result = playground?.querySelector<HTMLElement>('[data-finance-result]');
+  const resultLabel = playground?.querySelector<HTMLElement>('[data-finance-result-label]');
+  const output = playground?.querySelector<HTMLElement>('[data-finance-output]');
+  const raw = playground?.querySelector<HTMLAnchorElement>('[data-finance-raw]');
+  const presetButtons = [...(playground?.querySelectorAll<HTMLButtonElement>('[data-symbol]') ?? [])];
+
+  presetButtons.forEach((button) => button.addEventListener('click', () => {
+    if (!symbolInput || !button.dataset.symbol) return;
+    symbolInput.value = button.dataset.symbol;
+    presetButtons.forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
+    symbolInput.focus();
+  }));
+
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!form || !submit || !submitLabel || !result || !resultLabel || !output || !raw) return;
+    const endpoint = new URL('/api/finance', window.location.origin);
+    endpoint.search = new URLSearchParams(new FormData(form) as unknown as Record<string, string>).toString();
+    for (const [key, value] of [...endpoint.searchParams]) if (!value) endpoint.searchParams.delete(key);
+    const format = endpoint.searchParams.get('format') === 'json' ? 'json' : 'markdown';
+    submit.disabled = true;
+    submitLabel.textContent = 'Loading…';
+    result.hidden = false;
+    output.textContent = 'Fetching public market data…';
+    raw.href = endpoint.toString();
+    try {
+      const response = await fetch(endpoint, { credentials: 'same-origin', headers: { 'X-Extractor-Web-Client': '1' } });
+      const body = await response.text();
+      if (format === 'json') {
+        try { output.textContent = JSON.stringify(JSON.parse(body), null, 2); } catch { output.textContent = body; }
+      } else output.textContent = body;
+      resultLabel.textContent = response.ok ? `${format} result` : `HTTP ${response.status}`;
+    } catch {
+      output.textContent = 'The request could not reach extractor.sh.';
+      resultLabel.textContent = 'Network error';
+    } finally {
+      submit.disabled = false;
+      submitLabel.textContent = 'Get market data';
+    }
+  });
+</script>

@@ -5,19 +5,49 @@
   "main": "./src/worker.ts",
   "compatibility_date": "2026-07-31",
   "compatibility_flags": ["nodejs_compat"],
-  "workers_dev": true,
+  "workers_dev": false,
+  "cache": {
+    "enabled": false
+  },
   "assets": {
     "run_worker_first": true
   },
   "browser": {
     "binding": "BROWSER"
   },
+  "vars": {
+    "HANKO_AUTH_DOMAIN": "https://auth.extractor.sh",
+    "BILLING_ENABLED": "true",
+    "DODOPAYMENTS_ENVIRONMENT": "live_mode",
+    "DODOPAYMENTS_ONE_TIME_PRODUCT_ID": "pdt_0NkfoXx7VzaIB8nxSDPdy",
+    "DODOPAYMENTS_ON_DEMAND_PRODUCT_ID": "pdt_0NkfoY14HjKxMkVev8up7"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "extractor",
+      "database_id": "3500f720-f810-44a8-9862-0bf078084d13",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      { "name": "ACCOUNT_CREDITS", "class_name": "AccountCredits" },
+      { "name": "ANONYMOUS_QUOTA", "class_name": "AnonymousQuota" }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "billing-v1",
+      "new_sqlite_classes": ["AccountCredits", "AnonymousQuota"]
+    }
+  ],
   "ratelimits": [
     {
       "name": "EXTRACT_RATE_LIMITER",
       "namespace_id": "2026073101",
       "simple": {
-        "limit": 30,
+        "limit": 60,
         "period": 60
       }
     },
@@ -41,7 +71,11 @@
   "send_email": [
     {
       "name": "CONTACT_EMAIL",
-      "allowed_destination_addresses": ["sideprojects@eyloo.com"]
+      "allowed_destination_addresses": ["marius@eyloo.com"]
+    },
+    {
+      "name": "ACCOUNT_EMAIL",
+      "allowed_sender_addresses": ["billing@extractor.sh"]
     }
   ],
   "observability": {

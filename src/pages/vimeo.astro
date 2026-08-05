@@ -1,27 +1,6 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import SocialLanding from '../components/SocialLanding.astro';
-
+import PlatformPage from '../components/PlatformPage.astro';
+import { platformPages } from '../features/marketing/platform-pages';
 export const prerender = true;
-const title = 'Vimeo videos to Markdown or JSON — extractor.sh';
-const description = 'Extract public Vimeo video metadata into clean Markdown or normalized JSON.';
 ---
-
-<BaseLayout {title} {description} path="/vimeo/">
-  <SocialLanding
-    platform="Vimeo"
-    eyebrow="Vimeo extractor"
-    headline="Vimeo metadata, ready to use."
-    {description}
-    outcome="Public video details in one consistent format."
-    capabilities={[
-      { label: 'Input', value: 'One public Vimeo video URL, including supported channel, group, showcase, and On Demand video links.' },
-      { label: 'Returns', value: 'One normalized video entity.' },
-      { label: 'Includes', value: 'Title, author, description, upload date, duration, thumbnail, and canonical URL when available.' },
-      { label: 'Caching', value: 'Successful video results may be cached at Cloudflare’s edge for up to 30 days.' },
-    ]}
-    supported={['Public Vimeo video URLs', 'Supported channel, group, showcase, and On Demand video URLs', 'Public and valid unlisted links when the complete URL is supplied']}
-    limitations={['No private or embed-disabled videos', 'No transcripts, captions, comments, or media downloads', 'The result contains metadata rather than the video content']}
-    exampleUrl="https://vimeo.com/286898202"
-  />
-</BaseLayout>
+<PlatformPage page={platformPages.vimeo} />

@@ -9,7 +9,7 @@ const description = 'The versioned extractor.sh JSON entity schema, including co
 <DocsLayout {title} {description} path="/docs/schema/">
   <p class="!mt-0 font-mono text-[0.78rem] font-extrabold uppercase tracking-[0.14em]">JSON schema</p>
   <h1>One shape. Typed entities.</h1>
-  <p class="text-[1.08rem]">Every successful JSON response follows schema version <code>1</code>. Shared fields stay consistent while <code>type</code> and <code>attributes</code> describe the entity.</p>
+  <p class="text-[1.08rem]">Every successful search or extraction JSON response follows schema version <code>1</code>. Shared fields stay consistent while <code>type</code> and <code>attributes</code> describe the entity.</p>
 
   <h2>Common fields</h2>
   <div class="overflow-x-auto">
@@ -18,7 +18,7 @@ const description = 'The versioned extractor.sh JSON entity schema, including co
       <tbody>
         <tr><td><code>schemaVersion</code></td><td><code>1</code></td><td>The response contract version.</td></tr>
         <tr><td><code>type</code></td><td>enum</td><td><code>document</code>, <code>article</code>, <code>product</code>, <code>post</code>, <code>profile</code>, <code>video</code>, <code>audio</code>, or <code>feed</code>.</td></tr>
-        <tr><td><code>source</code></td><td>enum</td><td>The recognized platform or <code>web</code>, such as <code>amazon</code>, <code>app-store</code>, or <code>google-play</code>.</td></tr>
+        <tr><td><code>source</code></td><td>enum</td><td>The recognized platform, <code>web</code>, or a provider-neutral capability such as <code>web-search</code>, <code>image-search</code>, <code>video-search</code>, <code>place-search</code>, or <code>finance</code>.</td></tr>
         <tr><td><code>id</code></td><td>string or null</td><td>A stable source identifier when one is available.</td></tr>
         <tr><td><code>url</code></td><td>URL</td><td>The canonical or submitted public URL.</td></tr>
         <tr><td><code>title</code></td><td>string or null</td><td>The entity title or display label.</td></tr>
@@ -50,14 +50,27 @@ const description = 'The versioned extractor.sh JSON entity schema, including co
     "availability": "In stock"
   }
 }`}</code></pre>
-  <p><code>price</code> is always an integer in the currency’s minor unit: <code>1999</code> with <code>EUR</code> means €19.99. Use <code>priceDisplay</code> only for presentation.</p>
-  <p>Software products can additionally expose <code>softwareVersion</code>, <code>operatingSystem</code>, <code>contentRating</code>, and <code>developerUrl</code>. Unavailable fields are omitted.</p>
+  <p><code>price</code> and <code>compareAtPrice</code> are always integers in the currency’s minor unit: <code>1999</code> with <code>EUR</code> means €19.99. Use their display fields only for presentation. Products and variants can additionally expose <code>sku</code>; products can expose <code>tags</code>.</p>
+  <p>Physical products and variants can additionally expose <code>sku</code>, <code>gtin</code>, <code>seller</code>, categories, features, stock state, variants, and multiple images. Software products can expose <code>softwareVersion</code>, <code>operatingSystem</code>, <code>contentRating</code>, and <code>developerUrl</code>. Unavailable fields are omitted.</p>
+
+  <h2>Market document attributes</h2>
+  <p>Finance and Yahoo Finance documents can expose <code>tickerSymbol</code>, <code>exchange</code>, effective <code>currency</code>, <code>instrumentType</code>, <code>marketPrice</code>, <code>previousClose</code>, <code>change</code>, <code>changePercent</code>, day and 52-week ranges, <code>volume</code>, <code>timezone</code>, <code>marketState</code>, <code>historyTimeframe</code>, <code>historyInterval</code>, bounded <code>history</code>, and dividend or split <code>events</code>. Requested-currency responses additionally expose <code>listingCurrency</code>, <code>quoteCurrency</code>, <code>exchangeRate</code>, and <code>exchangeRateTimestamp</code>. Stock-search feeds contain finance documents with available <code>sector</code> and <code>industry</code> fields.</p>
+  <p>Each history point contains an ISO <code>timestamp</code> and available <code>open</code>, <code>high</code>, <code>low</code>, <code>close</code>, <code>adjustedClose</code>, and integer <code>volume</code> values. Market prices are decimal quote values; the integer minor-unit rule applies only to product prices.</p>
+
+  <h2>Webpage and image attributes</h2>
+  <p>Generic webpage documents and articles can expose <code>language</code>, <code>modifiedAt</code>, and computed <code>wordCount</code>. Image-search documents can expose <code>creatorUrl</code>, <code>fileType</code>, <code>tags</code>, and computed <code>orientation</code> in addition to dimensions and license metadata.</p>
 
   <h2>Post attributes</h2>
-  <p>Posts can expose <code>handle</code>, <code>authorImageUrl</code>, <code>contentWarning</code>, <code>mediaType</code>, and <code>durationSeconds</code>. The author image is a public profile image URL when the source provides one.</p>
+  <p>Posts can expose <code>handle</code>, <code>authorImageUrl</code>, <code>language</code>, <code>verified</code>, <code>edited</code>, <code>sensitive</code>, reply and quoted-post URLs, <code>coauthors</code>, <code>locationName</code>, <code>sponsored</code>, <code>contentWarning</code>, <code>mediaType</code>, <code>durationSeconds</code>, <code>hashtags</code>, and available non-negative engagement counts such as likes, replies, reposts, shares, quotes, and views.</p>
 
   <h2>Feeds and profiles</h2>
   <p><code>feed</code> and <code>profile</code> responses include an <code>items</code> array. Each item uses the same entity shape and can be an article, product, post, video, or another supported type. Other response types omit <code>items</code>.</p>
+  <p>Profiles can expose <code>verified</code>, <code>pronouns</code>, follower, following, post, and total-like counts when the public page provides them.</p>
+  <p>Web search returns a <code>feed</code> whose ordered <code>document</code> items contain result titles, URLs, and snippets. Item order represents relevance rank.</p>
+  <p>News search returns a <code>google-news</code> <code>feed</code> whose <code>article</code> items can include publishers, publication dates, summaries, and public links.</p>
+  <p>Image search returns an <code>image-search</code> <code>feed</code> whose document items carry source pages, image media, creators, dimensions, and license fields when available.</p>
+  <p>Video search returns a <code>video-search</code> <code>feed</code> whose semantic video items carry public source-page links and available creator, publication time, displayed relative upload time, description, duration, exact view count, and thumbnail metadata. Its <code>videoPlatform</code> and <code>videoSort</code> attributes record the effective source filter and relevance or newest-first ordering.</p>
+  <p>Place search returns a <code>place-search</code> <code>feed</code> whose document items can carry coordinates, bounding boxes, structured addresses, categories, country codes, websites, phone numbers, and opening hours. Search feeds expose <code>resultCount</code> and their effective locale, timeframe, or filter settings.</p>
   <pre><code>{`{
   "schemaVersion": 1,
   "type": "feed",

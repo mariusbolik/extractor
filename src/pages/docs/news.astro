@@ -1,0 +1,80 @@
+---
+import DocsLayout from '../../layouts/DocsLayout.astro';
+
+export const prerender = true;
+const title = 'News search API — extractor.sh docs';
+const description = 'Find current public news coverage for AI agents through a cacheable GET endpoint returning Markdown or normalized JSON.';
+---
+
+<DocsLayout {title} {description} path="/docs/news/">
+  <p class="!mt-0 font-mono text-[0.78rem] font-extrabold uppercase tracking-[0.14em]">News search</p>
+  <h1>Current coverage.<br />Clean feed.</h1>
+  <p class="text-[1.08rem]">Search current public news with one cacheable GET request. Results are normalized article entities with titles, publishers, publication dates, summaries, and public article links when available.</p>
+
+  <h2>Request</h2>
+  <pre><code>curl --get 'https://extractor.sh/api/news' \
+  --data-urlencode 'q=AI infrastructure' \
+  --data-urlencode 'limit=10' \
+  --data-urlencode 'format=json'</code></pre>
+
+  <div class="overflow-x-auto">
+    <table>
+      <thead><tr><th>Parameter</th><th>Required</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>q</code></td><td>Yes</td><td>A news query of up to 200 characters.</td></tr>
+        <tr><td><code>limit</code></td><td>No</td><td>An integer from <code>1</code> to <code>50</code>. Default: <code>10</code>.</td></tr>
+        <tr><td><code>language</code></td><td>No</td><td>Canonical BCP 47 language tag. Default: <code>en-US</code>.</td></tr>
+        <tr><td><code>country</code></td><td>No</td><td>Two-letter ISO country code. Default: <code>US</code>.</td></tr>
+        <tr><td><code>timeframe</code></td><td>No</td><td><code>any</code>, <code>1h</code>, <code>1d</code>, <code>7d</code>, or <code>30d</code>. Default: <code>any</code>.</td></tr>
+        <tr><td><code>format</code></td><td>No</td><td><code>json</code> (default) or <code>markdown</code>.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>JSON response</h2>
+  <p>JSON uses schema version 1 with <code>type: "feed"</code> and <code>source: "google-news"</code>. Each entry in <code>items</code> is an <code>article</code>. Unavailable publishers, dates, or summaries remain nullable or are omitted according to the shared schema.</p>
+  <pre><code>{`{
+  "schemaVersion": 1,
+  "type": "feed",
+  "source": "google-news",
+  "id": "AI infrastructure",
+  "url": "https://extractor.sh/api/news?q=AI+infrastructure&limit=10&format=json",
+  "title": "News results for AI infrastructure",
+  "author": null,
+  "publishedAt": "2026-08-02T10:00:00.000Z",
+  "content": "# News results for AI infrastructure\\n\\n...",
+  "media": [],
+  "attributes": {
+    "feedType": "news-search",
+    "query": "AI infrastructure",
+    "language": "en-US",
+    "country": "US",
+    "timeframe": "any",
+    "resultCount": 1
+  },
+  "items": [
+    {
+      "type": "article",
+      "source": "google-news",
+      "id": "…",
+      "url": "https://news.google.com/…",
+      "title": "…",
+      "author": "Example Publisher",
+      "publishedAt": "2026-08-02T10:00:00.000Z",
+      "content": "Public article summary…",
+      "media": [],
+      "attributes": { "publisher": "Example Publisher" }
+    }
+  ]
+}`}</code></pre>
+
+  <h2>Behavior</h2>
+  <ul>
+    <li>Results contain public news metadata and summaries, not complete publisher article bodies.</li>
+    <li>Successful searches are cached for up to one hour. Cache hits bypass extraction work and are not billed.</li>
+    <li>Uncached requests use the standard 60 requests per client per minute limit.</li>
+    <li>Language and country select an edition. A recent timeframe excludes undated items and articles older than its inclusive cutoff; a valid empty result is returned with HTTP 200.</li>
+    <li>Pagination and personalized feeds are not supported.</li>
+    <li>Result availability, order, and freshness can change as public coverage changes.</li>
+  </ul>
+</DocsLayout>

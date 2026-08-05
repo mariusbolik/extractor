@@ -1,11 +1,12 @@
 import type { APIRoute } from 'astro';
 import { alternativePages, platformArticles } from '../features/marketing/content';
+import { platformPageList } from '../features/marketing/platform-pages';
 
 export const prerender = true;
 
 const STATIC_PATHS = [
-  '/', '/amazon/', '/app-store/', '/bluesky/', '/google-news/', '/google-play/', '/instagram/', '/mastodon/', '/reddit/', '/shopify/', '/soundcloud/', '/spotify/', '/tiktok/', '/vimeo/', '/x/', '/youtube/',
-  '/docs/', '/docs/quickstart/', '/docs/mcp/', '/docs/api/', '/docs/schema/', '/docs/sources/', '/docs/limits/', '/docs/limitations/',
+  '/',
+  '/docs/', '/docs/quickstart/', '/docs/search/', '/docs/news/', '/docs/images/', '/docs/videos/', '/docs/places/', '/docs/finance/', '/docs/mcp/', '/docs/api/', '/docs/authentication/', '/docs/billing/', '/docs/schema/', '/docs/sources/', '/docs/limits/', '/docs/limitations/',
   '/pricing/', '/contact/', '/alternatives/', '/blog/',
 ];
 
@@ -16,9 +17,10 @@ function escapeXml(value: string): string {
 }
 
 export const GET: APIRoute = ({ site }) => {
-  const origin = site ?? new URL('https://extractor.mcb-software.workers.dev');
+  const origin = site ?? new URL('https://extractor.sh');
   const paths = [
     ...STATIC_PATHS,
+    ...platformPageList.map((page) => `/${page.slug}/`),
     ...alternativePages.map((page) => `/alternatives/${page.slug}/`),
     ...platformArticles.map((article) => `/blog/${article.slug}/`),
   ];

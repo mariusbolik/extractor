@@ -1,13 +1,14 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { inflateRawSync } from 'node:zlib';
 
-const DEFAULT_BASE_URL = 'https://extractor.mcb-software.workers.dev';
+const DEFAULT_BASE_URL = 'https://extractor.sh';
 const TRANCO_URL = 'https://tranco-list.eu/top-1m.csv.zip';
 const DEFAULT_COUNT = 100;
 const DEFAULT_DELAY_MS = 2_200;
 const DEFAULT_CONCURRENCY = 4;
 const DEFAULT_TIMEOUT_MS = 45_000;
 const DEFAULT_MINIMUM_SUCCESS_RATE = 0.6;
+const apiKey = process.env.EXTRACTOR_API_KEY?.trim() || null;
 
 const TWO_LEVEL_PUBLIC_SUFFIXES = new Set([
   'ac.uk', 'co.jp', 'co.kr', 'co.nz', 'co.uk', 'com.ar', 'com.au', 'com.br',
@@ -215,8 +216,8 @@ async function targetsFromFile(path, count) {
 }
 
 const extractionSources = new Set([
-  'web', 'amazon', 'app-store', 'bluesky', 'google-news', 'google-play', 'instagram', 'mastodon', 'reddit',
-  'shopify', 'soundcloud', 'spotify', 'tiktok', 'vimeo', 'x', 'youtube',
+  'web', 'web-search', 'image-search', 'video-search', 'place-search', 'finance', 'amazon', 'app-store', 'bluesky', 'google-news', 'google-play',
+  'instagram', 'mastodon', 'reddit', 'shopify', 'woocommerce', 'soundcloud', 'spotify', 'tiktok', 'vimeo', 'x', 'yahoo-finance', 'youtube',
 ]);
 const entityTypes = new Set(['document', 'article', 'product', 'post', 'profile', 'video', 'audio', 'feed']);
 
@@ -236,9 +237,10 @@ function validEntity(value) {
   if (typeof value.content !== 'string' || !Array.isArray(value.media)) return false;
   if (!value.attributes || typeof value.attributes !== 'object' || Array.isArray(value.attributes)) return false;
   if (!validPrice(value.attributes.price)) return false;
+  if (!validPrice(value.attributes.compareAtPrice)) return false;
   if (value.attributes.variants !== undefined) {
     if (!Array.isArray(value.attributes.variants)) return false;
-    if (value.attributes.variants.some((variant) => !variant || typeof variant !== 'object' || !validPrice(variant.price))) return false;
+    if (value.attributes.variants.some((variant) => !variant || typeof variant !== 'object' || !validPrice(variant.price) || !validPrice(variant.compareAtPrice))) return false;
   }
   if (value.type === 'feed' || value.type === 'profile') {
     return Array.isArray(value.items) && value.items.every(validEntity);
@@ -265,7 +267,11 @@ async function testTarget(target, options) {
 
   try {
     const response = await fetch(requestUrl, {
-      headers: { Accept: 'application/json', 'User-Agent': 'extractor.sh-production-smoke/1.0' },
+      headers: {
+        Accept: 'application/json',
+        'User-Agent': 'extractor.sh-production-smoke/1.0',
+        ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
+      },
       signal: AbortSignal.timeout(options.timeoutMs),
     });
     const text = await response.text();
@@ -373,7 +379,10 @@ async function requestProbe(targetUrl, format, options) {
   const startedAt = Date.now();
   try {
     const response = await fetch(requestUrl, {
-      headers: { Accept: format === 'markdown' ? 'text/markdown' : 'application/json' },
+      headers: {
+        Accept: format === 'markdown' ? 'text/markdown' : 'application/json',
+        ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
+      },
       signal: AbortSignal.timeout(options.timeoutMs),
     });
     const body = await response.text();

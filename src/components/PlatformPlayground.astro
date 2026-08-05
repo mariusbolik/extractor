@@ -1,0 +1,150 @@
+---
+import { Icon } from 'astro-icon/components';
+import type { PlatformCapability } from '../features/marketing/platform-pages';
+
+interface Props {
+  platform: string;
+  capabilities: PlatformCapability[];
+}
+
+const { platform, capabilities } = Astro.props;
+const examples = capabilities.filter((capability) => capability.exampleUrl);
+const initialUrl = examples[0]?.exampleUrl ?? '';
+---
+
+<section class="mt-8 border-2 border-black bg-white p-[clamp(22px,4vw,44px)] shadow-[8px_8px_0_#000] max-[660px]:shadow-[5px_5px_0_#000]" aria-labelledby="playground-heading" data-platform-playground>
+  <div class="grid grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] gap-10 max-[800px]:grid-cols-1 max-[800px]:gap-6">
+    <div>
+      <p class="mb-3 font-mono text-[0.76rem] font-extrabold uppercase tracking-[0.14em]">Live playground</p>
+      <h2 class="mb-4 font-heading text-[clamp(1.55rem,3vw,2.25rem)] font-normal leading-[1.05] tracking-[-0.04em]" id="playground-heading">Try {platform} extraction.</h2>
+      <p class="max-w-[500px] leading-[1.65]">Use an example or paste your own public URL. The playground calls the same cacheable GET API your agent will use.</p>
+    </div>
+
+    <form action="/api/extract" method="get" data-playground-form>
+      {examples.length > 1 && (
+        <div class="mb-4 flex max-w-full flex-wrap gap-2" aria-label={`${platform} example capabilities`}>
+          {examples.map((example, index) => (
+            <button
+              class="cursor-pointer border-2 border-black bg-white px-3 py-2 text-left text-[0.78rem] font-extrabold aria-pressed:bg-black aria-pressed:text-white"
+              type="button"
+              data-example-url={example.exampleUrl}
+              aria-pressed={index === 0 ? 'true' : 'false'}
+            >
+              {example.name}
+            </button>
+          ))}
+        </div>
+      )}
+      <label class="text-[0.86rem] font-extrabold" for="platform-playground-url">Public {platform} URL</label>
+      <input
+        class="mt-2 min-h-[52px] w-full min-w-0 border-2 border-black bg-white px-[15px] py-3 text-black outline-none placeholder:text-black/50 focus:outline-none focus-visible:!outline-none"
+        id="platform-playground-url"
+        name="url"
+        type="url"
+        inputmode="url"
+        autocomplete="url"
+        value={initialUrl}
+        placeholder={`Paste a public ${platform} URL`}
+        required
+        maxlength="2048"
+        data-playground-input
+      />
+      <div class="mt-4 flex items-end justify-between gap-5 max-[560px]:flex-col max-[560px]:items-stretch">
+        <fieldset class="flex items-center gap-5 border-0 p-0">
+          <legend class="mb-2 text-[0.82rem] font-extrabold">Output format</legend>
+          <label class="inline-flex cursor-pointer items-center gap-[7px] text-[0.88rem]"><input class="m-0 size-[17px] appearance-none border-2 border-black bg-white checked:bg-black checked:shadow-[inset_0_0_0_3px_#fff]" type="radio" name="format" value="markdown" checked /> Markdown</label>
+          <label class="inline-flex cursor-pointer items-center gap-[7px] text-[0.88rem]"><input class="m-0 size-[17px] appearance-none border-2 border-black bg-white checked:bg-black checked:shadow-[inset_0_0_0_3px_#fff]" type="radio" name="format" value="json" /> JSON</label>
+        </fieldset>
+        <button class="inline-flex min-h-[50px] cursor-pointer items-center justify-center gap-2 border-[2px_5px_5px_2px] border-black bg-white px-5 py-2.5 font-extrabold transition-[transform,border-width] duration-100 hover:translate-x-[2px] hover:translate-y-[2px] hover:border-[4px_3px_3px_4px] disabled:cursor-wait disabled:opacity-60" type="submit" data-playground-submit>
+          <span data-playground-submit-label>Extract</span>
+          <Icon class="size-5 shrink-0" name="heroicons:arrow-right" aria-hidden="true" />
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div class="mt-8 border-t-2 border-black pt-6" data-playground-result hidden aria-live="polite">
+    <div class="flex items-center justify-between gap-4">
+      <span class="font-mono text-[0.76rem] font-extrabold uppercase tracking-[0.14em]" data-playground-result-label>Result</span>
+      <div class="flex items-center gap-4 text-[0.82rem] font-extrabold">
+        <button class="inline-flex cursor-pointer items-center gap-1 border-0 bg-white p-0 font-extrabold underline underline-offset-4" type="button" data-playground-copy><Icon class="size-[17px]" name="heroicons:clipboard-document" aria-hidden="true" /> <span>Copy</span></button>
+        <a class="inline-flex items-center gap-1" target="_blank" rel="noopener" data-playground-raw>Open raw <Icon class="size-[17px]" name="heroicons:arrow-top-right-on-square" aria-hidden="true" /></a>
+      </div>
+    </div>
+    <pre class="mt-4 max-h-[560px] max-w-full overflow-auto rounded-[3px] border-2 border-black bg-white p-[clamp(16px,3vw,26px)] text-[0.8rem] leading-[1.6] whitespace-pre-wrap"><code data-playground-output></code></pre>
+  </div>
+</section>
+
+<script>
+  const playground = document.querySelector<HTMLElement>('[data-platform-playground]');
+  const form = playground?.querySelector<HTMLFormElement>('[data-playground-form]');
+  const input = playground?.querySelector<HTMLInputElement>('[data-playground-input]');
+  const submit = playground?.querySelector<HTMLButtonElement>('[data-playground-submit]');
+  const submitLabel = playground?.querySelector<HTMLElement>('[data-playground-submit-label]');
+  const result = playground?.querySelector<HTMLElement>('[data-playground-result]');
+  const resultLabel = playground?.querySelector<HTMLElement>('[data-playground-result-label]');
+  const output = playground?.querySelector<HTMLElement>('[data-playground-output]');
+  const raw = playground?.querySelector<HTMLAnchorElement>('[data-playground-raw]');
+  const copy = playground?.querySelector<HTMLButtonElement>('[data-playground-copy]');
+  const presets = [...(playground?.querySelectorAll<HTMLButtonElement>('[data-example-url]') ?? [])];
+  let copyValue = '';
+
+  // Presets are ordinary public URLs. They demonstrate each URL shape without
+  // exposing or coupling the UI to the source-specific retrieval strategy.
+  presets.forEach((button) => button.addEventListener('click', () => {
+    if (!input || !button.dataset.exampleUrl) return;
+    input.value = button.dataset.exampleUrl;
+    presets.forEach((preset) => preset.setAttribute('aria-pressed', String(preset === button)));
+    input.focus();
+  }));
+
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!form || !input || !submit || !submitLabel || !result || !resultLabel || !output || !raw) return;
+    const format = new FormData(form).get('format') === 'json' ? 'json' : 'markdown';
+    const endpoint = new URL('/api/extract', window.location.origin);
+    endpoint.searchParams.set('url', input.value.trim());
+    endpoint.searchParams.set('format', format);
+    submit.disabled = true;
+    submitLabel.textContent = 'Extracting…';
+    result.hidden = false;
+    resultLabel.textContent = 'Loading';
+    output.textContent = 'Fetching public data…';
+    raw.href = endpoint.toString();
+
+    try {
+      const response = await fetch(endpoint, {
+        credentials: 'same-origin',
+        headers: {
+          Accept: format === 'json' ? 'application/json' : 'text/markdown',
+          'X-Extractor-Web-Client': '1',
+        },
+      });
+      const body = await response.text();
+      let visibleBody = body;
+      if (format === 'json') {
+        try { visibleBody = JSON.stringify(JSON.parse(body), null, 2); } catch { /* Preserve a non-JSON error body verbatim. */ }
+      }
+      copyValue = visibleBody;
+      output.textContent = visibleBody;
+      resultLabel.textContent = response.ok ? `${format} result` : `HTTP ${response.status}`;
+      result.dataset.state = response.ok ? 'success' : 'error';
+    } catch {
+      copyValue = 'The request could not reach extractor.sh.';
+      output.textContent = copyValue;
+      resultLabel.textContent = 'Network error';
+      result.dataset.state = 'error';
+    } finally {
+      submit.disabled = false;
+      submitLabel.textContent = 'Extract';
+    }
+  });
+
+  copy?.addEventListener('click', async () => {
+    if (!copyValue || !copy) return;
+    await navigator.clipboard.writeText(copyValue);
+    const label = copy.querySelector('span');
+    if (label) label.textContent = 'Copied';
+    window.setTimeout(() => { if (label) label.textContent = 'Copy'; }, 1_500);
+  });
+</script>

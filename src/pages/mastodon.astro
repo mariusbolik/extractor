@@ -1,27 +1,6 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import SocialLanding from '../components/SocialLanding.astro';
-
+import PlatformPage from '../components/PlatformPage.astro';
+import { platformPages } from '../features/marketing/platform-pages';
 export const prerender = true;
-const title = 'Mastodon posts to Markdown or JSON — extractor.sh';
-const description = 'Extract public posts from compatible Mastodon instances into clean Markdown or normalized JSON.';
 ---
-
-<BaseLayout {title} {description} path="/mastodon/">
-  <SocialLanding
-    platform="Mastodon"
-    eyebrow="Mastodon extractor"
-    headline="Public federated posts, made portable."
-    {description}
-    outcome="Public posts from many instances in one format."
-    capabilities={[
-      { label: 'Input', value: 'One public Mastodon status URL in the form https://instance/@user/status-id.' },
-      { label: 'Returns', value: 'One normalized post entity.' },
-      { label: 'Includes', value: 'Post text, author, publication date, content warning, media descriptions, and canonical URL when available.' },
-      { label: 'Caching', value: 'Successful post results may be cached at Cloudflare’s edge for up to 30 days.' },
-    ]}
-    supported={['Public status pages on compatible Mastodon instances', 'Local and federated public accounts', 'Content warnings and media descriptions when supplied']}
-    limitations={['No private, followers-only, deleted, or unavailable posts', 'No timelines, complete threads, replies, or media downloads', 'Instances that disable compatible public endpoints may fall back to regular webpage extraction']}
-    exampleUrl="https://mastodon.social/@trwnh/99664077509711321"
-  />
-</BaseLayout>
+<PlatformPage page={platformPages.mastodon} />

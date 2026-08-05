@@ -1,36 +1,6 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import SocialLanding from '../components/SocialLanding.astro';
-
+import PlatformPage from '../components/PlatformPage.astro';
+import { platformPages } from '../features/marketing/platform-pages';
 export const prerender = true;
-const title = 'Google Play apps to Markdown or JSON — extractor.sh';
-const description = 'Extract public Google Play app listings into clean Markdown or normalized product JSON.';
 ---
-
-<BaseLayout {title} {description} path="/google-play/">
-  <SocialLanding
-    platform="Google Play"
-    eyebrow="Google Play extractor"
-    headline="Android app data, minus the storefront noise."
-    {description}
-    outcome="Public Android app metadata in one consistent product format."
-    capabilities={[
-      { label: 'Input', value: 'One ordinary public Google Play app detail URL containing its package ID.' },
-      { label: 'Returns', value: 'One software product entity with a stable Android package ID and canonical URL.' },
-      { label: 'Includes', value: 'App name, developer, description, price, rating, category, content rating, icon, and screenshots when available.' },
-      { label: 'Caching', value: 'Successful app results may be cached at Cloudflare’s edge for up to one hour.' },
-    ]}
-    supported={[
-      'Public Android app detail pages on play.google.com',
-      'Localized links with optional language and country parameters',
-      'Free and paid apps with integer minor-unit prices',
-      'Public descriptions, icons, screenshots, ratings, and review counts',
-    ]}
-    limitations={[
-      'No Google Play search, category browsing, reviews, account data, or APK downloads',
-      'Removed, age-gated, or country-restricted apps may be unavailable',
-      'Prices and availability can vary by country and may be cached for up to one hour',
-    ]}
-    exampleUrl="https://play.google.com/store/apps/details?id=com.openai.chatgpt"
-  />
-</BaseLayout>
+<PlatformPage page={platformPages['google-play']} />

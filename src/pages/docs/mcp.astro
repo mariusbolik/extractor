@@ -3,13 +3,13 @@ import DocsLayout from '../../layouts/DocsLayout.astro';
 
 export const prerender = true;
 const title = 'Hosted MCP server — extractor.sh docs';
-const description = 'Connect an MCP client to extractor.sh and extract public URLs as clean Markdown or normalized JSON.';
+const description = 'Connect an MCP client to extractor.sh for webpage, news, image, video, place, stock search, converted finance charts, and focused URL tools.';
 ---
 
 <DocsLayout {title} {description} path="/docs/mcp/">
   <p class="!mt-0 font-mono text-[0.78rem] font-extrabold uppercase tracking-[0.14em]">Hosted MCP server</p>
-  <h1>Extraction for<br />MCP clients.</h1>
-  <p class="text-[1.08rem]">Connect an MCP-compatible client directly to extractor.sh. The hosted server is public, stateless, and requires no API key.</p>
+  <h1>Search and extraction<br />for MCP clients.</h1>
+  <p class="text-[1.08rem]">Connect an MCP-compatible client directly to extractor.sh. The hosted server is stateless and supports the free anonymous daily allowance or an optional account Bearer key using the account's credit balance. New accounts receive 1,000 welcome credits once.</p>
 
   <h2>Endpoint</h2>
   <pre><code>https://extractor.sh/mcp</code></pre>
@@ -22,8 +22,9 @@ const description = 'Connect an MCP client to extractor.sh and extract public UR
   }
 }`}</code></pre>
   <p>Client configuration keys vary. If your client only launches local commands, use its supported remote-MCP bridge and point that bridge at the endpoint above.</p>
+  <p>To use welcome or purchased credits, configure the HTTP header <code>Authorization: Bearer ext_live_…</code> in clients that support remote-server headers. The key is forwarded into the same cache-first metering service used by the GET API.</p>
 
-  <h2>Tool</h2>
+  <h2>Tools</h2>
   <h3><code>extract_public_url</code></h3>
   <p>Extract one ordinary public page URL. The tool is read-only and accepts:</p>
   <table>
@@ -36,19 +37,59 @@ const description = 'Connect an MCP client to extractor.sh and extract public UR
   </table>
   <p>Choose Markdown when an agent will read or summarize the result. Choose JSON for stable, typed fields using <a href="/docs/schema/">schema version 1</a>.</p>
 
+  <h3><code>search_web</code></h3>
+  <p>Find public pages when no exact URL is known. The tool returns ordered titles, URLs, and snippets and accepts:</p>
+  <table>
+    <thead><tr><th>Input</th><th>Required</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>query</code></td><td>Yes</td><td>A concise query of up to 200 characters.</td></tr>
+      <tr><td><code>format</code></td><td>No</td><td><code>markdown</code> (default) or <code>json</code>.</td></tr>
+      <tr><td><code>limit</code></td><td>No</td><td>Maximum ordered results from <code>1</code> to <code>10</code>. Default: <code>10</code>.</td></tr>
+      <tr><td><code>language</code> / <code>country</code></td><td>No</td><td>BCP 47 language and two-letter country. Defaults: <code>en-US</code> and <code>US</code>.</td></tr>
+      <tr><td><code>site</code></td><td>No</td><td>Restrict results to a hostname such as <code>linkedin.com</code>; omit the scheme and path.</td></tr>
+    </tbody>
+  </table>
+  <p>Use <code>search_web</code> for discovery and <code>extract_public_url</code> for the full content of a selected result.</p>
+
+  <h3><code>search_images</code></h3>
+  <p>Find openly licensed public images with source pages, media URLs, creators, dimensions, and license metadata. It accepts a required <code>query</code>, optional <code>format</code>, a <code>limit</code> from 1 to 20, and the same <code>usage</code> and <code>orientation</code> controls as the image GET API.</p>
+
+  <h3><code>search_videos</code></h3>
+  <p>Find public video pages with available creator, publication time, description, duration, and thumbnail metadata. It accepts a required <code>query</code>, optional <code>creator</code>, <code>format</code>, a <code>limit</code> from 1 to 20, language and country controls, <code>platform=any|youtube</code>, and <code>sort=relevance|date</code>. Set <code>creator</code>, <code>sort=date</code>, and <code>limit=1</code> for a named creator’s latest upload. JSON calls include schema-v1 structured content for compatible AI chats.</p>
+
+  <h3><code>search_places</code></h3>
+  <p>Resolve addresses, businesses, landmarks, and local categories into coordinates, normalized address fields, categories, and canonical map links. It accepts the place GET API’s <code>language</code>, optional <code>country</code>, paired <code>lat</code>/<code>lon</code> bias, and <code>type</code> controls. Publicly unavailable ratings and reviews are omitted.</p>
+
+  <h3><code>search_news</code></h3>
+  <p>Search current public news with a query, format, limit from 1 to 50, language, country, and optional <code>timeframe</code> of <code>any</code>, <code>1h</code>, <code>1d</code>, <code>7d</code>, or <code>30d</code>.</p>
+
+  <h3><code>search_stocks</code></h3>
+  <p>Resolve a company or crypto asset name, brand, or partial ticker into up to ten ordered equity or crypto listings. Select <code>instrument=equity|crypto</code>; equity remains the default. Results expose the market symbol, exchange, listing currency, and sector or industry when available. Use this before <code>get_market_data</code> when a user has not supplied a reliable symbol.</p>
+
+  <h3><code>get_market_data</code></h3>
+  <p>Retrieve a market snapshot and bounded price history. Pass a symbol such as <code>AAPL</code>, <code>^GSPC</code>, <code>BTC-USD</code>, or <code>EURUSD=X</code>, plus an optional finance timeframe and output format. When the user asks for a currency, pass the optional three-letter <code>quote</code> directly—for example, <code>{`{ "symbol": "AAPL", "quote": "EUR" }`}</code>. Do not make a separate exchange-rate tool call. The default JSON result includes schema-v1 <code>structuredContent</code> so an AI chat can reason over the exact converted price points instead of reading pixels or reparsing prose.</p>
+
+  <h3><code>get_market_movers</code></h3>
+  <p>Return an already-ranked daily equity list with <code>list=gainers|losers|active</code>, a limit from 1 to 10, and JSON or Markdown. Use this tool—not company-name search—when the user asks which stock rose or fell the most today, or which stocks are most active.</p>
+
+  <h2>Rich finance chart</h2>
+  <p><code>get_market_data</code> links to a bundled MCP Apps resource. Compatible AI chats render a responsive line chart inline with the conversation, including the current price, change, timeframe, hover and keyboard inspection, and available range statistics. The chart uses the same bounded history returned by the tool and makes no separate market-data or third-party chart request.</p>
+
+  <p>MCP Apps is progressive enhancement. Clients without resource UI support still receive the normal text block and typed JSON result, so the model can answer the question and a client can build its own chart. Markdown remains available as the readable fallback.</p>
+
   <h2>Example task</h2>
-  <pre><code>Extract pricing from serper.dev.</code></pre>
-  <p>An MCP client can select <code>extract_public_url</code>, construct <code>https://serper.dev/</code>, and pass <code>pricing</code> as the focus. Topic focus keeps a large landing-page demo or navigation from displacing the requested section.</p>
+  <pre><code>Extract pricing from extractor.sh.</code></pre>
+  <p>An MCP client can select <code>extract_public_url</code>, construct <code>https://extractor.sh/pricing/</code>, and pass <code>pricing</code> as the focus. Topic focus keeps a large landing-page demo or navigation from displacing the requested section.</p>
 
   <h2>Limits and safety</h2>
   <ul>
-    <li>The same standard and high-cost request limits as the <a href="/docs/api/">GET API</a> apply.</li>
-    <li>Ordinary MCP and GET requests share Cloudflare edge cache entries. Focused MCP results use separate topic-aware cache entries. Cache hits do not consume an extraction request.</li>
-    <li>Only public HTTP and HTTPS URLs are accepted. Do not send credentials, cookies, private URLs, or private data.</li>
+    <li>The same 10/day anonymous allowance, account credit balance, and standard request limit as the <a href="/docs/api/">GET API</a> apply. Only extraction can use the separate high-cost limit.</li>
+    <li>MCP and GET requests share their corresponding Cloudflare edge cache entries. Focused extraction results use separate topic-aware entries. Cache hits do not consume a request.</li>
+    <li>Only public HTTP and HTTPS URLs are accepted for extraction. Do not send credentials, cookies, private URLs, or private data.</li>
     <li>CAPTCHAs, login walls, paywalls, and region selection are not supported.</li>
     <li>Tool errors include a stable error code and a specific human-readable message.</li>
   </ul>
 
   <h2>Discovery</h2>
-  <p>The public <a href="/.well-known/mcp/server-card.json">MCP Server Card</a> describes the endpoint, transport, authentication status, and capabilities. The runtime tool definition remains authoritative.</p>
+  <p>The public <a href="/.well-known/mcp/server-card.json">MCP Server Card</a> describes the endpoint, transport, authentication status, tools, and finance UI resource. The runtime tool and resource definitions remain authoritative.</p>
 </DocsLayout>

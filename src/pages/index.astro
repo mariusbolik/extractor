@@ -7,18 +7,18 @@ import { Icon } from 'astro-icon/components';
 
 export const prerender = true;
 
-const title = 'extractor.sh — Turn any public URL into clean Markdown or JSON';
-const description = 'A simple, cache-first GET API that extracts public webpages and supported platforms into clean Markdown or normalized JSON.';
+const title = 'extractor.sh — Power AI agents with clean web data';
+const description = 'A simple, cache-first GET API and hosted MCP server that searches and extracts the public web for AI agents.';
 ---
 
 <BaseLayout {title} {description}>
   <section class="pb-[22px]">
-    <p class="mb-4 font-mono text-[0.8rem] font-extrabold uppercase tracking-[0.14em]">URL → useful content</p>
+    <p class="mb-4 font-mono text-[0.8rem] font-extrabold uppercase tracking-[0.14em]">Agent ready</p>
     <div class="mb-5 flex items-center justify-between gap-4 sm:gap-8">
-      <h1 class="min-w-0 max-w-[900px] font-heading text-[clamp(2.5rem,6vw,5.4rem)] font-normal leading-[1.02] tracking-[-0.045em]">The web,<br />minus the noise.</h1>
+      <h1 class="min-w-0 max-w-[900px] font-heading text-[clamp(2rem,4.5vw,4rem)] font-normal leading-[1.02] tracking-[-0.045em]">Power AI agents with<br />{' '}clean web data</h1>
       <HeroBadge class="size-[clamp(96px,14vw,154px)]" />
     </div>
-    <p class="mb-[42px] max-w-[720px] text-[clamp(1.1rem,2vw,1.35rem)] leading-[1.55]">Paste a public URL. Get clean Markdown or structured JSON through one aggressively cached GET request.</p>
+    <p class="mb-[42px] max-w-[720px] text-[clamp(1.1rem,2vw,1.35rem)] leading-[1.55]">Give your AI agents web data they can actually use. Turn any public URL into clean Markdown or structured JSON with one fast, cacheable GET request.</p>
   </section>
 
   <ExtractorForm />
@@ -29,7 +29,7 @@ const description = 'A simple, cache-first GET API that extracts public webpages
       <div>
         <p class="mb-4 font-mono text-[0.8rem] font-extrabold uppercase tracking-[0.14em]">Public GET API</p>
         <h2 class="mb-5 font-heading text-[clamp(1.55rem,3vw,2.4rem)] font-normal leading-[1.02] tracking-[-0.045em]">Clean web data in one GET request.</h2>
-        <p>Use the same endpoint as the form. JSON is normalized across sources; Markdown is returned as a raw <code>text/markdown</code> response.</p>
+        <p>Search the <a href="/docs/search/">web</a>, <a href="/docs/news/">news</a>, <a href="/docs/images/">images</a>, <a href="/docs/videos/">videos</a>, <a href="/docs/places/">places</a>, and <a href="/docs/finance/">market data</a>, then use <code>/api/extract</code> for clean page and product content.</p>
       </div>
       <pre class="mt-10 mb-0 max-w-full overflow-auto rounded-[3px] border-2 border-black bg-white p-5 font-mono text-[0.82rem] leading-[1.55] text-black"><code>curl --get \
   'https://extractor.sh/api/extract' \
@@ -40,8 +40,8 @@ const description = 'A simple, cache-first GET API that extracts public webpages
     <section id="mcp" class="flex min-w-0 flex-col border-2 border-black bg-white p-[clamp(24px,4vw,42px)] shadow-[8px_8px_0_#000] max-[660px]:shadow-[5px_5px_0_#000] [&_p]:leading-[1.7]">
       <div>
         <p class="mb-4 font-mono text-[0.8rem] font-extrabold uppercase tracking-[0.14em]">Hosted MCP server</p>
-        <h2 class="mb-5 font-heading text-[clamp(1.55rem,3vw,2.4rem)] font-normal leading-[1.02] tracking-[-0.045em]">The MCP server for clean web data.</h2>
-        <p>Connect an MCP client and call <code>extract_public_url</code>. It returns clean Markdown by default or the same normalized JSON as the public API.</p>
+        <h2 class="mb-5 font-heading text-[clamp(1.55rem,3vw,2.4rem)] font-normal leading-[1.02] tracking-[-0.045em]">Give agents search and extraction.</h2>
+        <p>Connect one MCP server. Agents can discover webpages, news, images, videos, places, stocks, and market movers, then read clean content with <code>extract_public_url</code>.</p>
       </div>
       <pre class="mt-10 mb-0 max-w-full overflow-auto rounded-[3px] border-2 border-black bg-white p-5 font-mono text-[0.82rem] leading-[1.55] text-black"><code>https://extractor.sh/mcp</code></pre>
       <a class="mt-6 inline-flex self-start border-b-2 border-black pb-1 font-bold no-underline" href="/docs/mcp/">Read the MCP docs →</a>
@@ -79,16 +79,16 @@ const description = 'A simple, cache-first GET API that extracts public webpages
 </script>
 
 <script>
-  interface WebMcpTool {
+  interface WebMcpTool<Input extends object> {
     name: string;
     description: string;
     inputSchema: Record<string, unknown>;
-    execute: (input: { url: string; format?: 'json' | 'markdown' }) => Promise<unknown>;
+    execute: (input: Input) => Promise<unknown>;
     annotations: { readOnlyHint: boolean };
   }
 
   type AgentNavigator = Navigator & {
-    modelContext?: { registerTool: (tool: WebMcpTool) => void };
+    modelContext?: { registerTool: <Input extends object>(tool: WebMcpTool<Input>) => void };
   };
 
   const modelContext = (navigator as AgentNavigator).modelContext;
@@ -109,13 +109,279 @@ const description = 'A simple, cache-first GET API that extracts public webpages
             enum: ['json', 'markdown'],
             default: 'json',
           },
+          focus: { type: 'string', minLength: 1, maxLength: 80 },
         },
         required: ['url'],
       },
-      execute: async ({ url, format = 'json' }) => {
+      execute: async ({ url, format = 'json', focus }: {
+        url: string;
+        format?: 'json' | 'markdown';
+        focus?: string;
+      }) => {
         const endpoint = new URL('/api/extract', window.location.origin);
         endpoint.searchParams.set('url', url);
         endpoint.searchParams.set('format', format);
+        if (focus) endpoint.searchParams.set('focus', focus);
+        const response = await fetch(endpoint);
+        if (!response.ok) return response.json();
+        return format === 'markdown' ? response.text() : response.json();
+      },
+      annotations: { readOnlyHint: true },
+    });
+
+    modelContext.registerTool({
+      name: 'search_web',
+      description: 'Find relevant public webpages by query before extracting selected result URLs.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          query: {
+            type: 'string',
+            minLength: 1,
+            maxLength: 200,
+            description: 'A concise public web search query.',
+          },
+          format: {
+            type: 'string',
+            enum: ['json', 'markdown'],
+            default: 'markdown',
+          },
+          limit: {
+            type: 'integer',
+            minimum: 1,
+            maximum: 10,
+            default: 10,
+          },
+          language: { type: 'string', default: 'en-US' },
+          country: { type: 'string', pattern: '^[A-Za-z]{2}$', default: 'US' },
+          site: { type: 'string', minLength: 3, maxLength: 253, description: 'Optional hostname such as linkedin.com.' },
+        },
+        required: ['query'],
+      },
+      execute: async ({ query, format = 'markdown', limit = 10, language = 'en-US', country = 'US', site }: {
+        query: string;
+        format?: 'json' | 'markdown';
+        limit?: number;
+        language?: string;
+        country?: string;
+        site?: string;
+      }) => {
+        const endpoint = new URL('/api/search', window.location.origin);
+        endpoint.searchParams.set('q', query);
+        endpoint.searchParams.set('format', format);
+        endpoint.searchParams.set('limit', String(limit));
+        endpoint.searchParams.set('language', language);
+        endpoint.searchParams.set('country', country);
+        if (site) endpoint.searchParams.set('site', site);
+        const response = await fetch(endpoint);
+        if (!response.ok) return response.json();
+        return format === 'markdown' ? response.text() : response.json();
+      },
+      annotations: { readOnlyHint: true },
+    });
+
+    modelContext.registerTool({
+      name: 'search_images',
+      description: 'Find openly licensed public images with source and license metadata.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          query: { type: 'string', minLength: 1, maxLength: 200 },
+          format: { type: 'string', enum: ['json', 'markdown'], default: 'json' },
+          limit: { type: 'integer', minimum: 1, maximum: 20, default: 10 },
+          usage: { type: 'string', enum: ['all', 'commercial', 'modify', 'commercial-and-modify'], default: 'all' },
+          orientation: { type: 'string', enum: ['any', 'landscape', 'portrait', 'square'], default: 'any' },
+        },
+        required: ['query'],
+      },
+      execute: async ({ query, format = 'json', limit = 10, usage = 'all', orientation = 'any' }: {
+        query: string;
+        format?: 'json' | 'markdown';
+        limit?: number;
+        usage?: string;
+        orientation?: string;
+      }) => {
+        const endpoint = new URL('/api/images', window.location.origin);
+        endpoint.searchParams.set('q', query);
+        endpoint.searchParams.set('format', format);
+        endpoint.searchParams.set('limit', String(limit));
+        endpoint.searchParams.set('usage', usage);
+        endpoint.searchParams.set('orientation', orientation);
+        const response = await fetch(endpoint);
+        if (!response.ok) return response.json();
+        return format === 'markdown' ? response.text() : response.json();
+      },
+      annotations: { readOnlyHint: true },
+    });
+
+    modelContext.registerTool({
+      name: 'search_videos',
+      description: 'Find relevant or newest public videos with titles, creators, descriptions, durations, dates, and thumbnails when available. Use creator with sort=date and limit=1 for a named creator’s latest upload.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          query: { type: 'string', minLength: 1, maxLength: 200 },
+          format: { type: 'string', enum: ['json', 'markdown'], default: 'json' },
+          limit: { type: 'integer', minimum: 1, maximum: 20, default: 10 },
+          language: { type: 'string', default: 'en-US' },
+          country: { type: 'string', pattern: '^[A-Za-z]{2}$', default: 'US' },
+          platform: { type: 'string', enum: ['any', 'youtube'], default: 'any' },
+          sort: { type: 'string', enum: ['relevance', 'date'], default: 'relevance' },
+          creator: { type: 'string', minLength: 1, maxLength: 80 },
+        },
+        required: ['query'],
+      },
+      execute: async ({ query, format = 'json', limit = 10, language = 'en-US', country = 'US', platform = 'any', sort = 'relevance', creator }: {
+        query: string;
+        format?: 'json' | 'markdown';
+        limit?: number;
+        language?: string;
+        country?: string;
+        platform?: 'any' | 'youtube';
+        sort?: 'relevance' | 'date';
+        creator?: string;
+      }) => {
+        const endpoint = new URL('/api/videos', window.location.origin);
+        endpoint.searchParams.set('q', query);
+        endpoint.searchParams.set('format', format);
+        endpoint.searchParams.set('limit', String(limit));
+        endpoint.searchParams.set('language', language);
+        endpoint.searchParams.set('country', country);
+        endpoint.searchParams.set('platform', platform);
+        endpoint.searchParams.set('sort', sort);
+        if (creator) endpoint.searchParams.set('creator', creator);
+        const response = await fetch(endpoint);
+        if (!response.ok) return response.json();
+        return format === 'markdown' ? response.text() : response.json();
+      },
+      annotations: { readOnlyHint: true },
+    });
+
+    modelContext.registerTool({
+      name: 'search_places',
+      description: 'Resolve an address, business, landmark, or local category to coordinates and normalized address data.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          query: { type: 'string', minLength: 1, maxLength: 200 },
+          format: { type: 'string', enum: ['json', 'markdown'], default: 'json' },
+          limit: { type: 'integer', minimum: 1, maximum: 10, default: 5 },
+          language: { type: 'string', default: 'en' },
+          country: { type: 'string', pattern: '^[A-Za-z]{2}$' },
+          lat: { type: 'number', minimum: -90, maximum: 90 },
+          lon: { type: 'number', minimum: -180, maximum: 180 },
+          type: { type: 'string', enum: ['any', 'house', 'street', 'locality', 'city', 'county', 'state', 'country', 'other'], default: 'any' },
+        },
+        required: ['query'],
+      },
+      execute: async ({ query, format = 'json', limit = 5, language = 'en', country, lat, lon, type = 'any' }: {
+        query: string;
+        format?: 'json' | 'markdown';
+        limit?: number;
+        language?: string;
+        country?: string;
+        lat?: number;
+        lon?: number;
+        type?: string;
+      }) => {
+        const endpoint = new URL('/api/places', window.location.origin);
+        endpoint.searchParams.set('q', query);
+        endpoint.searchParams.set('format', format);
+        endpoint.searchParams.set('limit', String(limit));
+        endpoint.searchParams.set('language', language);
+        if (country) endpoint.searchParams.set('country', country);
+        if (lat !== undefined) endpoint.searchParams.set('lat', String(lat));
+        if (lon !== undefined) endpoint.searchParams.set('lon', String(lon));
+        endpoint.searchParams.set('type', type);
+        const response = await fetch(endpoint);
+        if (!response.ok) return response.json();
+        return format === 'markdown' ? response.text() : response.json();
+      },
+      annotations: { readOnlyHint: true },
+    });
+
+    modelContext.registerTool({
+      name: 'search_news',
+      description: 'Find current public news with locale and recent-timeframe controls.',
+      inputSchema: { type: 'object', properties: {
+        query: { type: 'string', minLength: 1, maxLength: 200 },
+        format: { type: 'string', enum: ['json', 'markdown'], default: 'markdown' },
+        limit: { type: 'integer', minimum: 1, maximum: 50, default: 10 },
+        language: { type: 'string', default: 'en-US' },
+        country: { type: 'string', pattern: '^[A-Za-z]{2}$', default: 'US' },
+        timeframe: { type: 'string', enum: ['any', '1h', '1d', '7d', '30d'], default: 'any' },
+      }, required: ['query'] },
+      execute: async ({ query, format = 'markdown', limit = 10, language = 'en-US', country = 'US', timeframe = 'any' }: { query: string; format?: 'json' | 'markdown'; limit?: number; language?: string; country?: string; timeframe?: string }) => {
+        const endpoint = new URL('/api/news', window.location.origin);
+        Object.entries({ q: query, format, limit: String(limit), language, country, timeframe }).forEach(([key, value]) => endpoint.searchParams.set(key, value));
+        const response = await fetch(endpoint);
+        if (!response.ok) return response.json();
+        return format === 'markdown' ? response.text() : response.json();
+      },
+      annotations: { readOnlyHint: true },
+    });
+
+    modelContext.registerTool({
+      name: 'search_stocks',
+      description: 'Resolve a company, asset name, or partial ticker into public equity or cryptocurrency symbols.',
+      inputSchema: { type: 'object', properties: {
+        query: { type: 'string', minLength: 1, maxLength: 200 },
+        instrument: { type: 'string', enum: ['equity', 'crypto'], default: 'equity' },
+        format: { type: 'string', enum: ['json', 'markdown'], default: 'json' },
+        limit: { type: 'integer', minimum: 1, maximum: 10, default: 10 },
+      }, required: ['query'] },
+      execute: async ({ query, instrument = 'equity', format = 'json', limit = 10 }: {
+        query: string;
+        instrument?: 'equity' | 'crypto';
+        format?: 'json' | 'markdown';
+        limit?: number;
+      }) => {
+        const endpoint = new URL('/api/finance/search', window.location.origin);
+        Object.entries({ q: query, instrument, format, limit: String(limit) })
+          .forEach(([key, value]) => endpoint.searchParams.set(key, value));
+        const response = await fetch(endpoint);
+        if (!response.ok) return response.json();
+        return format === 'markdown' ? response.text() : response.json();
+      },
+      annotations: { readOnlyHint: true },
+    });
+
+    modelContext.registerTool({
+      name: 'get_market_movers',
+      description: 'Return today’s already-ranked stock gainers, losers, or most-active equities.',
+      inputSchema: { type: 'object', properties: {
+        list: { type: 'string', enum: ['gainers', 'losers', 'active'], default: 'gainers' },
+        format: { type: 'string', enum: ['json', 'markdown'], default: 'json' },
+        limit: { type: 'integer', minimum: 1, maximum: 10, default: 10 },
+      } },
+      execute: async ({ list = 'gainers', format = 'json', limit = 10 }: {
+        list?: 'gainers' | 'losers' | 'active';
+        format?: 'json' | 'markdown';
+        limit?: number;
+      }) => {
+        const endpoint = new URL('/api/finance/movers', window.location.origin);
+        Object.entries({ list, format, limit: String(limit) })
+          .forEach(([key, value]) => endpoint.searchParams.set(key, value));
+        const response = await fetch(endpoint);
+        if (!response.ok) return response.json();
+        return format === 'markdown' ? response.text() : response.json();
+      },
+      annotations: { readOnlyHint: true },
+    });
+
+    modelContext.registerTool({
+      name: 'get_market_data',
+      description: 'Retrieve a market snapshot and bounded history in the native or requested quote currency.',
+      inputSchema: { type: 'object', properties: {
+        symbol: { type: 'string', minLength: 1, maxLength: 32, pattern: '^[A-Za-z0-9.^=-]+$' },
+        format: { type: 'string', enum: ['json', 'markdown'], default: 'json' },
+        timeframe: { type: 'string', enum: ['1d', '5d', '1mo', '3mo', '6mo', '1y', '5y', 'max'], default: '1mo' },
+        quote: { type: 'string', pattern: '^[A-Za-z]{3}$' },
+      }, required: ['symbol'] },
+      execute: async ({ symbol, format = 'json', timeframe = '1mo', quote }: { symbol: string; format?: 'json' | 'markdown'; timeframe?: string; quote?: string }) => {
+        const endpoint = new URL('/api/finance', window.location.origin);
+        Object.entries({ symbol, format, timeframe }).forEach(([key, value]) => endpoint.searchParams.set(key, value));
+        if (quote) endpoint.searchParams.set('quote', quote);
         const response = await fetch(endpoint);
         if (!response.ok) return response.json();
         return format === 'markdown' ? response.text() : response.json();

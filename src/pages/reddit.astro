@@ -1,35 +1,6 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import SocialLanding from '../components/SocialLanding.astro';
-
+import PlatformPage from '../components/PlatformPage.astro';
+import { platformPages } from '../features/marketing/platform-pages';
 export const prerender = true;
-const title = 'Reddit to Markdown or JSON — extractor.sh';
-const description = 'Turn public Reddit posts, communities, and profiles into clean Markdown or normalized JSON.';
 ---
-
-<BaseLayout {title} {description} path="/reddit/">
-  <SocialLanding
-    platform="Reddit"
-    eyebrow="Reddit extractor"
-    headline="Reddit content, made usable."
-    {description}
-    outcome="Posts and communities in one consistent format."
-    capabilities={[
-      { label: 'Input', value: 'One public Reddit post, subreddit, community, or user profile URL.' },
-      { label: 'Returns', value: 'One post entity or a normalized feed for a community or profile.' },
-      { label: 'Includes', value: 'Titles, post bodies, authors, timestamps, feed items, and canonical links when available.' },
-      { label: 'Caching', value: 'Feeds may be cached for one hour; posts for up to 30 days.' },
-    ]}
-    supported={[
-      'Public Reddit post URLs',
-      'Public subreddit and community pages',
-      'Public user profile pages',
-    ]}
-    limitations={[
-      'No private or quarantined communities',
-      'Post extraction does not include the full comment tree',
-      'Results follow Reddit’s public updates',
-    ]}
-    exampleUrl="https://www.reddit.com/r/CloudFlare/"
-  />
-</BaseLayout>
+<PlatformPage page={platformPages.reddit} />

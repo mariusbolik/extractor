@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { extractionJsonSchema } from '../../features/extraction/schema';
+import { extractionJsonSchema } from '@extractor/core';
 
 export const prerender = true;
 

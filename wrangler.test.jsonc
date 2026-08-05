@@ -1,0 +1,23 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "extractor-test",
+  "main": "tests-worker/entry.ts",
+  "compatibility_date": "2026-07-31",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "extractor-test",
+      "database_id": "00000000-0000-0000-0000-000000000001"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      { "name": "ACCOUNT_CREDITS", "class_name": "AccountCredits" },
+      { "name": "ANONYMOUS_QUOTA", "class_name": "AnonymousQuota" }
+    ]
+  },
+  "migrations": [
+    { "tag": "billing-v1", "new_sqlite_classes": ["AccountCredits", "AnonymousQuota"] }
+  ]
+}

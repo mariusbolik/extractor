@@ -37,6 +37,10 @@ input {
   font: inherit;
 }
 
+button:not(:disabled) {
+  cursor: pointer;
+}
+
 a {
   color: #000;
   text-underline-offset: 0.2em;
@@ -45,6 +49,42 @@ a {
 
 a:hover {
   text-decoration-thickness: 2px;
+}
+
+hanko-login,
+hanko-registration,
+hanko-auth,
+hanko-profile {
+  --color: #000;
+  --color-shade-1: #000;
+  --color-shade-2: #e5e5e5;
+  --brand-color: #000;
+  --brand-color-shade-1: #000;
+  --brand-contrast-color: #fff;
+  --background-color: #fff;
+  --error-color: #b91c1c;
+  --link-color: #000;
+  --font-weight: 600;
+  --font-size: 15px;
+  --font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  --border-radius: 0;
+  --border-style: solid;
+  --border-width: 2px;
+  --item-height: 50px;
+  --item-margin: 0.7rem 0;
+  --container-padding: 0;
+  --container-max-width: none;
+  --headline1-font-size: 1.55rem;
+  --headline1-font-weight: 400;
+  --headline1-margin: 0 0 1.25rem;
+  --headline2-font-size: 1rem;
+  --headline2-font-weight: 800;
+  --headline2-margin: 1.25rem 0 0.7rem;
+  --divider-padding: 0 18px;
+  --link-text-decoration: underline;
+  --link-text-decoration-hover: underline;
+  display: block;
+  width: 100%;
 }
 
 :focus-visible {

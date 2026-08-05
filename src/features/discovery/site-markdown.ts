@@ -1,6 +1,7 @@
 import { CURRENT_YEAR, alternativePages, platformArticles } from '../marketing/content';
+import { platformPageList } from '../marketing/platform-pages';
 
-const ORIGIN = 'https://extractor.mcb-software.workers.dev';
+const ORIGIN = 'https://extractor.sh';
 
 const apiExample = `~~~sh
 curl --get '${ORIGIN}/api/extract' \\
@@ -8,20 +9,111 @@ curl --get '${ORIGIN}/api/extract' \\
   --data-urlencode 'format=markdown'
 ~~~`;
 
+const searchExample = `~~~sh
+curl --get '${ORIGIN}/api/search' \\
+  --data-urlencode 'q=Cloudflare Workers documentation' \\
+  --data-urlencode 'format=json'
+~~~`;
+
+const newsExample = `~~~sh
+curl --get '${ORIGIN}/api/news' \\
+  --data-urlencode 'q=AI infrastructure' \\
+  --data-urlencode 'limit=10' \\
+  --data-urlencode 'format=json'
+~~~`;
+
+const imageExample = `~~~sh
+curl --get '${ORIGIN}/api/images' \\
+  --data-urlencode 'q=coral reef' \\
+  --data-urlencode 'limit=10' \\
+  --data-urlencode 'format=json'
+~~~`;
+
+const videoExample = `~~~sh
+curl --get '${ORIGIN}/api/videos' \\
+  --data-urlencode 'q=Cloudflare Workers tutorial' \\
+  --data-urlencode 'limit=10' \\
+  --data-urlencode 'format=json'
+~~~`;
+
+const placeExample = `~~~sh
+curl --get '${ORIGIN}/api/places' \\
+  --data-urlencode 'q=Brandenburg Gate Berlin' \\
+  --data-urlencode 'limit=5' \\
+  --data-urlencode 'format=json'
+~~~`;
+
+const financeExample = `~~~sh
+curl --get '${ORIGIN}/api/finance' \\
+  --data-urlencode 'symbol=AAPL' \\
+  --data-urlencode 'timeframe=3mo' \\
+  --data-urlencode 'quote=EUR' \\
+  --data-urlencode 'format=json'
+~~~`;
+
+const stockSearchExample = `~~~sh
+curl --get '${ORIGIN}/api/finance/search' \\
+  --data-urlencode 'q=Apple' \\
+  --data-urlencode 'limit=10' \\
+  --data-urlencode 'format=json'
+~~~`;
+
 const pages: Record<string, string> = {
   '/': `# extractor.sh
 
-> Turn public URLs into clean Markdown or normalized JSON through one cacheable GET request.
+> Search the public web and turn known URLs into clean Markdown or normalized JSON through cacheable GET requests.
+
+## Search the public web
+
+Call \`GET ${ORIGIN}/api/search\` with a required \`q\`, optional \`limit\` from 1 to 10, and \`format=markdown\` or \`format=json\`.
+
+${searchExample}
+
+## Search current news
+
+Call \`GET ${ORIGIN}/api/news\` with a required \`q\`, optional \`limit\` from 1 to 50, and \`format=markdown\` or \`format=json\`.
+
+${newsExample}
+
+## Search public images
+
+Call \`GET ${ORIGIN}/api/images\` with a required \`q\`, optional \`limit\` from 1 to 20, and \`format=markdown\` or \`format=json\`.
+
+${imageExample}
+
+## Search public videos
+
+Call GET ${ORIGIN}/api/videos with a required q, optional limit from 1 to 20, and format=markdown or format=json.
+
+${videoExample}
+
+## Search places
+
+Call \`GET ${ORIGIN}/api/places\` with a required address, business, landmark, or local-category query, optional \`limit\` from 1 to 10, and \`format=markdown\` or \`format=json\`. Paired \`lat\` and \`lon\` coordinates can bias results toward a nearby area.
+
+${placeExample}
+
+## Get market data
+
+Call \`GET ${ORIGIN}/api/finance\` with a required market \`symbol\`, optional \`timeframe\` from \`1d|5d|1mo|3mo|6mo|1y|5y|max\`, optional three-letter \`quote\` currency, and \`format=markdown|json\`. Omit \`quote\` to preserve the listing currency.
+
+${financeExample}
+
+## Search stocks
+
+Call \`GET ${ORIGIN}/api/finance/search\` with a company name or partial ticker when the exact symbol is unknown.
+
+${stockSearchExample}
 
 ## Extract a public URL
 
-Call \`GET ${ORIGIN}/api/extract\` with an absolute public \`url\` and \`format=markdown\` or \`format=json\`. The public preview requires no account or API key.
+Call \`GET ${ORIGIN}/api/extract\` with an absolute public \`url\` and \`format=markdown\` or \`format=json\`. No account is required for 10 successful uncached operations per IP each UTC day. New accounts receive a one-time bonus of 1,000 non-expiring credits. Signed-in website tools and an optional Bearer key use the same account balance.
 
 ${apiExample}
 
 ## Supported sources
 
-- [Amazon](${ORIGIN}/amazon/): Public product detail and search results pages from supported country stores.
+- [Amazon](${ORIGIN}/amazon/): Public products, search results, storefronts, Idea Lists, and shared Wish Lists from supported country stores.
 - [Apple App Store](${ORIGIN}/app-store/): Public iPhone and iPad app detail pages as software products.
 - [Bluesky](${ORIGIN}/bluesky/): Public profile feeds and individual posts.
 - [Google News](${ORIGIN}/google-news/): Public searches, topics, and top stories as article feeds.
@@ -30,18 +122,26 @@ ${apiExample}
 - [Mastodon](${ORIGIN}/mastodon/): Public statuses from compatible federated instances.
 - [Reddit](${ORIGIN}/reddit/): Public posts, communities, and user profiles.
 - [Shopify](${ORIGIN}/shopify/): Public products, collections, and storefront catalogs.
+- [WooCommerce](${ORIGIN}/woocommerce/): Public product pages, shops, product-search result pages, and product categories.
 - [SoundCloud](${ORIGIN}/soundcloud/): Public tracks, playlists, sets, and creator profiles.
 - [Spotify](${ORIGIN}/spotify/): Public music, artist, playlist, and podcast links.
 - [TikTok](${ORIGIN}/tiktok/): Public video and photo posts, short links, and creator profiles.
 - [Vimeo](${ORIGIN}/vimeo/): Public video metadata.
 - [X](${ORIGIN}/x/): Public X and Twitter status URLs.
+- [Yahoo Finance](${ORIGIN}/yahoo-finance/): Public quote and price-history pages with market snapshots and recent daily prices.
 - [YouTube](${ORIGIN}/youtube/): Public videos, channels, and playlists.
-- Web pages: Public HTTP and HTTPS pages.
+- Web pages: Public HTTP and HTTPS content, product-detail, and product-listing pages.
 
 ## Documentation
 
 - [Developer documentation](${ORIGIN}/docs/)
-- [Hosted MCP server](${ORIGIN}/docs/mcp/): Connect to \`${ORIGIN}/mcp\` and call \`extract_public_url\`.
+- [Web search](${ORIGIN}/docs/search/): Discover relevant public pages through one GET request.
+- [News search](${ORIGIN}/docs/news/): Find current public coverage as a normalized article feed.
+- [Image search](${ORIGIN}/docs/images/): Find openly licensed images with source and license metadata.
+- [Video search](${ORIGIN}/docs/videos/): Find public video pages with available creator, duration, date, description, and thumbnail metadata.
+- [Places](${ORIGIN}/docs/places/): Resolve addresses, businesses, landmarks, and local categories with normalized coordinates.
+- [Finance](${ORIGIN}/docs/finance/): Search stock symbols and retrieve native or converted snapshots with configurable, bounded history.
+- [Hosted MCP server](${ORIGIN}/docs/mcp/): Connect to \`${ORIGIN}/mcp\` and call \`search_web\` or \`extract_public_url\`.
 - [OpenAPI 3.1](${ORIGIN}/openapi.json)
 - [API catalog](${ORIGIN}/.well-known/api-catalog)
 - [JSON Schema](${ORIGIN}/schemas/extraction-v1.json)
@@ -49,141 +149,51 @@ ${apiExample}
 - [Pricing](${ORIGIN}/pricing/)
 - [Contact](${ORIGIN}/contact/)
 `,
-  '/amazon/': `# Amazon product and search extraction with extractor.sh
-
-> Turn a public Amazon product detail or search results page into clean Markdown or normalized JSON.
-
-Submit an ordinary product URL containing an ASIN, such as \`https://www.amazon.de/echo-dot-2022/dp/B09B8X9RGM\`, or a search URL such as \`https://www.amazon.de/s?k=mechanical+keyboard\`. Searches return up to 20 normalized product items. Categories, pagination, carts, accounts, reviews, and personalized offers are unavailable. Results may be cached for up to one hour.
-
-Call \`GET ${ORIGIN}/api/extract\` with the product or search page in the \`url\` parameter.
-`,
-  '/app-store/': `# Apple App Store extraction with extractor.sh
-
-> Turn one public App Store app detail page into clean Markdown or normalized product JSON.
-
-Submit an ordinary apps.apple.com app URL containing its numeric app ID. Results can include the app name, developer, description, integer minor-unit price, rating, version, release details, icon, and screenshots. Search, charts, reviews, accounts, and app downloads are not included.
-
-Call \`GET ${ORIGIN}/api/extract\` with the App Store page in the \`url\` parameter.
-`,
-  '/bluesky/': `# Bluesky extraction with extractor.sh
-
-> Turn public Bluesky profiles and individual posts into clean Markdown or normalized JSON.
-
-Profile pages return a profile entity with recent public post items. Individual post pages return one post entity. Replies and parent threads are not included.
-
-Call \`GET ${ORIGIN}/api/extract\` with the Bluesky page in the \`url\` parameter.
-`,
-  '/google-news/': `# Google News extraction with extractor.sh
-
-> Turn public Google News searches, topics, and top stories into clean Markdown or typed JSON.
-
-Submit an ordinary Google News search, topic, or top-stories URL. Results contain up to 50 normalized article entities with public titles, publishers, dates, summaries, and source links when available. Full publisher article bodies, personalized results, Google Search, and Google Shopping are not included.
-
-Call \`GET ${ORIGIN}/api/extract\` with the Google News page in the \`url\` parameter.
-`,
-  '/google-play/': `# Google Play extraction with extractor.sh
-
-> Turn one public Google Play app detail page into clean Markdown or normalized product JSON.
-
-Submit an ordinary play.google.com app URL containing its Android package ID. Results can include the app name, developer, description, integer minor-unit price, rating, category, content rating, icon, and screenshots. Search, category browsing, reviews, accounts, and APK downloads are not included.
-
-Call \`GET ${ORIGIN}/api/extract\` with the Google Play page in the \`url\` parameter.
-`,
-  '/instagram/': `# Instagram extraction with extractor.sh
-
-> Turn public Instagram posts, reels, and profiles into clean Markdown or normalized JSON.
-
-Post and reel pages return one post entity. Public profile pages return a profile entity with recent public post items. Private content, stories, comments, transcripts, and media downloads are not supported.
-
-Call \`GET ${ORIGIN}/api/extract\` with the ordinary Instagram page in the \`url\` parameter.
-`,
-  '/mastodon/': `# Mastodon extraction with extractor.sh
-
-> Turn one public Mastodon status into clean Markdown or normalized JSON.
-
-Submit a public status URL from a compatible instance. Results can include the post text, author, publication date, content warning, and media descriptions. Private statuses, timelines, complete threads, and media downloads are not supported.
-
-Call \`GET ${ORIGIN}/api/extract\` with the Mastodon status in the \`url\` parameter.
-`,
-  '/reddit/': `# Reddit extraction with extractor.sh
-
-> Turn public Reddit posts, communities, and profiles into clean Markdown or normalized JSON.
-
-Submit normal public Reddit page URLs such as \`https://www.reddit.com/r/CloudFlare/\`. Private and quarantined communities are not supported, and post results do not include the complete comment tree.
-
-Call \`GET ${ORIGIN}/api/extract\` with the Reddit page in the \`url\` parameter.
-`,
-  '/shopify/': `# Shopify extraction with extractor.sh
-
-> Turn public Shopify products, collections, and storefront catalogs into clean Markdown or normalized JSON.
-
-Submit an ordinary storefront page. Product pages return one product entity; storefront and collection pages return a feed with up to 50 product entities.
-
-Call \`GET ${ORIGIN}/api/extract\` with the storefront page in the \`url\` parameter.
-`,
-  '/soundcloud/': `# SoundCloud extraction with extractor.sh
-
-> Turn a public SoundCloud track, playlist, set, or profile into clean Markdown or normalized JSON.
-
-Results contain public metadata rather than audio, transcripts, comments, or media downloads.
-
-Call \`GET ${ORIGIN}/api/extract\` with the SoundCloud page in the \`url\` parameter.
-`,
-  '/spotify/': `# Spotify extraction with extractor.sh
-
-> Turn a public Spotify music or podcast link into clean Markdown or normalized JSON.
-
-Tracks, albums, artists, playlists, shows, and episodes are supported. Lyrics, transcripts, playback data, audio analysis, and media downloads are not included.
-
-Call \`GET ${ORIGIN}/api/extract\` with the Spotify page in the \`url\` parameter.
-`,
-  '/tiktok/': `# TikTok extraction with extractor.sh
-
-> Turn public TikTok video and photo posts or creator profiles into clean Markdown or normalized JSON.
-
-Submit an ordinary public TikTok page or short link. Private, deleted, or age-restricted content, comments, transcripts, and media downloads are not supported.
-
-Call \`GET ${ORIGIN}/api/extract\` with the TikTok page in the \`url\` parameter.
-`,
-  '/vimeo/': `# Vimeo extraction with extractor.sh
-
-> Turn public Vimeo video metadata into clean Markdown or normalized JSON.
-
-Results can include title, author, description, upload date, duration, thumbnail, and source URL. Transcripts, captions, comments, and media downloads are not included.
-
-Call \`GET ${ORIGIN}/api/extract\` with the Vimeo video page in the \`url\` parameter.
-`,
-  '/x/': `# X extraction with extractor.sh
-
-> Convert one public X or Twitter status URL into clean Markdown or normalized JSON.
-
-Submit a public \`x.com\` or legacy \`twitter.com\` status URL. Private, deleted, and age-gated posts are not supported.
-
-Call \`GET ${ORIGIN}/api/extract\` with the post page in the \`url\` parameter.
-`,
-  '/youtube/': `# YouTube extraction with extractor.sh
-
-> Extract public YouTube video metadata, channels, and playlists into clean Markdown or normalized JSON.
-
-Submit a normal public watch, Shorts, channel, handle, user, or playlist page such as \`https://www.youtube.com/@Cloudflare\`. Transcripts, captions, and media downloads are not provided.
-
-Call \`GET ${ORIGIN}/api/extract\` with the YouTube page in the \`url\` parameter.
-`,
   '/docs/': `# extractor.sh developer documentation
 
-> Send a normal public webpage URL to one GET endpoint and receive Markdown or normalized JSON.
+> Search the public web or send a known page URL and receive Markdown or normalized JSON.
 
 ${apiExample}
 
 ## Documentation
 
 - [Quickstart](${ORIGIN}/docs/quickstart/)
+- [Web search](${ORIGIN}/docs/search/)
+- [News search](${ORIGIN}/docs/news/)
+- [Image search](${ORIGIN}/docs/images/)
+- [Video search](${ORIGIN}/docs/videos/)
+- [Place search](${ORIGIN}/docs/places/)
+- [Finance](${ORIGIN}/docs/finance/)
 - [Hosted MCP server](${ORIGIN}/docs/mcp/)
 - [API reference](${ORIGIN}/docs/api/)
+- [API keys](${ORIGIN}/docs/authentication/)
+- [Billing and credits](${ORIGIN}/docs/billing/)
 - [JSON schema](${ORIGIN}/docs/schema/)
 - [Supported sources](${ORIGIN}/docs/sources/)
 - [Limits and caching](${ORIGIN}/docs/limits/)
 - [Limitations](${ORIGIN}/docs/limitations/)
+`,
+  '/docs/authentication/': `# extractor.sh API keys
+
+The public APIs provide 10 successful uncached operations per IP each UTC day without an account. New free accounts receive a one-time bonus of 1,000 non-expiring credits. The homepage and platform playgrounds use a valid Hanko session automatically. For external integrations, create up to two active keys in the private dashboard and send the key only as:
+
+\`Authorization: Bearer ext_live_…\`
+
+The complete key is shown once and stored only as a cryptographic hash. Never copy the Hanko session cookie into an integration. Cache lookup happens before authentication, so hits are free. On a miss, invalid or revoked keys return HTTP 401. Successful cacheable work uses one account credit; errors refund the reservation. An account with insufficient credits returns HTTP 402.
+
+See [billing and credits](${ORIGIN}/docs/billing/) and the [API reference](${ORIGIN}/docs/api/).
+
+Example endpoint: \`GET ${ORIGIN}/api/extract\`.
+`,
+  '/docs/billing/': `# extractor.sh billing and credits
+
+Prepaid credits cost $0.49 per 1,000 successful uncached operations and never expire. Exact purchases from $10.00 through $4,900.00 grant \`floor(amount_cents × 1,000 / 49)\` credits; $100 grants 204,081 credits.
+
+Add prepaid credits in the dashboard through Dodo Payments' hosted checkout. Manual top-ups are one-time purchases. Optional automatic funding is off by default and requires a separate hosted mandate approval, a balance threshold, a top-up amount, and a maximum pre-tax subtotal per UTC calendar month. There is no postpaid usage.
+
+Dodo Payments acts as merchant of record. Credits are granted only after a successful signed payment webhook. Failed charges create no credits or debt. extractor.sh sends billing-address alerts at 80%, 90%, and 100% usage with a direct top-up link. Refunds and disputes reverse the complete original grant and can make a balance negative, blocking paid cache misses until replenished.
+
+Prepaid keys apply to \`GET ${ORIGIN}/api/extract\` and the other public GET APIs.
 `,
   '/docs/quickstart/': `# extractor.sh quickstart
 
@@ -192,6 +202,91 @@ Call \`GET ${ORIGIN}/api/extract\` with a required public \`url\` and optional \
 ${apiExample}
 
 Always submit an ordinary public page URL a person could open in a browser.
+`,
+  '/docs/search/': `# extractor.sh web search
+
+Call \`GET ${ORIGIN}/api/search\` to discover public pages when no exact URL is known.
+
+- \`q\`: required query, up to 200 characters.
+- \`limit\`: optional integer from 1 to 10; default 10.
+- \`format\`: optional \`json\` (default) or \`markdown\`.
+- \`language\`: optional canonical BCP 47 tag; default \`en-US\`.
+- \`country\`: optional two-letter country; default \`US\`.
+
+${searchExample}
+
+JSON uses schema version 1 with a \`web-search\` feed containing ordered \`document\` items. Each item has a title, URL, and short snippet. Safe search remains strict. Call \`GET ${ORIGIN}/api/extract\` on selected URLs for full page content.
+`,
+  '/docs/news/': `# extractor.sh news search
+
+Call \`GET ${ORIGIN}/api/news\` for current public news coverage.
+
+- \`q\`: required query, up to 200 characters.
+- \`limit\`: optional integer from 1 to 50; default 10.
+- \`format\`: optional \`json\` (default) or \`markdown\`.
+- \`language\`: optional canonical BCP 47 tag; default \`en-US\`.
+- \`country\`: optional two-letter country; default \`US\`.
+- \`timeframe\`: optional \`any|1h|1d|7d|30d\`; default \`any\`.
+
+${newsExample}
+
+JSON uses schema version 1 with a \`google-news\` feed containing \`article\` items. A recent timeframe excludes undated and older articles. Complete publisher bodies, personalized feeds, and pagination are not included.
+`,
+  '/docs/images/': `# extractor.sh image search
+
+Call \`GET ${ORIGIN}/api/images\` to find openly licensed public images.
+
+- \`q\`: required query, up to 200 characters.
+- \`limit\`: optional integer from 1 to 20; default 10.
+- \`format\`: optional \`json\` (default) or \`markdown\`.
+- \`usage\`: optional \`all|commercial|modify|commercial-and-modify\`.
+- \`orientation\`: optional \`any|landscape|portrait|square\`.
+
+${imageExample}
+
+JSON uses schema version 1 with an \`image-search\` feed. Document items include public source pages and image media, plus creator, dimensions, description, and license metadata when available. Always follow the returned license requirements. Successful searches may be cached for up to one hour.
+`,
+  '/docs/videos/': `# extractor.sh video search
+
+Call GET ${ORIGIN}/api/videos to find public video pages.
+
+- q: required query, up to 200 characters.
+- limit: optional integer from 1 to 20; default 10.
+- format: optional json (default) or markdown.
+- language: optional canonical BCP 47 tag; default en-US.
+- country: optional two-letter country; default US.
+- platform: optional any for public video pages from supported sources (default), or youtube for YouTube-only results.
+- sort: optional relevance (default) or date for newest-first results. Use date when the user asks for the latest video.
+
+${videoExample}
+
+JSON uses schema version 1 with a video-search feed containing semantic video items. Public source-page links and available creator, publication time, displayed relative upload time, description, duration, exact view count, and thumbnail metadata are returned. For “latest video of Taylor Swift,” send q=Taylor Swift official, platform=youtube, and sort=date; the first item is the newest matching artist upload. Omit official when the user wants any recent video about the subject. Safe search remains strict, direct streams are not returned, and successful searches may be cached for up to one hour.
+`,
+  '/docs/places/': `# extractor.sh place search
+
+Call \`GET ${ORIGIN}/api/places\` to resolve an address, business, landmark, or local-category query.
+
+- \`q\`: required address, business, landmark, or local-category query, up to 200 characters.
+- \`limit\`: optional integer from 1 to 10; default 5.
+- \`format\`: optional \`json\` (default) or \`markdown\`.
+- \`language\`: optional canonical BCP 47 tag; default \`en\`.
+- \`country\`: optional two-letter hard filter.
+- \`lat\` and \`lon\`: optional paired location bias.
+- \`type\`: optional \`any|house|street|locality|city|county|state|country|other\`.
+
+${placeExample}
+
+JSON uses schema version 1 with a \`place-search\` feed. Document items can include latitude, longitude, address, category, country code, website, phone, opening hours, and a canonical map link. This is a submitted search rather than autocomplete. Results are bounded and ranked, not an exhaustive business directory. Unavailable ratings and reviews are omitted. Results contain OpenStreetMap data and its required attribution. Successful searches may be cached for up to one hour.
+`,
+  '/docs/finance/': `# extractor.sh finance API
+
+Call \`GET ${ORIGIN}/api/finance\` with a required \`symbol\`, optional \`timeframe\`, optional three-letter \`quote\` currency, and \`format=json|markdown\`.
+
+${financeExample}
+
+Symbols are canonicalized to uppercase and contain at most 32 supported characters. Timeframes are \`1d\`, \`5d\`, \`1mo\`, \`3mo\`, \`6mo\`, \`1y\`, \`5y\`, and \`max\`. History is capped at 512 points. Without \`quote\`, values remain in the listing currency. With \`quote=EUR\` or another three-letter currency, the snapshot and history are converted in the same one-credit operation and include listing-currency and exchange-rate metadata. Successful responses may be cached for five minutes.
+
+Use \`GET ${ORIGIN}/api/finance/search?q=Apple&limit=10&format=json\` to resolve company names or partial tickers into equity listings. Successful stock searches may be cached for one hour.
 `,
   '/docs/mcp/': `# extractor.sh hosted MCP server
 
@@ -203,7 +298,56 @@ Connect an MCP-compatible client to the public stateless Streamable HTTP endpoin
 - \`format\`: optional \`markdown\` (default) or \`json\`.
 - \`focus\`: optional short topic such as \`pricing\`, \`features\`, or \`FAQ\`.
 
-Markdown is best for reading and summarizing. JSON follows extractor.sh schema version 1. When a request asks for a specific part of a landing page, pass it as \`focus\` so unrelated demos or navigation do not displace that section. Ordinary MCP and \`GET ${ORIGIN}/api/extract\` calls share the same Cloudflare cache; focused MCP results use separate topic-aware cache entries. All calls share the same rate limits, including the lower high-cost request limit. Do not send credentials, cookies, private URLs, or private data.
+## Tool: search_web
+
+- \`query\`: required public web query, up to 200 characters.
+- \`format\`: optional \`markdown\` (default) or \`json\`.
+- \`limit\`: optional integer from 1 to 10.
+- \`language\` and \`country\`: optional locale controls.
+
+## Tool: search_news
+
+- \`query\`: required news query.
+- \`limit\`: optional integer from 1 to 50.
+- \`language\`, \`country\`, and \`timeframe\`: optional effective filters.
+
+## Tool: search_images
+
+- \`query\`: required image query, up to 200 characters.
+- \`format\`: optional \`json\` (default) or \`markdown\`.
+- \`limit\`: optional integer from 1 to 20.
+- \`usage\` and \`orientation\`: optional image filters.
+
+## Tool: search_videos
+
+- \`query\`: required video query, up to 200 characters.
+- \`format\`: optional \`json\` (default) or \`markdown\`.
+- \`limit\`: optional integer from 1 to 20.
+- \`language\` and \`country\`: optional locale controls.
+- \`platform\`: optional \`any\` or \`youtube\`.
+- \`sort\`: optional \`relevance\` or newest-first \`date\`; use \`date\` for latest-video requests.
+
+## Tool: search_places
+
+- \`query\`: required address, business, landmark, or local-category query, up to 200 characters.
+- \`format\`: optional \`json\` (default) or \`markdown\`.
+- \`limit\`: optional integer from 1 to 10.
+- \`language\`, \`country\`, paired \`lat\`/\`lon\`, and \`type\`: optional place controls.
+
+## Tool: get_market_data
+
+- \`symbol\`: required market symbol.
+- \`timeframe\`: optional finance range.
+- \`quote\`: optional three-letter output currency. Pass it directly instead of making a separate currency-pair call.
+- \`format\`: optional \`json\` (default) or \`markdown\`.
+
+## Tool: search_stocks
+
+- \`query\`: required company name, brand, or partial ticker.
+- \`limit\`: optional integer from 1 to 10.
+- \`format\`: optional \`json\` (default) or \`markdown\`.
+
+Use search for discovery, then extract selected result URLs for full content. Markdown is best for reading and summarizing. JSON follows extractor.sh schema version 1. MCP calls share cache entries and limits with \`GET ${ORIGIN}/api/search\` and \`GET ${ORIGIN}/api/extract\`. Do not send credentials, cookies, private URLs, or private data.
 
 - [MCP Server Card](${ORIGIN}/.well-known/mcp/server-card.json)
 - [Limits and caching](${ORIGIN}/docs/limits/)
@@ -214,20 +358,68 @@ Markdown is best for reading and summarizing. JSON follows extractor.sh schema v
 
 - \`url\`: required absolute public HTTP or HTTPS URL, up to 2,048 characters.
 - \`format\`: optional \`json\` (default) or \`markdown\`.
+- \`focus\`: optional topic from 1 to 80 characters.
+
+## GET /api/search
+
+- \`q\`: required query, up to 200 characters.
+- \`limit\`: optional integer from 1 to 10.
+- \`format\`: optional \`json\` (default) or \`markdown\`.
+
+## GET /api/news
+
+- \`q\`: required news query, up to 200 characters.
+- \`limit\`: optional integer from 1 to 50.
+- \`format\`: optional \`json\` (default) or \`markdown\`.
+
+## GET /api/images
+
+- \`q\`: required image query, up to 200 characters.
+- \`limit\`: optional integer from 1 to 20.
+- \`format\`: optional \`json\` (default) or \`markdown\`.
+
+## GET /api/videos
+
+- \`q\`: required video query, up to 200 characters.
+- \`limit\`: optional integer from 1 to 20.
+- \`format\`: optional \`json\` (default) or \`markdown\`.
+- \`language\` and \`country\`: optional locale controls.
+- \`platform\`: optional \`any\` or \`youtube\`.
+
+## GET /api/places
+
+- \`q\`: required place name or address, up to 200 characters.
+- \`limit\`: optional integer from 1 to 10.
+- \`format\`: optional \`json\` (default) or \`markdown\`.
+
+## GET /api/finance
+
+- \`symbol\`: required market symbol, up to 32 characters.
+- \`timeframe\`: optional \`1d|5d|1mo|3mo|6mo|1y|5y|max\`.
+- \`quote\`: optional three-letter output currency such as \`EUR\`.
+- \`format\`: optional \`json\` (default) or \`markdown\`.
+
+## GET /api/finance/search
+
+- \`q\`: required company name, brand, or partial ticker, up to 200 characters.
+- \`limit\`: optional integer from 1 to 10.
+- \`format\`: optional \`json\` (default) or \`markdown\`.
 
 JSON responses use schema version \`1\` and contain the shared fields \`type\`, \`source\`, \`id\`, \`url\`, \`title\`, \`author\`, \`publishedAt\`, \`content\`, \`media\`, and \`attributes\`. The semantic \`type\` is \`document\`, \`article\`, \`product\`, \`post\`, \`profile\`, \`video\`, \`audio\`, or \`feed\`. Feed and profile responses also contain \`items\`. Errors use an \`error\` object with \`code\` and \`message\`.
 
-See the [schema guide](${ORIGIN}/docs/schema/), [JSON Schema](${ORIGIN}/schemas/extraction-v1.json), and [OpenAPI 3.1 document](${ORIGIN}/openapi.json) for the machine-readable contract for \`GET ${ORIGIN}/api/extract\`.
+See the [schema guide](${ORIGIN}/docs/schema/), [JSON Schema](${ORIGIN}/schemas/extraction-v1.json), and [OpenAPI 3.1 document](${ORIGIN}/openapi.json) for the machine-readable contracts.
 `,
   '/docs/schema/': `# extractor.sh JSON response schema
 
 Every successful JSON response uses \`schemaVersion: 1\` and a semantic \`type\`: \`document\`, \`article\`, \`product\`, \`post\`, \`profile\`, \`video\`, \`audio\`, or \`feed\`.
 
-The schema applies to successful JSON responses from \`GET ${ORIGIN}/api/extract\`.
+The schema applies to successful JSON responses from \`GET ${ORIGIN}/api/extract\`, \`GET ${ORIGIN}/api/search\`, \`GET ${ORIGIN}/api/news\`, \`GET ${ORIGIN}/api/images\`, \`GET ${ORIGIN}/api/videos\`, \`GET ${ORIGIN}/api/places\`, \`GET ${ORIGIN}/api/finance\`, and \`GET ${ORIGIN}/api/finance/search\`.
 
 The common fields are \`source\`, \`id\`, \`url\`, \`title\`, \`author\`, \`publishedAt\`, \`content\`, \`media\`, and \`attributes\`. Content is Markdown. Common nullable fields are present with \`null\` when unavailable; optional type-specific attributes are omitted. Feed and profile entities include \`items\`, whose entries use the same entity shape.
 
 Product \`attributes.price\` and variant \`price\` values are non-negative integers in the currency's minor unit. For example, \`1999\` with \`EUR\` means €19.99. \`priceDisplay\` is presentation text.
+
+Finance document attributes can include \`tickerSymbol\`, \`exchange\`, effective \`currency\`, \`listingCurrency\`, \`quoteCurrency\`, \`exchangeRate\`, \`exchangeRateTimestamp\`, \`instrumentType\`, quote fields, \`marketState\`, \`historyTimeframe\`, \`historyInterval\`, bounded \`history\`, and market \`events\`. Finance feeds from stock search contain equity documents and effective \`resultCount\`. Market prices are decimal quote values; the integer minor-unit rule applies only to product prices.
 
 - [JSON Schema Draft 2020-12](${ORIGIN}/schemas/extraction-v1.json)
 - [OpenAPI 3.1](${ORIGIN}/openapi.json)
@@ -236,31 +428,39 @@ Product \`attributes.price\` and variant \`price\` values are non-negative integ
 
 Submit normal public browser URLs to \`GET ${ORIGIN}/api/extract\`.
 
-- Web: public HTTP and HTTPS content pages.
-- Amazon: public product detail pages and search results pages. Search feeds contain up to 20 products; results may be cached for up to one hour.
+- Web: public HTTP and HTTPS content pages, including supported product details and repeated product listings.
+- Amazon: public product detail, search, storefront, Idea List, and shared Wish List pages. Results may be cached for up to one hour.
 - Apple App Store: public app detail pages containing a numeric app ID. Results are software product entities.
 - Bluesky: public profile feeds and individual public post pages.
 - Google News: public search, topic, and top-stories pages. Feeds contain up to 50 article entities.
 - Google Play: public app detail pages containing an Android package ID. Results are software product entities.
-- Instagram: public post, reel, and profile pages. Profile results include recent public posts when available.
+- Instagram: public post, reel, and profile pages with exposed carousel media, profile details, and recent posts when available.
 - Mastodon: public status pages on compatible instances.
 - Shopify: public product pages, collections, and storefront homepages. Submit the normal storefront URL; catalog feeds contain up to 50 products.
+- WooCommerce: public product pages, shop and storefront pages, product-search result pages, and supported product-category pages. Results use product entities with integer minor-unit prices.
 - SoundCloud: public tracks, playlists, sets, and creator profiles.
 - Spotify: public tracks, albums, artists, playlists, podcast shows, and episodes.
-- TikTok: public video posts, photo posts, short links, and creator profile pages.
+- TikTok: public video posts, photo posts, short links, and creator profiles with up to ten recent posts.
 - Vimeo: public video pages, including supported channel, group, showcase, and On Demand links.
 - Reddit: public post, subreddit, community, and user profile pages.
 - X: public x.com and twitter.com status pages.
+- Yahoo Finance: public quote and price-history pages. Results include the latest available market snapshot and up to one month of recent daily OHLCV history, and may be cached for up to five minutes.
 - YouTube: public video, Shorts, channel, handle, user, and playlist pages.
 
 Private sources, credentials, stories, transcripts, media downloads, Bluesky reply threads, and complete Reddit comment trees are not supported.
 `,
   '/docs/limits/': `# extractor.sh limits and caching
 
-The \`GET ${ORIGIN}/api/extract\` endpoint allows 30 extraction requests per client per 60 seconds and 5 high-cost extraction requests per client per 60 seconds.
+The public \`GET ${ORIGIN}/api/search\`, \`/api/news\`, \`/api/images\`, \`/api/videos\`, \`/api/places\`, \`/api/finance\`, \`/api/finance/search\`, and \`/api/extract\` APIs allow 60 uncached requests per client per 60 seconds. Extraction and news search additionally share the limit of at most 5 high-cost requests per client per 60 seconds when a high-cost request is required.
 
 - Single entities and pages may be cached at the edge for up to 30 days.
 - Products, profiles, and feeds may be cached for up to 1 hour.
+- Yahoo Finance market documents may be cached for up to 5 minutes.
+- Web searches may be cached for up to 1 hour.
+- News searches may be cached for up to 1 hour.
+- Image searches may be cached for up to 1 hour.
+- Video searches may be cached for up to 1 hour.
+- Place searches may be cached for up to 1 hour.
 - Errors are not cached.
 - URLs may contain up to 2,048 characters.
 - Extracted results may contain up to 2 MB.
@@ -279,9 +479,24 @@ extractor.sh is designed for straightforward extraction of public content throug
 `,
   '/pricing/': `# extractor.sh pricing
 
-> Simple pay-as-you-go pricing: €0.49 / 1,000 extractions.
+> Simple prepaid pricing: $0.49 / 1,000 credits.
 
-There are no subscriptions or tiers, and credits never expire. Checkout is coming soon and is not currently available. During the public preview, usage is free at up to 30 extraction requests per minute. Test extractor.sh with your intended URLs before purchasing, and [contact us](${ORIGIN}/contact/) if you need help evaluating a specific use case. API usage is documented at \`GET ${ORIGIN}/api/extract\`.
+Each successful uncached extraction, web search, news search, image search, video search, place or map search, or finance request counts as one credit.
+
+Credits never expire and form the hard usage cap. New accounts receive 1,000 welcome credits once. Buy an exact one-time amount from $10.00 to $4,900.00 whenever you need more. Optional capped automatic funding can be authorized separately and runs only when the prepaid balance reaches the customer's threshold. Anonymous callers receive 10 successful uncached operations per IP each UTC day. The website tools use the account session automatically, while external integrations use an API key. Identical cache hits are free, and the 60-per-minute protection still applies. Manage credits, automatic funding, and API keys in the private [dashboard](${ORIGIN}/dashboard/). API usage is documented at \`GET ${ORIGIN}/api/extract\`.
+
+## Pricing FAQ
+
+- **Is there a free tier?** Yes: 10 successful uncached requests per IP each UTC day without an account, plus a one-time 1,000-credit welcome bonus for new accounts.
+- **How do API credits work?** Each successful uncached account operation uses one non-expiring welcome or purchased credit.
+- **Are failed requests charged?** No. Failed work releases its reservation, and cache hits are free.
+- **What happens at zero credits?** Uncached account requests return HTTP 402 until credits are added.
+- **Is there a monthly plan?** No scheduled monthly plan is required. Funding uses one-time pay-as-you-go top-ups, with optional capped automatic funding triggered by a low balance.
+- **What are the rate limits?** The standard limit is 60 uncached requests per client per minute, with 5 high-cost extraction requests per minute.
+- **Why do I see tax, and which payment methods are accepted?** Dodo Payments applies tax under the transaction details and local rules, and displays the available payment methods in checkout.
+- **Are startup or nonprofit discounts available?** There is no standard program; contact extractor.sh when the public pricing does not fit the use case.
+- **Are there extra fees for complex pages?** No. Every supported successful uncached account operation has the same one-credit cost.
+- **Do all endpoints and features cost the same?** Yes. Every supported successful uncached API or MCP operation uses one allowance slot or credit, regardless of endpoint or extraction method. Failed requests and cache hits are free.
 `,
   '/contact/': `# Contact extractor.sh
 
@@ -293,17 +508,44 @@ For technical details before contacting us, see the [developer documentation](${
 `,
 };
 
+// Platform HTML, structured data, and agent-readable Markdown share one
+// source of truth so capability promises cannot drift between representations.
+for (const platform of platformPageList) {
+  pages[`/${platform.slug}/`] = `# ${platform.headline}
+
+> ${platform.description}
+
+## Capabilities
+
+${platform.capabilities.map((capability) => `- **${capability.name}** (${capability.output}): ${capability.description}`).join('\n')}
+
+## Supported inputs
+
+${platform.includes.map((item) => `- ${item}`).join('\n')}
+
+## Boundaries
+
+${platform.limitations.map((item) => `- ${item}`).join('\n')}
+
+Call \`GET ${ORIGIN}/api/extract\` with an ordinary public ${platform.platform} URL in the \`url\` parameter. Choose \`format=markdown\` or \`format=json\`. The public playground at ${ORIGIN}/${platform.slug}/ uses the anonymous allowance without an account and the account credit balance after sign-in.
+`;
+}
+
 pages['/blog/'] = `# extractor.sh blog
 
-> ${CURRENT_YEAR} guides for extracting public web data into AI-ready Markdown and normalized JSON.
+> ${CURRENT_YEAR} guides for extracting public pages, searching the web, and giving AI agents source-linked Markdown or normalized JSON.
 
-${platformArticles.map((article) => `- [How to scrape data from ${article.platform} in ${CURRENT_YEAR}](${ORIGIN}/blog/${article.slug}/): ${article.description}`).join('\n')}
+${platformArticles.map((article) => `- [${article.headline ?? `How to scrape data from ${article.platform} in ${CURRENT_YEAR}`}](${ORIGIN}/blog/${article.slug}/): ${article.description}`).join('\n')}
 
-Every guide uses the public \`GET ${ORIGIN}/api/extract\` endpoint.
+The guides cover public extraction, web search, news, images, places, and the hosted MCP server.
 `;
 
 for (const article of platformArticles) {
-  pages[`/blog/${article.slug}/`] = `# How to scrape data from ${article.platform} in ${CURRENT_YEAR}
+  const headline = article.headline ?? `How to scrape data from ${article.platform} in ${CURRENT_YEAR}`;
+  const apiExample = article.apiExample ?? `curl --get '${ORIGIN}/api/extract' \\
+  --data-urlencode 'url=${article.exampleUrl}' \\
+  --data-urlencode 'format=json'`;
+  pages[`/blog/${article.slug}/`] = `# ${headline}
 
 > ${article.description}
 
@@ -317,13 +559,17 @@ ${article.extracts.map((item) => `- ${item}`).join('\n')}
 
 ${article.boundaries.map((item) => `- ${item}`).join('\n')}
 
-Call \`GET ${ORIGIN}/api/extract\` with the ordinary public ${article.platform} page in the \`url\` parameter. Use \`format=markdown\` for AI and RAG input or \`format=json\` for normalized fields.
+## Example
+
+\`\`\`
+${apiExample}
+\`\`\`
 `;
 }
 
 pages['/alternatives/'] = `# extractor.sh alternatives
 
-> Compare a focused public URL-to-Markdown API with broader proxy, browser, crawling, and automation providers.
+> Compare focused extraction and search APIs with broader search, proxy, browser, crawling, and automation providers.
 
 ${alternativePages.map((page) => `- [extractor.sh vs. ${page.provider}](${ORIGIN}/alternatives/${page.slug}/): ${page.description}`).join('\n')}
 
@@ -335,7 +581,7 @@ for (const alternative of alternativePages) {
 
 > Skip the scraping stack when you already have a public URL and need clean Markdown or normalized JSON.
 
-extractor.sh gives applications and AI agents a direct, cacheable GET endpoint without proxy configuration, browser-session management, crawl jobs, or result polling.
+extractor.sh gives applications and AI agents focused GET endpoints for public-page extraction plus web, news, image, and place search without proxy configuration, browser-session management, crawl jobs, or result polling.
 
 ## Where extractor.sh wins
 

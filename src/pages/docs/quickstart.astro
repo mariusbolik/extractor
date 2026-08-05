@@ -34,6 +34,15 @@ const result = await response.json();`;
   --data-urlencode 'format=json'</code></pre>
   <p>JSON is the default, so <code>format=json</code> may be omitted.</p>
 
+  <h2>Search</h2>
+  <p>Use the dedicated GET endpoints when you need to discover webpages, current news, openly licensed images, public videos, places, stocks, or market movers before extracting a known URL.</p>
+  <pre><code>GET /api/search?q=AI+web+data
+GET /api/news?q=AI+infrastructure
+GET /api/images?q=coral+reef
+GET /api/videos?q=Cloudflare+Workers+tutorial
+GET /api/places?q=Brandenburg+Gate+Berlin
+GET /api/places?q=coffee+Berlin&amp;lat=52.52&amp;lon=13.405</code></pre>
+
   <h2>JavaScript</h2>
   <pre><code>{javascriptExample}</code></pre>
 

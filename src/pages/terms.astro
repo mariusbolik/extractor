@@ -1,0 +1,71 @@
+---
+import LegalPage from '../components/LegalPage.astro';
+import { LEGAL_LAST_UPDATED, legalOperator } from '../features/legal/operator';
+import { hasLegalAccess } from '../features/legal/access';
+import { env } from 'cloudflare:workers';
+
+export const prerender = false;
+const title = 'Terms of Service — extractor.sh';
+const description = 'Terms for using the extractor.sh website, public APIs, documentation, and hosted MCP server.';
+const accessGranted = await hasLegalAccess(Astro.request, env.TURNSTILE_SECRET_KEY);
+const gateFailed = Astro.url.searchParams.get('gate') === 'failed';
+---
+
+<LegalPage
+  {title}
+  {description}
+  path="/terms/"
+  eyebrow="Terms of service"
+  heading="Simple rules for a public-data tool."
+  introduction="These terms govern the extractor.sh website, public APIs, hosted MCP server, documentation, and related services provided by Eyloo GmbH."
+  updated={LEGAL_LAST_UPDATED}
+  {accessGranted}
+  turnstileSiteKey={env.TURNSTILE_SITE_KEY}
+  {gateFailed}
+>
+  <h2>1. Scope and operator</h2>
+  <p>These terms apply between you and {legalOperator.name}, {legalOperator.street}, {legalOperator.postalCode} {legalOperator.city}, {legalOperator.country}. Individual written agreements and mandatory law take precedence where they conflict with these terms.</p>
+
+  <h2>2. Service</h2>
+  <p>extractor.sh accepts supported public web URLs and search queries and returns Markdown or normalized JSON. Results can be served from an edge cache. Supported sources, formats, limits, and known limitations are described in the <a href="/docs/">developer documentation</a>.</p>
+  <p>The service offers an anonymous daily allowance without an account, a one-time welcome credit bonus for new accounts, and optional prepaid usage after the account balance is exhausted. A successful response for one URL or source does not guarantee future compatibility or availability.</p>
+
+  <h2>3. Acceptable use</h2>
+  <p>You may use extractor.sh only for lawful purposes and only with public information you are entitled to request and process. You are responsible for your submitted URLs and queries, your use of results, and compliance with applicable copyright, database, privacy, competition, and platform rules.</p>
+  <p>You must not:</p>
+  <ul>
+    <li>Submit credentials, private URLs, personal data, confidential information, malware, or unlawful content.</li>
+    <li>Attempt to access private networks, bypass authentication, CAPTCHAs, paywalls, age gates, or other access controls.</li>
+    <li>Evade rate limits, overload the service or upstream sources, probe for vulnerabilities, or interfere with other users.</li>
+    <li>Use results to violate another person's rights or make unlawful automated decisions about individuals.</li>
+  </ul>
+
+  <h2>4. Results and third-party content</h2>
+  <p>Extraction and search results originate from public third-party sources. They may be incomplete, inaccurate, delayed, reformatted, or unavailable. You must verify information before relying on it for legal, medical, financial, safety-critical, or other consequential decisions.</p>
+  <p>extractor.sh does not grant you ownership of or a license to third-party content, trademarks, or data. Rights remain with their respective owners. A technically accessible result does not determine whether your intended reuse is lawful.</p>
+
+  <h2>5. Rate limits and caching</h2>
+  <p>Current public-preview limits and cache periods are published in the <a href="/docs/limits/">limits documentation</a>. We may adjust protective limits, suspend abusive traffic, or block requests that threaten security, availability, cost controls, or third-party systems. Cache hits can return content captured earlier rather than a live copy of a source.</p>
+
+  <h2>6. Paid services</h2>
+  <p>New accounts receive a one-time bonus of 1,000 credits. Prepaid credits cost $0.49 per 1,000 credits. The exact purchase grant is <code>floor(amount in cents × 1,000 / 49)</code>. Purchases range from $10.00 to $4,900.00. Welcome and purchased credits do not expire, have no cash value, and are consumed only by successful uncached operations made through a valid signed-in session or active account API key.</p>
+  <p>Manual top-ups are one-time purchases through Dodo Payments checkout. Dodo Payments acts as merchant of record, and its checkout identifies prices, taxes, payment terms, and transaction conditions. extractor.sh does not provide postpaid usage.</p>
+  <p>Automatic funding is optional and disabled by default. If you enable it, you authorize Dodo Payments to charge the selected top-up subtotal without another checkout when your prepaid balance reaches the selected threshold, subject to the selected maximum automatic-funding subtotal per UTC calendar month. Applicable tax is added separately and is not included in that pre-tax subtotal limit. A failed charge grants no credits or debt, repeated automatic attempts are paused, and you can disable automatic funding at any time.</p>
+  <p>Refunds and payment disputes reverse the complete credit grant associated with the original transaction, including already-used credits. This can make the account balance negative and block further paid cache misses until the balance is replenished. Statutory rights and the merchant-of-record transaction terms remain unaffected.</p>
+
+  <h2>7. Availability and changes</h2>
+  <p>The public preview is provided without a service-level agreement. We may change, limit, suspend, or discontinue features where reasonably necessary, including when a public source changes or withdraws access. We aim to keep documentation accurate but do not promise uninterrupted or error-free operation.</p>
+
+  <h2>8. Intellectual property</h2>
+  <p>The extractor.sh website, API design, documentation, branding, and original software remain protected by applicable intellectual-property laws. These terms do not transfer rights except the limited right to use the publicly offered service in accordance with these terms.</p>
+
+  <h2>9. Liability</h2>
+  <p>{legalOperator.name} is liable without limitation for intent and gross negligence, injury to life, body, or health, fraudulently concealed defects, guarantees, and liability that cannot legally be limited. For ordinary negligence, liability is limited to breach of an essential contractual duty and to the foreseeable damage typical for the contract. Mandatory statutory liability remains unaffected.</p>
+  <p>You are responsible for backing up important results and for reviewing extracted data before using it in production systems.</p>
+
+  <h2>10. Governing law and disputes</h2>
+  <p>German law applies, excluding its conflict-of-law rules and the UN Convention on Contracts for the International Sale of Goods. Mandatory consumer protections remain unaffected. Where legally permitted, the courts at the registered office of {legalOperator.name} have jurisdiction.</p>
+
+  <h2>11. Contact and updates</h2>
+  <p>Questions about these terms can be sent to <a href={`mailto:${legalOperator.email}`}>{legalOperator.email}</a>. We may update these terms for future use when the service, legal requirements, or business model changes. The date above identifies the current version.</p>
+</LegalPage>

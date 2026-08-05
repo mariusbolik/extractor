@@ -31,7 +31,7 @@ describe('contact submissions', () => {
 
     expect(mock.send).toHaveBeenCalledOnce();
     expect(mock.send).toHaveBeenCalledWith(expect.objectContaining({
-      to: { name: 'extractor.sh', email: 'sideprojects@eyloo.com' },
+      to: { name: 'extractor.sh', email: 'marius@eyloo.com' },
       from: { name: 'extractor.sh contact', email: 'contact@extractor.eyloo.com' },
       replyTo: { name: 'Ada Lovelace', email: 'ada@example.com' },
       subject: '[extractor.sh] Extraction help',

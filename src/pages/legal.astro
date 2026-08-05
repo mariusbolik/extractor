@@ -1,0 +1,57 @@
+---
+import LegalPage from '../components/LegalPage.astro';
+import { LEGAL_LAST_UPDATED, legalOperator } from '../features/legal/operator';
+import { hasLegalAccess } from '../features/legal/access';
+import { env } from 'cloudflare:workers';
+
+export const prerender = false;
+const title = 'Legal Notice — extractor.sh';
+const description = 'Legal provider information for extractor.sh, a service operated by Eyloo GmbH.';
+const accessGranted = await hasLegalAccess(Astro.request, env.TURNSTILE_SECRET_KEY);
+const gateFailed = Astro.url.searchParams.get('gate') === 'failed';
+---
+
+<LegalPage
+  {title}
+  {description}
+  path="/legal/"
+  eyebrow="Legal notice"
+  heading="Who operates extractor.sh."
+  introduction="The company and contact information for this service."
+  updated={LEGAL_LAST_UPDATED}
+  {accessGranted}
+  turnstileSiteKey={env.TURNSTILE_SITE_KEY}
+  {gateFailed}
+>
+  <h2>Service provider</h2>
+  <p>
+    <strong>{legalOperator.name}</strong><br />
+    {legalOperator.street}<br />
+    {legalOperator.postalCode} {legalOperator.city}<br />
+    {legalOperator.country}
+  </p>
+
+  <h2>Contact</h2>
+  <p>
+    Email: <a href={`mailto:${legalOperator.email}`}>{legalOperator.email}</a><br />
+    Phone: <a href={`tel:${legalOperator.phoneHref}`}>{legalOperator.phoneDisplay}</a>
+  </p>
+
+  <h2>Company information</h2>
+  <ul>
+    <li>Registered office: {legalOperator.registeredOffice}</li>
+    <li>Legal form: {legalOperator.legalForm}</li>
+    <li>Managing Director: {legalOperator.managingDirector}</li>
+    <li>Commercial register: {legalOperator.registerCourt}, {legalOperator.registerNumber}</li>
+    <li>VAT identification number under Section 27a German VAT Act: {legalOperator.vatId}</li>
+  </ul>
+
+  <h2>Responsible for content</h2>
+  <p>{legalOperator.managingDirector}, at the address stated above.</p>
+
+  <h2>Scope</h2>
+  <p>This legal notice applies to extractor.sh, its public API, hosted MCP server, documentation, and related pages operated by {legalOperator.name}.</p>
+
+  <h2>External content</h2>
+  <p>Links and extracted results can lead to third-party websites. Their operators remain responsible for their content. A link or extraction result does not imply endorsement by {legalOperator.name}.</p>
+</LegalPage>
