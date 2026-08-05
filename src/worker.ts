@@ -87,7 +87,18 @@ export default {
     const markdown = getSiteMarkdown(url.pathname);
 
     if (url.pathname === '/mcp') {
-      const response = await mcpHandler(request, env, context);
+      const serviceAuth = await authenticateServiceRequest(request, getSecret('LLMBASE_SERVICE_TOKEN'));
+      if (serviceAuth.kind === 'invalid') return serviceAuth.response;
+      const mcpRequest = serviceAuth.kind === 'service'
+        ? new Request(request, {
+            headers: (() => {
+              const headers = new Headers(request.headers);
+              headers.set('cf-connecting-ip', serviceAuth.limiterKey);
+              return headers;
+            })(),
+          })
+        : request;
+      const response = await mcpHandler(mcpRequest, env, context);
       const decorated = new Response(response.body, response);
       decorated.headers.set('Cache-Control', 'private, no-store');
       decorated.headers.set('Link', DISCOVERY_LINKS);

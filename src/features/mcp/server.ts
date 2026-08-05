@@ -21,6 +21,7 @@ import { finishRequestMeter, MeteringError, reserveRequestMeter } from '../billi
 import { sendUsageAlert } from '../billing/email';
 import { maybeTriggerAutoTopUp } from '../billing/auto-top-up';
 import { dodoEnvironment } from '../billing/dodo';
+import { authenticateServiceRequest } from '../billing/service-auth';
 import {
   FINANCE_APP_HTML,
   FINANCE_APP_MIME_TYPE,
@@ -147,7 +148,17 @@ function clientKeyFor(requestInfo: Request | undefined): string {
 
 async function meteredMcpMiss<T>(context: McpRequestContext, operation: () => Promise<T>): Promise<T> {
   const request = context.requestInfo ?? new Request('https://extractor.sh/mcp', { method: 'POST' });
-  const reservation = await reserveRequestMeter(request, env, getSecret('ANONYMOUS_QUOTA_HMAC_SECRET'));
+  const serviceAuth = await authenticateServiceRequest(request, getSecret('LLMBASE_SERVICE_TOKEN'));
+  if (serviceAuth.kind === 'invalid') {
+    throw new MeteringError('invalid_api_key', 'The service credentials are invalid.', 401);
+  }
+  const reservation = await reserveRequestMeter(
+    request,
+    env,
+    getSecret('ANONYMOUS_QUOTA_HMAC_SECRET'),
+    null,
+    serviceAuth.kind === 'service' ? serviceAuth.limiterKey : null,
+  );
   try {
     const result = await operation();
     const finish = await finishRequestMeter(reservation, env, true);

@@ -6,6 +6,7 @@ import { platformPageList } from '../src/features/marketing/platform-pages.ts';
 
 const origin = (process.env.EXTRACTOR_ORIGIN || 'https://extractor.sh').replace(/\/$/, '');
 const apiKey = process.env.EXTRACTOR_API_KEY?.trim() || null;
+const serviceSubject = process.env.EXTRACTOR_SERVICE_SUBJECT?.trim() || null;
 const allowExhaustedAnonymousQuota = process.env.EXTRACTOR_SMOKE_ALLOW_EXHAUSTED_ANONYMOUS_QUOTA === '1';
 if (!apiKey) {
   throw new Error('EXTRACTOR_API_KEY is required for the authenticated production Chromium suite. The suite separately verifies one anonymous MISS/HIT without using this key.');
@@ -14,7 +15,10 @@ const browser = await chromium.launch({ headless: true });
 const context = await browser.newContext({
   viewport: { width: 1440, height: 1000 },
   colorScheme: 'light',
-  extraHTTPHeaders: { Authorization: `Bearer ${apiKey}` },
+  extraHTTPHeaders: {
+    Authorization: `Bearer ${apiKey}`,
+    ...(serviceSubject ? { 'X-Extractr-Service-Subject': serviceSubject } : {}),
+  },
 });
 // Analytics ingestion rejects automated browsers with 403. Stub only that
 // third-party beacon so console assertions remain about extractor.sh itself;
@@ -969,7 +973,14 @@ try {
 
   await mcpClient.connect(new StreamableHTTPClientTransport(
     new URL(`${origin}/mcp`),
-    apiKey ? { requestInit: { headers: { Authorization: `Bearer ${apiKey}` } } } : undefined,
+    apiKey ? {
+      requestInit: {
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          ...(serviceSubject ? { 'X-Extractr-Service-Subject': serviceSubject } : {}),
+        },
+      },
+    } : undefined,
   ));
   const tools = await mcpClient.listTools();
   assert.deepEqual(tools.tools.map((tool) => tool.name), ['extract_public_url', 'search_images', 'search_videos', 'search_places', 'search_web', 'search_news', 'search_stocks', 'get_market_movers', 'get_market_data']);

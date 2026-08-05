@@ -9,6 +9,7 @@ const DEFAULT_CONCURRENCY = 4;
 const DEFAULT_TIMEOUT_MS = 45_000;
 const DEFAULT_MINIMUM_SUCCESS_RATE = 0.6;
 const apiKey = process.env.EXTRACTOR_API_KEY?.trim() || null;
+const serviceSubject = process.env.EXTRACTOR_SERVICE_SUBJECT?.trim() || null;
 
 const TWO_LEVEL_PUBLIC_SUFFIXES = new Set([
   'ac.uk', 'co.jp', 'co.kr', 'co.nz', 'co.uk', 'com.ar', 'com.au', 'com.br',
@@ -271,6 +272,7 @@ async function testTarget(target, options) {
         Accept: 'application/json',
         'User-Agent': 'extractor.sh-production-smoke/1.0',
         ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
+        ...(serviceSubject ? { 'X-Extractr-Service-Subject': serviceSubject } : {}),
       },
       signal: AbortSignal.timeout(options.timeoutMs),
     });
@@ -382,6 +384,7 @@ async function requestProbe(targetUrl, format, options) {
       headers: {
         Accept: format === 'markdown' ? 'text/markdown' : 'application/json',
         ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
+        ...(serviceSubject ? { 'X-Extractr-Service-Subject': serviceSubject } : {}),
       },
       signal: AbortSignal.timeout(options.timeoutMs),
     });
