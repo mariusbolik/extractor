@@ -307,7 +307,11 @@ async function testTarget(target, options) {
     } else if (validErrorBody(body)) {
       result.errorCode = body.error.code;
       result.errorMessage = body.error.message;
-      result.outcome = body.error.code === 'rate_limited' ? 'rate_limited' : 'source_error';
+      result.outcome = body.error.code === 'rate_limited'
+        ? 'rate_limited'
+        : ['invalid_url', 'unsafe_url'].includes(body.error.code)
+          ? 'rejected_target'
+          : 'source_error';
     } else {
       result.outcome = 'invalid_response';
       result.errorMessage = `HTTP ${response.status} did not return the public error schema.`;
@@ -455,7 +459,11 @@ function summarize(results, options) {
   durations.sort((a, b) => a - b);
   const percentile = (ratio) => durations[Math.min(durations.length - 1, Math.floor(durations.length * ratio))] || 0;
   const successes = outcomes.success || 0;
-  const successRate = successes / results.length;
+  // Security-policy rejections are still attempted, reported, and grouped,
+  // but they are not extraction attempts and therefore do not dilute source
+  // reliability. This keeps a stricter SSRF boundary from lowering the score.
+  const evaluated = results.filter((result) => result.outcome !== 'rejected_target').length;
+  const successRate = evaluated > 0 ? successes / evaluated : 0;
   const checks = {
     attemptedMinimum: results.length >= options.count,
     successRate: successRate >= options.minimumSuccessRate,
@@ -465,6 +473,7 @@ function summarize(results, options) {
   };
   return {
     attempted: results.length,
+    evaluated,
     distinctSites: new Set(results.map((result) => siteKey(new URL(result.url).hostname))).size,
     successes,
     successRate,
@@ -495,7 +504,7 @@ function markdownReport(report) {
 - Source: ${report.source.name}
 - Source last modified: ${report.source.lastModified || 'not provided'}
 - Distinct sites: ${report.summary.distinctSites}
-- Successful extractions: ${report.summary.successes}/${report.summary.attempted} (${(report.summary.successRate * 100).toFixed(1)}%)
+- Successful extractions: ${report.summary.successes}/${report.summary.evaluated} eligible targets (${(report.summary.successRate * 100).toFixed(1)}%); ${report.summary.attempted} total requests
 - Result: ${report.summary.passed ? 'PASS' : 'FAIL'}
 - Latency: p50 ${report.summary.latencyMs.p50} ms; p95 ${report.summary.latencyMs.p95} ms; max ${report.summary.latencyMs.maximum} ms
 - JSON cache probe: ${report.contract.checks.jsonCacheHit ? 'PASS' : 'FAIL'}
@@ -563,7 +572,7 @@ async function main() {
   };
   const paths = await saveReport(report, options.reportDir);
 
-  console.log(`\n${summary.passed ? 'PASS' : 'FAIL'}: ${summary.successes}/${summary.attempted} successful (${(summary.successRate * 100).toFixed(1)}%)`);
+  console.log(`\n${summary.passed ? 'PASS' : 'FAIL'}: ${summary.successes}/${summary.evaluated} eligible targets successful (${(summary.successRate * 100).toFixed(1)}%); ${summary.attempted} total requests`);
   console.log(`Outcomes: ${JSON.stringify(summary.outcomes)}`);
   console.log(`Latency: p50=${summary.latencyMs.p50}ms p95=${summary.latencyMs.p95}ms max=${summary.latencyMs.maximum}ms`);
   console.log(`Reports: ${paths.markdown} and ${paths.json}`);
