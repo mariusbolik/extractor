@@ -1,13 +1,28 @@
 import { describe, expect, it } from 'vitest';
-import { apiCacheKey } from './cache';
+import { apiCacheKey, cacheTtlForResponse } from './cache';
 
 describe('apiCacheKey', () => {
   it('versions internal cache keys without changing the public request', () => {
     const request = new Request('https://extractor.test/api/extract?url=https%3A%2F%2Fexample.com&format=json');
     const key = apiCacheKey(request);
 
-    expect(new URL(key.url).searchParams.get('__extractor_cache')).toBe('2026-08-intent-filters-v9');
+    expect(new URL(key.url).searchParams.get('__extractor_cache')).toBe('2026-08-access-block-v10');
     expect(new URL(request.url).searchParams.has('__extractor_cache')).toBe(false);
+  });
+
+  it('never caches error responses even when they accidentally carry a TTL', () => {
+    const blocked = new Response(JSON.stringify({ error: { code: 'source_blocked' } }), {
+      status: 502,
+      headers: { 'X-Extractor-Cache-TTL': '2592000' },
+    });
+    const success = new Response('{}', {
+      status: 200,
+      headers: { 'X-Extractor-Cache-TTL': '3600' },
+    });
+
+    expect(cacheTtlForResponse(blocked)).toBeNull();
+    expect(cacheTtlForResponse(success)).toBe(3600);
+    expect(cacheTtlForResponse(new Response('{}', { status: 200 }))).toBeNull();
   });
 
   it('shares canonical search keys across omitted defaults and whitespace', () => {

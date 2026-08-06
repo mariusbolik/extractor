@@ -1,5 +1,5 @@
 import { handle } from '@astrojs/cloudflare/handler';
-import { apiCacheKey } from './features/extraction';
+import { apiCacheKey, cacheTtlForResponse } from './features/extraction';
 import { getSiteMarkdown } from './features/discovery/site-markdown';
 import { canonicalPageRedirectUrl } from './features/discovery/canonical-page';
 import { mcpHandler } from './features/mcp/server';
@@ -176,8 +176,8 @@ export default {
         await finishRequestMeter(reservation, env, false);
         throw error;
       }
-      const ttl = Number(response.headers.get('X-Extractor-Cache-TTL'));
-      const commit = response.ok && Number.isFinite(ttl) && ttl > 0;
+      const ttl = cacheTtlForResponse(response);
+      const commit = ttl !== null;
       const finish = await finishRequestMeter(reservation, env, commit);
       if (commit && reservation.kind === 'paid') {
         const dodoApiKey = getSecret('DODOPAYMENTS_API_KEY');

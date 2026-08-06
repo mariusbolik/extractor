@@ -1,4 +1,5 @@
 import { ExtractionError } from '../errors';
+import { assertNoAccessInterstitial } from '../access-interstitial';
 import { fetchPublicPage } from '../fetch';
 import { extractMarkdownFromHtml, markdownWordCount } from '../markdown';
 import type { ExtractionDependencies, ExtractionResult } from '../types';
@@ -88,6 +89,8 @@ export async function extractWebPage(
       );
     }
 
+    assertNoAccessInterstitial(page.body);
+
     // Set eligibility before parsing: a parser failure may be recoverable only
     // when the original HTML indicates that client-side rendering is expected.
     shouldUseBrowser = hasClientRenderingSignals(page.body);
@@ -124,7 +127,7 @@ export async function extractWebPage(
       method: metadataOnly ? 'metadata' : 'linkedom',
     };
   } catch (error) {
-    if (error instanceof ExtractionError && ['invalid_url', 'unsafe_url', 'not_found', 'unsupported_content_type', 'content_too_large', 'timeout'].includes(error.code)) {
+    if (error instanceof ExtractionError && ['invalid_url', 'unsafe_url', 'not_found', 'unsupported_content_type', 'content_too_large', 'source_blocked', 'timeout'].includes(error.code)) {
       throw error;
     }
     directError = error;
@@ -156,6 +159,7 @@ export async function extractWebPage(
 
   try {
     const html = await dependencies.renderPageHtml(url);
+    assertNoAccessInterstitial(html);
     const extracted = extractMarkdownFromHtml(html, fetchedUrl, dependencies.focus);
     const { metadataOnly: _metadataOnly, description, language, modifiedAt, wordCount, ...article } = extracted;
     return {

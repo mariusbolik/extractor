@@ -2,51 +2,62 @@
 import { Icon } from 'astro-icon/components';
 ---
 
-<section class="mb-12 border-2 border-black bg-white p-[clamp(22px,4vw,44px)] shadow-[10px_10px_0_#000] max-[660px]:shadow-[6px_6px_0_#000]" aria-label="Web extraction, search, and finance">
-  <form id="extract-form" action="/api/extract" method="get">
-    <div class="mb-5 inline-flex max-w-full overflow-x-auto border-2 border-black" aria-label="Choose an action">
-      <button class="inline-flex min-h-10 shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap border-0 border-r-2 border-black bg-white px-4 py-2 text-[0.85rem] font-extrabold aria-pressed:bg-black aria-pressed:text-white" type="button" data-form-mode="extract" aria-pressed="true">
-        <Icon class="size-[17px] shrink-0" name="heroicons:link" aria-hidden="true" /> Extract
-      </button>
-      <button class="inline-flex min-h-10 shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap border-0 border-r-2 border-black bg-white px-4 py-2 text-[0.85rem] font-extrabold aria-pressed:bg-black aria-pressed:text-white" type="button" data-form-mode="search" aria-pressed="false">
-        <Icon class="size-[17px] shrink-0" name="heroicons:magnifying-glass" aria-hidden="true" /> Web Search
-      </button>
-      <button class="inline-flex min-h-10 shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap border-0 border-r-2 border-black bg-white px-4 py-2 text-[0.85rem] font-extrabold aria-pressed:bg-black aria-pressed:text-white" type="button" data-form-mode="news" aria-pressed="false">
-        <Icon class="size-[17px] shrink-0" name="heroicons:newspaper" aria-hidden="true" /> News
-      </button>
-      <button class="inline-flex min-h-10 shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap border-0 border-r-2 border-black bg-white px-4 py-2 text-[0.85rem] font-extrabold aria-pressed:bg-black aria-pressed:text-white" type="button" data-form-mode="images" aria-pressed="false">
-        <Icon class="size-[17px] shrink-0" name="heroicons:photo" aria-hidden="true" /> Images
-      </button>
-      <button class="inline-flex min-h-10 shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap border-0 border-r-2 border-black bg-white px-4 py-2 text-[0.85rem] font-extrabold aria-pressed:bg-black aria-pressed:text-white" type="button" data-form-mode="videos" aria-pressed="false">
-        <Icon class="size-[17px] shrink-0" name="heroicons:video-camera" aria-hidden="true" /> Videos
-      </button>
-      <button class="inline-flex min-h-10 shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap border-0 border-r-2 border-black bg-white px-4 py-2 text-[0.85rem] font-extrabold aria-pressed:bg-black aria-pressed:text-white" type="button" data-form-mode="places" aria-pressed="false">
-        <Icon class="size-[17px] shrink-0" name="heroicons:map-pin" aria-hidden="true" /> Places
-      </button>
-      <button class="inline-flex min-h-10 shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap border-0 bg-white px-4 py-2 text-[0.85rem] font-extrabold aria-pressed:bg-black aria-pressed:text-white" type="button" data-form-mode="finance" aria-pressed="false">
-        <Icon class="size-[17px] shrink-0" name="heroicons:chart-bar" aria-hidden="true" /> Finance
-      </button>
-    </div>
-    <div>
-      <label id="form-input-label" class="text-[0.88rem] font-extrabold" for="url">Website URL</label>
-    </div>
-    <div class="mt-[9px] grid grid-cols-[1fr_auto] gap-[14px] max-[660px]:grid-cols-1">
-      <input class="min-h-[52px] min-w-0 border-2 border-black bg-white px-[15px] py-3 text-black outline-none placeholder:text-black/50 focus:outline-none focus-visible:!outline-none" id="url" name="url" type="url" inputmode="url" autocomplete="url" required maxlength="2048" placeholder="https://www.amazon.com/dp/B09B8V1LZ3" />
-      <button class="inline-flex min-h-[52px] cursor-pointer items-center justify-center gap-[9px] border-[2px_5px_5px_2px] border-black bg-white px-[22px] py-[10px] font-[850] transition-[transform,border-width] duration-100 hover:translate-x-[2px] hover:translate-y-[2px] hover:border-[4px_3px_3px_4px] active:translate-x-[3px] active:translate-y-[3px] active:border-[5px_2px_2px_5px] disabled:cursor-wait disabled:opacity-60 max-[660px]:w-full" type="submit"><span id="form-submit-label">Extract</span> <Icon class="size-[19px] shrink-0" name="heroicons:arrow-right" aria-hidden="true" /></button>
-    </div>
-    <fieldset class="mt-[18px] flex items-center gap-5 border-0 p-0 max-[660px]:flex-col max-[660px]:items-start max-[660px]:gap-[10px]">
-      <legend class="float-left mr-2 text-[0.88rem] font-extrabold max-[660px]:mb-2">Output format</legend>
-      <label class="inline-flex cursor-pointer items-center gap-[7px]"><input class="m-0 size-[17px] appearance-none border-2 border-black bg-white checked:bg-black checked:shadow-[inset_0_0_0_3px_#fff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black" type="radio" name="format" value="markdown" checked /> Markdown</label>
-      <label class="inline-flex cursor-pointer items-center gap-[7px]"><input class="m-0 size-[17px] appearance-none border-2 border-black bg-white checked:bg-black checked:shadow-[inset_0_0_0_3px_#fff] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black" type="radio" name="format" value="json" /> JSON</label>
-    </fieldset>
-    <details class="mt-5 border-t-2 border-black pt-4" id="form-options">
-      <summary class="cursor-pointer font-extrabold">Options</summary>
-      <div class="mt-4 grid gap-4 sm:grid-cols-2">
-        <div data-options-mode="extract">
+<section class="mb-12 border-2 border-black bg-white shadow-[10px_10px_0_#000] max-[660px]:shadow-[6px_6px_0_#000]" aria-label="Web extraction, search, and finance">
+  <div class="grid lg:grid-cols-[218px_minmax(0,1fr)]">
+    <aside class="border-b-2 border-black bg-white p-3 text-black lg:border-r-2 lg:border-b-0" aria-label="Live API examples">
+      <div class="px-2 pt-2 pb-4">
+        <p class="mb-2 font-mono text-[0.7rem] font-extrabold uppercase tracking-[0.14em] text-black/60">Live examples</p>
+        <p class="text-[0.82rem] leading-[1.5] text-black/70">Choose a capability. Its example runs instantly.</p>
+      </div>
+      <div class="grid gap-2 max-lg:grid-cols-2 max-[520px]:grid-cols-1" aria-label="Choose an action">
+        <button class="group inline-flex min-h-[50px] w-full items-center gap-3 border-2 border-black bg-white px-3 py-2.5 text-left text-[0.85rem] font-extrabold text-black aria-pressed:bg-black aria-pressed:text-white" type="button" data-form-mode="search" aria-pressed="true">
+          <Icon class="size-[18px] shrink-0" name="heroicons:magnifying-glass" aria-hidden="true" /> <span class="flex-1">Web Search</span><Icon class="size-4 shrink-0 opacity-0 group-aria-pressed:opacity-100" name="heroicons:arrow-right" aria-hidden="true" />
+        </button>
+        <button class="group inline-flex min-h-[50px] w-full items-center gap-3 border-2 border-black bg-white px-3 py-2.5 text-left text-[0.85rem] font-extrabold text-black aria-pressed:bg-black aria-pressed:text-white" type="button" data-form-mode="extract" aria-pressed="false">
+          <Icon class="size-[18px] shrink-0" name="heroicons:link" aria-hidden="true" /> <span class="flex-1">Extract</span><Icon class="size-4 shrink-0 opacity-0 group-aria-pressed:opacity-100" name="heroicons:arrow-right" aria-hidden="true" />
+        </button>
+        <button class="group inline-flex min-h-[50px] w-full items-center gap-3 border-2 border-black bg-white px-3 py-2.5 text-left text-[0.85rem] font-extrabold text-black aria-pressed:bg-black aria-pressed:text-white" type="button" data-form-mode="news" aria-pressed="false">
+          <Icon class="size-[18px] shrink-0" name="heroicons:newspaper" aria-hidden="true" /> <span class="flex-1">News</span><Icon class="size-4 shrink-0 opacity-0 group-aria-pressed:opacity-100" name="heroicons:arrow-right" aria-hidden="true" />
+        </button>
+        <button class="group inline-flex min-h-[50px] w-full items-center gap-3 border-2 border-black bg-white px-3 py-2.5 text-left text-[0.85rem] font-extrabold text-black aria-pressed:bg-black aria-pressed:text-white" type="button" data-form-mode="images" aria-pressed="false">
+          <Icon class="size-[18px] shrink-0" name="heroicons:photo" aria-hidden="true" /> <span class="flex-1">Images</span><Icon class="size-4 shrink-0 opacity-0 group-aria-pressed:opacity-100" name="heroicons:arrow-right" aria-hidden="true" />
+        </button>
+        <button class="group inline-flex min-h-[50px] w-full items-center gap-3 border-2 border-black bg-white px-3 py-2.5 text-left text-[0.85rem] font-extrabold text-black aria-pressed:bg-black aria-pressed:text-white" type="button" data-form-mode="videos" aria-pressed="false">
+          <Icon class="size-[18px] shrink-0" name="heroicons:video-camera" aria-hidden="true" /> <span class="flex-1">Videos</span><Icon class="size-4 shrink-0 opacity-0 group-aria-pressed:opacity-100" name="heroicons:arrow-right" aria-hidden="true" />
+        </button>
+        <button class="group inline-flex min-h-[50px] w-full items-center gap-3 border-2 border-black bg-white px-3 py-2.5 text-left text-[0.85rem] font-extrabold text-black aria-pressed:bg-black aria-pressed:text-white" type="button" data-form-mode="places" aria-pressed="false">
+          <Icon class="size-[18px] shrink-0" name="heroicons:map-pin" aria-hidden="true" /> <span class="flex-1">Places</span><Icon class="size-4 shrink-0 opacity-0 group-aria-pressed:opacity-100" name="heroicons:arrow-right" aria-hidden="true" />
+        </button>
+        <button class="group inline-flex min-h-[50px] w-full items-center gap-3 border-2 border-black bg-white px-3 py-2.5 text-left text-[0.85rem] font-extrabold text-black aria-pressed:bg-black aria-pressed:text-white" type="button" data-form-mode="finance" aria-pressed="false">
+          <Icon class="size-[18px] shrink-0" name="heroicons:chart-bar" aria-hidden="true" /> <span class="flex-1">Finance</span><Icon class="size-4 shrink-0 opacity-0 group-aria-pressed:opacity-100" name="heroicons:arrow-right" aria-hidden="true" />
+        </button>
+      </div>
+    </aside>
+
+    <div class="min-w-0 p-[clamp(20px,3.5vw,38px)]">
+      <form id="extract-form" action="/api/search" method="get">
+        <div>
+          <p class="mb-1 font-mono text-[0.7rem] font-extrabold uppercase tracking-[0.14em]">Try your own data</p>
+          <label id="form-input-label" class="text-[0.88rem] font-extrabold" for="url">Search query</label>
+        </div>
+        <div class="mt-[9px] grid grid-cols-[1fr_auto] gap-[12px] max-[660px]:grid-cols-1">
+          <input class="min-h-[52px] min-w-0 border-2 border-black bg-white px-[15px] py-3 text-black outline-none placeholder:text-black/50 focus:outline-none focus-visible:!outline-none" id="url" name="q" type="text" inputmode="search" autocomplete="off" required maxlength="200" value="the white house" placeholder="the white house" />
+          <button class="inline-flex min-h-[52px] cursor-pointer items-center justify-center gap-[9px] border-[2px_5px_5px_2px] border-black bg-white px-[20px] py-[10px] font-[850] transition-[transform,border-width] duration-100 hover:translate-x-[2px] hover:translate-y-[2px] hover:border-[4px_3px_3px_4px] active:translate-x-[3px] active:translate-y-[3px] active:border-[5px_2px_2px_5px] max-[660px]:w-full" type="submit"><span id="form-submit-label">Search</span> <Icon class="size-[19px] shrink-0" name="heroicons:arrow-right" aria-hidden="true" /></button>
+        </div>
+        <div class="mt-5 flex flex-col gap-4 border-t-2 border-black pt-4 sm:flex-row sm:items-start" id="form-options">
+          <fieldset class="m-0 shrink-0 border-0 p-0">
+            <legend class="text-[0.82rem] font-extrabold">Output format</legend>
+            <div class="mt-2 inline-flex border-2 border-black">
+              <label class="cursor-pointer"><input class="peer sr-only" type="radio" name="format" value="markdown" checked /><span class="inline-flex min-h-10 items-center bg-white px-3 text-[0.78rem] font-extrabold peer-checked:bg-black peer-checked:text-white peer-focus-visible:outline-3 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-black">Markdown</span></label>
+              <label class="cursor-pointer border-l-2 border-black"><input class="peer sr-only" type="radio" name="format" value="json" /><span class="inline-flex min-h-10 items-center bg-white px-3 text-[0.78rem] font-extrabold peer-checked:bg-black peer-checked:text-white peer-focus-visible:outline-3 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-black">JSON</span></label>
+            </div>
+          </fieldset>
+          <div class="grid min-w-0 flex-1 gap-4 sm:grid-cols-2">
+        <div data-options-mode="extract" hidden>
           <label class="text-[0.82rem] font-extrabold" for="extract-focus">Focus topic</label>
           <input class="mt-2 min-h-11 w-full border-2 border-black px-3 py-2" id="extract-focus" name="focus" type="text" maxlength="80" placeholder="pricing, features, FAQ" />
         </div>
-        <div data-options-mode="search news videos" hidden>
+        <div data-options-mode="search news videos">
           <label class="text-[0.82rem] font-extrabold" for="search-locale">Language and country</label>
           <select class="mt-2 min-h-11 w-full border-2 border-black bg-white px-3 py-2" id="search-locale" data-locale-preset disabled>
             <option value="en-US|US">English · United States</option>
@@ -115,19 +126,23 @@ import { Icon } from 'astro-icon/components';
             <option value="">Native listing currency</option><option value="EUR">EUR</option><option value="USD">USD</option><option value="GBP">GBP</option><option value="JPY">JPY</option><option value="CHF">CHF</option><option value="CAD">CAD</option><option value="AUD">AUD</option>
           </select>
         </div>
-      </div>
-    </details>
-  </form>
+          </div>
+        </div>
+      </form>
 
-  <div id="result" class="result mt-[34px] border-t-2 border-black pt-6 data-[state=error]:[&_.result-content]:border-dashed" hidden aria-live="polite">
-    <div class="flex items-center justify-between gap-5">
-      <span id="result-label" class="mb-4 font-mono text-[0.8rem] font-extrabold uppercase tracking-[0.14em]">Result</span>
-      <div class="flex items-center gap-4 text-[0.85rem] font-extrabold">
-        <button id="copy-result" class="inline-flex cursor-pointer items-center gap-[5px] border-0 bg-white p-0 font-extrabold underline underline-offset-[0.2em]" type="button"><Icon class="size-[19px] shrink-0" name="heroicons:clipboard-document" aria-hidden="true" /> <span>Copy</span></button>
-        <a class="inline-flex items-center gap-[5px]" id="raw-result" target="_blank" rel="noopener">Open raw <Icon class="size-[19px] shrink-0" name="heroicons:arrow-top-right-on-square" aria-hidden="true" /></a>
+      <div id="result" class="result mt-6 border-t-2 border-black pt-5 data-[state=error]:[&_.result-content]:border-dashed" data-state="loading" aria-live="polite" aria-busy="true">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <span id="result-label" class="font-mono text-[0.75rem] font-extrabold uppercase tracking-[0.14em]">Searching…</span>
+          <div class="flex items-center gap-4 text-[0.82rem] font-extrabold">
+            <button id="copy-result" class="inline-flex cursor-pointer items-center gap-[5px] border-0 bg-white p-0 font-extrabold underline underline-offset-[0.2em]" type="button"><Icon class="size-[18px] shrink-0" name="heroicons:clipboard-document" aria-hidden="true" /> <span>Copy</span></button>
+            <a class="inline-flex items-center gap-[5px]" id="raw-result" target="_blank" rel="noopener">Open raw <Icon class="size-[18px] shrink-0" name="heroicons:arrow-top-right-on-square" aria-hidden="true" /></a>
+          </div>
+        </div>
+        <div id="result-content" class="result-content mt-3 h-[min(52vh,520px)] min-h-[300px] overflow-auto border-2 border-black bg-black p-[clamp(16px,2.5vw,26px)] font-mono text-[0.82rem] leading-[1.65] text-white [&_.shiki]:!bg-black [&_pre]:m-0 [&_pre]:min-w-max [&_pre]:rounded-[3px] [&_pre]:!bg-black [&_pre]:text-white [&_pre]:whitespace-pre">
+          <p class="animate-pulse">Loading. Please wait.</p>
+        </div>
       </div>
     </div>
-    <div id="result-content" class="result-content mt-3 max-h-[620px] overflow-auto border-2 border-black bg-white p-[clamp(18px,3vw,30px)] font-mono text-[0.84rem] leading-[1.65] [&_.shiki]:!bg-white [&_pre]:m-0 [&_pre]:min-w-max [&_pre]:rounded-[3px] [&_pre]:bg-white [&_pre]:whitespace-pre"></div>
   </div>
 </section>
 
@@ -152,6 +167,7 @@ import { Icon } from 'astro-icon/components';
   const modes = {
     extract: {
       action: '/api/extract',
+      example: 'https://blog.hubspot.com/marketing/loop-marketing',
       inputName: 'url',
       inputType: 'url',
       inputMode: 'url',
@@ -166,13 +182,14 @@ import { Icon } from 'astro-icon/components';
     },
     search: {
       action: '/api/search',
+      example: 'the white house',
       inputName: 'q',
       inputType: 'text',
       inputMode: 'search',
       autocomplete: 'off',
       maximumLength: 200,
       label: 'Search query',
-      placeholder: 'best web data tools for AI agents',
+      placeholder: 'the white house',
       submit: 'Search',
       loading: 'Searching…',
       errorLabel: 'Could not search',
@@ -180,13 +197,14 @@ import { Icon } from 'astro-icon/components';
     },
     news: {
       action: '/api/news',
+      example: 'elon musk',
       inputName: 'q',
       inputType: 'text',
       inputMode: 'search',
       autocomplete: 'off',
       maximumLength: 200,
       label: 'News query',
-      placeholder: 'latest AI infrastructure news',
+      placeholder: 'elon musk',
       submit: 'Search news',
       loading: 'Searching news…',
       errorLabel: 'Could not search news',
@@ -194,13 +212,14 @@ import { Icon } from 'astro-icon/components';
     },
     images: {
       action: '/api/images',
+      example: 'humanoid robot',
       inputName: 'q',
       inputType: 'text',
       inputMode: 'search',
       autocomplete: 'off',
       maximumLength: 200,
       label: 'Image query',
-      placeholder: 'coral reef',
+      placeholder: 'humanoid robot',
       submit: 'Search images',
       loading: 'Searching images…',
       errorLabel: 'Could not search images',
@@ -208,13 +227,14 @@ import { Icon } from 'astro-icon/components';
     },
     videos: {
       action: '/api/videos',
+      example: 'Claude Code tutorial',
       inputName: 'q',
       inputType: 'text',
       inputMode: 'search',
       autocomplete: 'off',
       maximumLength: 200,
       label: 'Video query',
-      placeholder: 'Cloudflare Workers tutorial',
+      placeholder: 'Claude Code tutorial',
       submit: 'Search videos',
       loading: 'Searching videos…',
       errorLabel: 'Could not search videos',
@@ -222,13 +242,14 @@ import { Icon } from 'astro-icon/components';
     },
     places: {
       action: '/api/places',
+      example: 'Computer History Museum',
       inputName: 'q',
       inputType: 'text',
       inputMode: 'search',
       autocomplete: 'off',
       maximumLength: 200,
       label: 'Place or address',
-      placeholder: 'Brandenburg Gate Berlin',
+      placeholder: 'Computer History Museum',
       submit: 'Search places',
       loading: 'Searching places…',
       errorLabel: 'Could not search places',
@@ -236,6 +257,7 @@ import { Icon } from 'astro-icon/components';
     },
     finance: {
       action: '/api/finance',
+      example: 'NVDA',
       inputName: 'symbol',
       inputType: 'text',
       inputMode: 'text',
@@ -249,15 +271,17 @@ import { Icon } from 'astro-icon/components';
       errorMessage: 'Market data request failed.',
     },
   } as const;
-  let mode: FormMode = 'extract';
+  let mode: FormMode = 'search';
+  let activeRequest: AbortController | undefined;
+  let requestId = 0;
 
   /**
    * Reconfigure the single public input instead of maintaining two forms.
    * This keeps the interaction compact and guarantees that only the parameter
    * accepted by the selected GET endpoint is submitted.
    */
-  function selectMode(nextMode: FormMode) {
-    if (!form || !input || !inputLabel || !submitLabel || nextMode === mode) return;
+  function selectMode(nextMode: FormMode, runExample = true, example?: string) {
+    if (!form || !input || !inputLabel || !submitLabel) return;
     mode = nextMode;
     const config = modes[mode];
     form.action = config.action;
@@ -267,7 +291,7 @@ import { Icon } from 'astro-icon/components';
     input.setAttribute('autocomplete', config.autocomplete);
     input.maxLength = config.maximumLength;
     input.placeholder = config.placeholder;
-    input.value = '';
+    input.value = example ?? config.example;
     inputLabel.textContent = config.label;
     submitLabel.textContent = config.submit;
     modeButtons.forEach((button) => {
@@ -280,11 +304,8 @@ import { Icon } from 'astro-icon/components';
         (control as HTMLElement & { disabled: boolean }).disabled = !active;
       });
     });
-    // A result belongs to the mode that produced it. Hide stale output when
-    // the endpoint changes so its raw link cannot be mistaken for a new result.
-    if (result) result.hidden = true;
     copyValue = '';
-    input.focus();
+    if (runExample) form.requestSubmit();
   }
 
   modeButtons.forEach((button) => {
@@ -302,14 +323,14 @@ import { Icon } from 'astro-icon/components';
   // Shiki is only needed after a successful JSON request. Keeping its single
   // grammar and light theme in a lazy chunk avoids slowing the initial form.
   async function createJsonHighlighter() {
-    const [{ createHighlighterCore }, { createJavaScriptRegexEngine }, { default: json }, { default: githubLight }] = await Promise.all([
+    const [{ createHighlighterCore }, { createJavaScriptRegexEngine }, { default: json }, { default: githubDark }] = await Promise.all([
       import('shiki/core'),
       import('shiki/engine/javascript'),
       import('shiki/langs/json.mjs'),
-      import('shiki/themes/github-light-default.mjs'),
+      import('shiki/themes/github-dark-default.mjs'),
     ]);
     return createHighlighterCore({
-      themes: [githubLight],
+      themes: [githubDark],
       langs: [json],
       engine: createJavaScriptRegexEngine(),
     });
@@ -332,20 +353,26 @@ import { Icon } from 'astro-icon/components';
       if (!value) endpoint.searchParams.delete(key);
     }
     const format = endpoint.searchParams.get('format') || 'json';
+    const currentRequestId = ++requestId;
+    activeRequest?.abort();
+    activeRequest = new AbortController();
 
-    result.hidden = false;
     result.dataset.state = 'loading';
+    result.setAttribute('aria-busy', 'true');
     resultLabel.textContent = config.loading;
-    resultContent.replaceChildren();
-    submit.disabled = true;
-    modeButtons.forEach((button) => { button.disabled = true; });
+    const loading = document.createElement('p');
+    loading.className = 'animate-pulse';
+    loading.textContent = 'Loading. Please wait.';
+    resultContent.replaceChildren(loading);
     rawResult.href = endpoint.toString();
 
     try {
       const response = await fetch(endpoint, {
         credentials: 'same-origin',
         headers: { 'X-Extractor-Web-Client': '1' },
+        signal: activeRequest.signal,
       });
+      if (currentRequestId !== requestId) return;
       if (!response.ok) {
         const payload = await response.json().catch(() => ({ error: { message: config.errorMessage } })) as {
           error?: { message?: string };
@@ -355,15 +382,18 @@ import { Icon } from 'astro-icon/components';
 
       if (format === 'json') {
         const payload = await response.json();
+        if (currentRequestId !== requestId) return;
         copyValue = JSON.stringify(payload, null, 2);
         const highlighter = await getJsonHighlighter();
+        if (currentRequestId !== requestId) return;
         resultContent.innerHTML = highlighter.codeToHtml(copyValue, {
           lang: 'json',
-          theme: 'github-light-default',
+          theme: 'github-dark-default',
         });
         resultLabel.textContent = 'JSON result';
       } else {
         copyValue = await response.text();
+        if (currentRequestId !== requestId) return;
         const pre = document.createElement('pre');
         pre.textContent = copyValue;
         resultContent.replaceChildren(pre);
@@ -371,6 +401,8 @@ import { Icon } from 'astro-icon/components';
       }
       result.dataset.state = 'success';
     } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return;
+      if (currentRequestId !== requestId) return;
       copyValue = '';
       result.dataset.state = 'error';
       resultLabel.textContent = config.errorLabel;
@@ -378,9 +410,12 @@ import { Icon } from 'astro-icon/components';
       message.textContent = error instanceof Error ? error.message : config.errorMessage;
       resultContent.replaceChildren(message);
     } finally {
-      submit.disabled = false;
-      modeButtons.forEach((button) => { button.disabled = false; });
+      if (currentRequestId === requestId) result.setAttribute('aria-busy', 'false');
     }
+  });
+
+  form?.querySelectorAll<HTMLInputElement>('input[name="format"]').forEach((formatInput) => {
+    formatInput.addEventListener('change', () => form.requestSubmit());
   });
 
   copyResult?.addEventListener('click', async () => {
@@ -390,4 +425,8 @@ import { Icon } from 'astro-icon/components';
     if (label) label.textContent = 'Copied';
     window.setTimeout(() => { if (label) label.textContent = 'Copy'; }, 1_500);
   });
+
+  const linkedExample = new URLSearchParams(window.location.search).get('example');
+  selectMode(linkedExample ? 'extract' : 'search', false, linkedExample ?? undefined);
+  form?.requestSubmit();
 </script>

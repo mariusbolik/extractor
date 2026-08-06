@@ -1,5 +1,10 @@
 import puppeteer from '@cloudflare/puppeteer';
-import { ExtractionError, sourceResponseError, validateTargetUrl } from '@extractor/core';
+import {
+  assertNoAccessInterstitial,
+  ExtractionError,
+  sourceResponseError,
+  validateTargetUrl,
+} from '@extractor/core';
 
 const BROWSER_TIMEOUT_MS = 12_000;
 const NETWORK_SETTLE_TIMEOUT_MS = 2_000;
@@ -7,6 +12,66 @@ const BROWSER_CLOSE_TIMEOUT_MS = 1_000;
 const MAX_RENDERED_BYTES = 5 * 1024 * 1024;
 
 const UNNEEDED_RESOURCE_TYPES = new Set(['font', 'image', 'media']);
+
+export function alignedBrowserUserAgent(originalUserAgent: string, browserVersion: string): string {
+  const version = browserVersion.match(/(?:HeadlessChrome|Chrome)\/([\d.]+)/i)?.[1];
+  if (!version) return originalUserAgent;
+  return originalUserAgent.replace(/HeadlessChrome\/[\d.]+/i, `Chrome/${version}`);
+}
+
+function numericErrorStatus(error: unknown): number | null {
+  if (!error || typeof error !== 'object') return null;
+  const record = error as Record<string, unknown>;
+  for (const key of ['status', 'statusCode', 'code']) {
+    const value = record[key];
+    if (typeof value === 'number') return value;
+    if (typeof value === 'string' && /^\d{3}$/.test(value)) return Number(value);
+  }
+  return null;
+}
+
+export function normalizeBrowserRunError(error: unknown, browserStarted: boolean): ExtractionError {
+  if (error instanceof ExtractionError) return error;
+
+  const message = error instanceof Error ? error.message : String(error);
+  const status = numericErrorStatus(error);
+  if (
+    status === 429
+    || /(?:too many requests|browser time limit exceeded|unable to create new browser[^\n]*429|browser acquisition[^\n]*limit)/i.test(message)
+  ) {
+    return new ExtractionError(
+      'rate_limited',
+      'High-cost extraction capacity is temporarily exhausted. Try again shortly.',
+      429,
+      20,
+    );
+  }
+  if (/timeout/i.test(message)) {
+    return new ExtractionError('timeout', 'The source did not finish loading within 12 seconds.', 504);
+  }
+  if (/ERR_NAME_NOT_RESOLVED/i.test(message)) {
+    return new ExtractionError('upstream_error', 'The source hostname could not be resolved.', 502);
+  }
+  if (/ERR_CONNECTION_REFUSED/i.test(message)) {
+    return new ExtractionError('upstream_error', 'The source refused the connection.', 502);
+  }
+  if (/ERR_CONNECTION_(?:TIMED_OUT|CLOSED|RESET)|ERR_TIMED_OUT/i.test(message)) {
+    return new ExtractionError('timeout', 'The connection to the source timed out.', 504);
+  }
+  if (/ERR_TOO_MANY_REDIRECTS/i.test(message)) {
+    return new ExtractionError('upstream_error', 'The source redirected too many times.', 502);
+  }
+  if (/ERR_CERT_/i.test(message)) {
+    return new ExtractionError('upstream_error', 'The source has an invalid or unsupported TLS certificate.', 502);
+  }
+  if (/(?:protocol error|target closed|browser closed|session closed|connection closed)/i.test(message)) {
+    return new ExtractionError('upstream_error', 'A required extraction service ended unexpectedly.', 502);
+  }
+  if (!browserStarted) {
+    return new ExtractionError('upstream_error', 'A required extraction service is temporarily unavailable.', 502);
+  }
+  return new ExtractionError('extraction_failed', 'The source loaded, but its content could not be extracted.', 422);
+}
 
 async function closeBrowserWithinDeadline(
   browser: Awaited<ReturnType<typeof puppeteer.launch>>,
@@ -34,11 +99,19 @@ export async function renderPageHtml(url: URL, binding: BrowserRun): Promise<str
   try {
     browser = await puppeteer.launch(binding);
     const page = await browser.newPage();
-    // Cloudflare's Chromium build identifies itself as headless by default,
-    // which causes some otherwise public pages to return a challenge before
-    // their DOM exists. A conventional browser identity avoids that false
-    // negative without adding cookies, credentials, or challenge bypassing.
-    await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36');
+    // Keep the browser's real platform and Chromium version. Removing only the
+    // HeadlessChrome token avoids stale, internally inconsistent identities;
+    // it does not add cookies, credentials, stealth patches, or challenge work.
+    try {
+      const [originalUserAgent, browserVersion] = await Promise.all([
+        browser.userAgent(),
+        browser.version(),
+      ]);
+      const userAgent = alignedBrowserUserAgent(originalUserAgent, browserVersion);
+      if (userAgent !== originalUserAgent) await page.setUserAgent(userAgent);
+    } catch {
+      // Identity normalization is optional; the managed browser default is safe.
+    }
     await page.setExtraHTTPHeaders({ 'Accept-Language': 'en-US,en;q=0.9' });
     await page.setRequestInterception(true);
     page.on('request', (request) => {
@@ -103,32 +176,11 @@ export async function renderPageHtml(url: URL, binding: BrowserRun): Promise<str
     if (new TextEncoder().encode(html).byteLength > MAX_RENDERED_BYTES) {
       throw new ExtractionError('content_too_large', 'The processed page is larger than 5 MB.', 413);
     }
+    assertNoAccessInterstitial(html);
 
     return html;
   } catch (error) {
-    if (error instanceof ExtractionError) throw error;
-    if (error instanceof Error && /timeout/i.test(error.message)) {
-      throw new ExtractionError('timeout', 'The source did not finish loading within 12 seconds.', 504);
-    }
-    if (error instanceof Error && /ERR_NAME_NOT_RESOLVED/i.test(error.message)) {
-      throw new ExtractionError('upstream_error', 'The source hostname could not be resolved.', 502);
-    }
-    if (error instanceof Error && /ERR_CONNECTION_REFUSED/i.test(error.message)) {
-      throw new ExtractionError('upstream_error', 'The source refused the connection.', 502);
-    }
-    if (error instanceof Error && /ERR_CONNECTION_(?:TIMED_OUT|CLOSED|RESET)|ERR_TIMED_OUT/i.test(error.message)) {
-      throw new ExtractionError('timeout', 'The connection to the source timed out.', 504);
-    }
-    if (error instanceof Error && /ERR_TOO_MANY_REDIRECTS/i.test(error.message)) {
-      throw new ExtractionError('upstream_error', 'The source redirected too many times.', 502);
-    }
-    if (error instanceof Error && /ERR_CERT_/i.test(error.message)) {
-      throw new ExtractionError('upstream_error', 'The source has an invalid or unsupported TLS certificate.', 502);
-    }
-    if (!browser) {
-      throw new ExtractionError('upstream_error', 'A required extraction service is temporarily unavailable.', 502);
-    }
-    throw new ExtractionError('extraction_failed', 'The source loaded, but its content could not be extracted.', 422);
+    throw normalizeBrowserRunError(error, Boolean(browser));
   } finally {
     if (browser) await closeBrowserWithinDeadline(browser);
   }

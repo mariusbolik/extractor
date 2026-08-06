@@ -56,7 +56,7 @@ export type {
   NewsTimeframe,
   SearchDependencies,
 } from '@extractor/core';
-export { apiCacheKey } from './cache';
+export { apiCacheKey, cacheTtlForResponse } from './cache';
 export { runPublicExtraction } from './service';
 export { runPublicNewsSearch } from './news-service';
 export { runPublicSearch } from './search-service';

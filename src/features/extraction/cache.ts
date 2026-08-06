@@ -1,4 +1,4 @@
-export const API_CACHE_VERSION = '2026-08-intent-filters-v9';
+export const API_CACHE_VERSION = '2026-08-access-block-v10';
 const SEARCH_CACHE_VERSION = '2026-08-search-site-v7';
 const NEWS_CACHE_VERSION = '2026-08-news-locales-timeframe-v3';
 const IMAGE_CACHE_VERSION = '2026-08-image-filters-v2';
@@ -25,6 +25,17 @@ function coordinate(value: string | null): string | null {
   if (value === null || !value.trim()) return value;
   const number = Number(value);
   return Number.isFinite(number) ? String(number) : value.trim();
+}
+
+/**
+ * Only successful route responses carrying an explicit positive internal TTL
+ * may enter caches.default. Error responses remain uncacheable even if a
+ * future route accidentally attaches a TTL header to one.
+ */
+export function cacheTtlForResponse(response: Response): number | null {
+  if (!response.ok) return null;
+  const ttl = Number(response.headers.get('X-Extractor-Cache-TTL'));
+  return Number.isFinite(ttl) && ttl > 0 ? ttl : null;
 }
 
 /**

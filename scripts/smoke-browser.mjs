@@ -124,7 +124,7 @@ async function submitExtraction({ url, format, source, type, text }) {
   if (format === 'json') {
     assert.equal(await content.locator('pre.shiki').count(), 1, 'JSON preview is not highlighted by Shiki');
     const background = await content.locator('pre.shiki').evaluate((element) => getComputedStyle(element).backgroundColor);
-    assert.equal(background, 'rgb(255, 255, 255)', 'Shiki JSON preview does not use a white background');
+    assert.equal(background, 'rgb(0, 0, 0)', 'Shiki JSON preview does not use a black background');
     const payload = JSON.parse(await content.locator('pre').innerText());
     assert.equal(payload.schemaVersion, 1);
     assertEntity(payload, source, type);
@@ -376,6 +376,7 @@ try {
   assert.equal(home?.status(), 200);
   assert.match(home?.headers()['cache-control'] || '', /no-store/, 'Homepage is cacheable');
   assert.equal(home?.headers()['cloudflare-cdn-cache-control'], undefined, 'Homepage exposes an edge-cache directive');
+  assert.equal(await page.locator('main h1').first().innerText(), 'Turn web pages into\nAI-friendly context', 'Homepage hero copy is incorrect');
   assert.equal(await page.locator('head link[rel="icon"][type="image/png"][href="/favicon-96x96.png"][sizes="96x96"]').count(), 1, '96px PNG favicon link is missing');
   assert.equal(await page.locator('head link[rel="icon"][type="image/svg+xml"][href="/favicon.svg"]').count(), 1, 'SVG favicon link is missing');
   assert.equal(await page.locator('head link[rel="shortcut icon"][href="/favicon.ico"]').count(), 1, 'Shortcut favicon link is missing');
@@ -449,33 +450,67 @@ try {
   assert.notEqual(await heroBadge.locator('svg').evaluate((element) => getComputedStyle(element).animationName), 'none', 'Hero badge is not animated');
   const formatRadios = page.locator('input[name="format"]');
   assert.equal(await page.locator('#extract-form > div #url').count(), 1, 'Homepage primary input is missing or duplicated');
-  assert.equal(await page.locator('#form-options > summary').count(), 1, 'Homepage options disclosure is missing');
+  assert.equal(await page.locator('#form-options').count(), 1, 'Homepage inline controls are missing');
+  assert.equal(await page.locator('#form-options summary').count(), 0, 'Homepage controls still use an options disclosure');
   assert.equal(await page.locator('[data-form-mode]').count(), 7, 'Homepage mode controls are incomplete');
   assert.deepEqual(
     await page.locator('[data-form-mode]').allTextContents().then((labels) => labels.map((label) => label.trim())),
-    ['Extract', 'Web Search', 'News', 'Images', 'Videos', 'Places', 'Finance'],
+    ['Web Search', 'Extract', 'News', 'Images', 'Videos', 'Places', 'Finance'],
     'Homepage mode labels are incorrect',
   );
-  assert.equal(await page.locator('[data-form-mode="extract"]').getAttribute('aria-pressed'), 'true', 'Extract mode is not selected initially');
-  assert.equal(await page.locator('[data-form-mode="search"]').getAttribute('aria-pressed'), 'false', 'Search mode is selected initially');
+  assert.equal(await page.locator('[data-form-mode="search"]').getAttribute('aria-pressed'), 'true', 'Web Search is not selected initially');
+  assert.equal(await page.locator('[data-form-mode="extract"]').getAttribute('aria-pressed'), 'false', 'Extract mode is selected initially');
   assert.equal(await page.locator('[data-form-mode="news"]').getAttribute('aria-pressed'), 'false', 'News mode is selected initially');
   assert.equal(await page.locator('[data-form-mode="images"]').getAttribute('aria-pressed'), 'false', 'Image mode is selected initially');
   assert.equal(await page.locator('[data-form-mode="videos"]').getAttribute('aria-pressed'), 'false', 'Video mode is selected initially');
   assert.equal(await page.locator('[data-form-mode="places"]').getAttribute('aria-pressed'), 'false', 'Place mode is selected initially');
   assert.equal(await page.locator('[data-form-mode="stocks"]').count(), 0, 'Stock search is still shown as a homepage mode');
   assert.equal(await page.locator('[data-form-mode="finance"]').getAttribute('aria-pressed'), 'false', 'Finance mode is selected initially');
-  assert.equal(await page.locator('#url').getAttribute('placeholder'), 'https://www.amazon.com/dp/B09B8V1LZ3', 'Homepage form does not use the verified Amazon.com placeholder');
+  assert.equal(await page.locator('#url').getAttribute('placeholder'), 'the white house', 'Homepage form does not show the web-search prompt');
+  assert.equal(await page.locator('#url').inputValue(), 'the white house', 'Homepage does not preload the Web Search example');
+  assert.equal(await page.locator('#result').getAttribute('data-state'), 'success', 'Homepage did not automatically fetch its first example');
+  const initialRawResult = new URL(await page.locator('#raw-result').getAttribute('href'));
+  assert.equal(initialRawResult.pathname, '/api/search', 'Homepage initial example did not use web search');
+  assert.equal(initialRawResult.searchParams.get('q'), 'the white house', 'Homepage initial search query is incorrect');
   assert.match(await page.locator('#api pre code').textContent() || '', /https:\/\/www\.amazon\.com\/dp\/B09B8V1LZ3/, 'Homepage API example does not use the verified Amazon.com product');
   assert.equal(await page.locator('input[name="format"][value="markdown"]').isChecked(), true, 'Markdown is not the default website output');
   assert.deepEqual(await formatRadios.evaluateAll((radios) => radios.map((radio) => radio.value)), ['markdown', 'json'], 'Markdown is not the first output option');
-  for (const radio of await formatRadios.all()) {
-    const borderRadius = await radio.evaluate((element) => getComputedStyle(element).borderRadius);
-    assert.equal(borderRadius, '0px', 'A format radio is not square');
+  for (const toggle of await page.locator('input[name="format"] + span').all()) {
+    const borderRadius = await toggle.evaluate((element) => getComputedStyle(element).borderRadius);
+    assert.equal(borderRadius, '0px', 'A format toggle is not square');
   }
+  const automaticJsonResponse = page.waitForResponse((response) => {
+    const responseUrl = new URL(response.url());
+    return responseUrl.pathname === '/api/search'
+      && responseUrl.searchParams.get('q') === 'the white house'
+      && responseUrl.searchParams.get('format') === 'json';
+  });
+  await page.locator('input[name="format"][value="json"]').check();
+  assert.equal((await automaticJsonResponse).status(), 200, 'Format toggle did not automatically refetch JSON');
+  await page.locator('#result[data-state="success"]').waitFor();
+  assert.equal(await page.locator('#result-label').textContent(), 'JSON result', 'Automatic JSON preview did not render');
+  const automaticMarkdownResponse = page.waitForResponse((response) => {
+    const responseUrl = new URL(response.url());
+    return responseUrl.pathname === '/api/search'
+      && responseUrl.searchParams.get('q') === 'the white house'
+      && responseUrl.searchParams.get('format') === 'markdown';
+  });
+  await page.locator('input[name="format"][value="markdown"]').check();
+  assert.equal((await automaticMarkdownResponse).status(), 200, 'Format toggle did not automatically refetch Markdown');
+  await page.locator('#result[data-state="success"]').waitFor();
   const supportedSection = page.locator('[aria-labelledby="supported-heading"]');
   const extractorCardBox = await page.locator('[aria-label="Web extraction, search, and finance"]').boundingBox();
   const supportedSectionBox = await supportedSection.boundingBox();
   assert.ok(extractorCardBox && supportedSectionBox, 'Extraction or supported-platform card geometry is unavailable');
+  const modeButtonBoxes = await page.locator('[data-form-mode]').evaluateAll((buttons) => buttons.map((button) => {
+    const box = button.getBoundingClientRect();
+    return { x: box.x, y: box.y };
+  }));
+  assert.ok(modeButtonBoxes.every((box) => Math.abs(box.x - modeButtonBoxes[0].x) <= 1), 'Homepage example segments are not vertically aligned');
+  assert.ok(modeButtonBoxes.every((box, index) => index === 0 || box.y > modeButtonBoxes[index - 1].y), 'Homepage example segments are not stacked on desktop');
+  const examplesBox = await page.locator('[aria-label="Live API examples"]').boundingBox();
+  const demoFormBox = await page.locator('#extract-form').boundingBox();
+  assert.ok(examplesBox && demoFormBox && examplesBox.x < demoFormBox.x, 'Homepage examples are not positioned to the left of the live response');
   assert.ok(Math.abs(supportedSectionBox.y - (extractorCardBox.y + extractorCardBox.height) - 48) <= 1, 'Extraction and supported-platform cards do not have a 48px gap');
   const platformGrid = supportedSection.locator('#supported-platforms-grid');
   assert.equal(await page.locator('[aria-label="Web extraction, search, and finance"] > #works-with').count(), 0, 'Works with icons are still inside the extraction card');
@@ -560,8 +595,6 @@ try {
 
   // The same single field must exercise both new search representations from
   // the visible homepage UI, not only through request-level API checks.
-  await page.locator('#form-options > summary').click();
-  assert.equal(await page.locator('#form-options').getAttribute('open'), '', 'Homepage options disclosure did not open');
   await page.locator('[data-form-mode="search"]').click();
   assert.equal(await page.locator('#url').getAttribute('name'), 'q');
   assert.equal(await page.locator('#url').getAttribute('type'), 'text');
@@ -1534,7 +1567,8 @@ try {
   assert.equal(sitemapResponse.status(), 200, '/sitemap.xml is unavailable');
   assert.match(sitemapResponse.headers()['content-type'] || '', /^application\/xml/i);
   const sitemap = await sitemapResponse.text();
-  assert.equal((sitemap.match(/<loc>/g) || []).length, 78, 'Sitemap does not contain every public page');
+  const expectedSitemapUrls = 21 + platformPageList.length + alternativePages.length + platformArticles.length;
+  assert.equal((sitemap.match(/<loc>/g) || []).length, expectedSitemapUrls, 'Sitemap does not contain every public page');
   for (const route of contentRoutes) {
     assert.ok(sitemap.includes(`${origin}${route}`), `${route} is missing from sitemap.xml`);
   }
@@ -1547,6 +1581,7 @@ try {
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(`${origin}/`, { waitUntil: 'networkidle' });
+  assert.equal(await page.locator('main h1').first().innerText(), 'Turn web pages into\nAI-friendly context', 'Mobile homepage hero copy is incorrect');
   await assertNoHorizontalOverflow('mobile homepage');
   assert.equal(
     await page.locator('#supported-platforms-grid').evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(' ').length),

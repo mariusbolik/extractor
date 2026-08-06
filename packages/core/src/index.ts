@@ -10,6 +10,7 @@ export { getMarketMovers } from './finance-movers';
 export { getMarketData, normalizeFinanceQuoteCurrency, normalizeFinanceSymbol, normalizeFinanceTimeframe } from './adapters/yahoo-finance';
 export { normalizeChoice, normalizeCoordinate, normalizeCountryCode, normalizeLanguageTag } from './options';
 export { ExtractionError, sourceResponseError, toExtractionError } from './errors';
+export { assertNoAccessInterstitial, isAccessInterstitialHtml } from './access-interstitial';
 export { extractionTtl } from './cache';
 export { toPublicExtractionResult } from './types';
 export type {

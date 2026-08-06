@@ -186,6 +186,39 @@ describe('extractUrl', () => {
     expect(renderPageHtmlMock).not.toHaveBeenCalled();
   });
 
+  it('does not launch a browser for a successful response containing an access interstitial', async () => {
+    const challenge = `<!doctype html><html><head><title>Just a moment...</title>
+      <script>window._cf_chl_opt = { cType: 'managed' };</script></head><body>
+      <form id="challenge-form">Verify you are human. Enable JavaScript and cookies to continue.</form>
+      <script src="/cdn-cgi/challenge-platform/scripts/jsd/main.js"></script>
+      </body></html>`;
+
+    await expect(extractUrl('https://example.com/blocked-with-200', {
+      fetcher: mockFetch(challenge, 'text/html'),
+      renderPageHtml: renderPageHtmlMock,
+      allowBrowser: async () => true,
+    })).rejects.toMatchObject({
+      code: 'source_blocked',
+      status: 502,
+      message: 'The source returned an access-verification page instead of public content.',
+    });
+    expect(renderPageHtmlMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects an access interstitial returned by Browser Run', async () => {
+    renderPageHtmlMock.mockResolvedValue(`<!doctype html><html><head><title>Security Check</title>
+      <script>window._cf_chl_opt = { cType: 'managed' };</script></head><body>
+      <main id="cf-challenge-running">Checking your browser before accessing the site.</main>
+      </body></html>`);
+
+    await expect(extractUrl('https://example.com/rendered-block', {
+      fetcher: mockFetch('<html><body><div id="app"></div><script src="/app.js"></script></body></html>', 'text/html'),
+      renderPageHtml: renderPageHtmlMock,
+      allowBrowser: async () => true,
+    })).rejects.toMatchObject({ code: 'source_blocked', status: 502 });
+    expect(renderPageHtmlMock).toHaveBeenCalledOnce();
+  });
+
   it('does not spend a browser launch on a source that already timed out', async () => {
     const fetcher = vi.fn(async () => {
       throw new DOMException('Timed out', 'TimeoutError');
