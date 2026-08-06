@@ -93,11 +93,18 @@ function assertIntegerPrices(entity) {
   for (const item of entity.items || []) assertIntegerPrices(item);
 }
 
+async function selectHomepageFormat(format) {
+  const input = page.locator(`input[name="format"][value="${format}"]`);
+  if (await input.isChecked()) return;
+  await page.locator(`input[name="format"][value="${format}"] + span`).click();
+  assert.equal(await input.isChecked(), true, `Homepage ${format} format toggle did not activate`);
+}
+
 async function submitExtraction({ url, format, source, type, text }) {
   const extractMode = page.locator('[data-form-mode="extract"]');
   if (await extractMode.getAttribute('aria-pressed') !== 'true') await extractMode.click();
   await page.locator('#url').fill(url);
-  await page.locator(`input[name="format"][value="${format}"]`).check();
+  await selectHomepageFormat(format);
 
   const responsePromise = page.waitForResponse((response) => {
     const responseUrl = new URL(response.url());
@@ -141,7 +148,7 @@ async function submitSearch({ query, format }) {
   const searchMode = page.locator('[data-form-mode="search"]');
   if (await searchMode.getAttribute('aria-pressed') !== 'true') await searchMode.click();
   await page.locator('#url').fill(query);
-  await page.locator(`input[name="format"][value="${format}"]`).check();
+  await selectHomepageFormat(format);
 
   const responsePromise = page.waitForResponse((response) => {
     const responseUrl = new URL(response.url());
@@ -179,7 +186,7 @@ async function submitNews({ query, format }) {
   const newsMode = page.locator('[data-form-mode="news"]');
   if (await newsMode.getAttribute('aria-pressed') !== 'true') await newsMode.click();
   await page.locator('#url').fill(query);
-  await page.locator(`input[name="format"][value="${format}"]`).check();
+  await selectHomepageFormat(format);
 
   const responsePromise = page.waitForResponse((response) => {
     const responseUrl = new URL(response.url());
@@ -219,7 +226,7 @@ async function submitImageSearch({ query, format }) {
   const mode = page.locator('[data-form-mode="images"]');
   if (await mode.getAttribute('aria-pressed') !== 'true') await mode.click();
   await page.locator('#url').fill(query);
-  await page.locator(`input[name="format"][value="${format}"]`).check();
+  await selectHomepageFormat(format);
   const responsePromise = page.waitForResponse((response) => {
     const responseUrl = new URL(response.url());
     return responseUrl.pathname === '/api/images'
@@ -255,7 +262,7 @@ async function submitVideoSearch({ query, format }) {
   const mode = page.locator('[data-form-mode="videos"]');
   if (await mode.getAttribute('aria-pressed') !== 'true') await mode.click();
   await page.locator('#url').fill(query);
-  await page.locator(`input[name="format"][value="${format}"]`).check();
+  await selectHomepageFormat(format);
   const responsePromise = page.waitForResponse((response) => {
     const responseUrl = new URL(response.url());
     return responseUrl.pathname === '/api/videos'
@@ -289,7 +296,7 @@ async function submitPlaceSearch({ query, format }) {
   const mode = page.locator('[data-form-mode="places"]');
   if (await mode.getAttribute('aria-pressed') !== 'true') await mode.click();
   await page.locator('#url').fill(query);
-  await page.locator(`input[name="format"][value="${format}"]`).check();
+  await selectHomepageFormat(format);
   const responsePromise = page.waitForResponse((response) => {
     const responseUrl = new URL(response.url());
     return responseUrl.pathname === '/api/places'
@@ -329,7 +336,7 @@ async function submitFinance({ symbol, format, timeframe = '1mo', quote }) {
   await page.locator('#url').fill(symbol);
   await page.locator('#finance-timeframe').selectOption(timeframe);
   await page.locator('#finance-quote').selectOption(quote || '');
-  await page.locator(`input[name="format"][value="${format}"]`).check();
+  await selectHomepageFormat(format);
   const responsePromise = page.waitForResponse((response) => {
     const responseUrl = new URL(response.url());
     return responseUrl.pathname === '/api/finance'
@@ -485,7 +492,7 @@ try {
       && responseUrl.searchParams.get('q') === 'the white house'
       && responseUrl.searchParams.get('format') === 'json';
   });
-  await page.locator('input[name="format"][value="json"]').check();
+  await selectHomepageFormat('json');
   assert.equal((await automaticJsonResponse).status(), 200, 'Format toggle did not automatically refetch JSON');
   await page.locator('#result[data-state="success"]').waitFor();
   assert.equal(await page.locator('#result-label').textContent(), 'JSON result', 'Automatic JSON preview did not render');
@@ -495,7 +502,7 @@ try {
       && responseUrl.searchParams.get('q') === 'the white house'
       && responseUrl.searchParams.get('format') === 'markdown';
   });
-  await page.locator('input[name="format"][value="markdown"]').check();
+  await selectHomepageFormat('markdown');
   assert.equal((await automaticMarkdownResponse).status(), 200, 'Format toggle did not automatically refetch Markdown');
   await page.locator('#result[data-state="success"]').waitFor();
   const supportedSection = page.locator('[aria-labelledby="supported-heading"]');
