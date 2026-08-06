@@ -165,6 +165,22 @@ function queryTerms(query: string, language: string): string[] {
   return [...new Set(meaningful.length > 0 ? meaningful : words)];
 }
 
+function upstreamDiscoveryQuery(query: string, language: string): string {
+  const tokens = query.split(/\s+/);
+  let firstMeaningful = 0;
+  // Some indexes treat a leading article or question word as the dominant
+  // term. Remove only the leading run, keep internal grammar intact, and
+  // always retain at least one token for stop-word-only searches.
+  while (firstMeaningful < tokens.length - 1) {
+    const word = tokens[firstMeaningful]
+      ?.toLocaleLowerCase(language)
+      .match(/[\p{L}\p{N}]+/u)?.[0];
+    if (!word || !QUERY_STOP_WORDS.has(word)) break;
+    firstMeaningful += 1;
+  }
+  return tokens.slice(firstMeaningful).join(' ');
+}
+
 function isRelevant(item: ExtractedItem, query: string, language: string): boolean {
   const terms = queryTerms(query, language);
   if (terms.length === 0) return false;
@@ -392,7 +408,8 @@ export async function searchWeb(
   const language = normalizeLanguageTag(dependencies.language, 'en-US');
   const country = normalizeCountryCode(dependencies.country, 'US')!;
   const site = normalizeSearchSite(dependencies.site);
-  const discoveryQuery = site ? `${query} site:${site}` : query;
+  const upstreamQuery = upstreamDiscoveryQuery(query, language);
+  const discoveryQuery = site ? `${upstreamQuery} site:${site}` : upstreamQuery;
   const endpoint = searchEndpoint(discoveryQuery, language, country);
   let rssWasValid = false;
   let rssFailure: unknown;

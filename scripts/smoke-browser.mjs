@@ -496,6 +496,10 @@ try {
   assert.equal((await automaticJsonResponse).status(), 200, 'Format toggle did not automatically refetch JSON');
   await page.locator('#result[data-state="success"]').waitFor();
   assert.equal(await page.locator('#result-label').textContent(), 'JSON result', 'Automatic JSON preview did not render');
+  const automaticSearchPayload = JSON.parse(await page.locator('#result-content pre').innerText());
+  assert.equal(automaticSearchPayload.schemaVersion, 1);
+  assertEntity(automaticSearchPayload, 'web-search', 'feed');
+  assert.equal(automaticSearchPayload.items.length, 10, 'Homepage White House example did not return ten results');
   const automaticMarkdownResponse = page.waitForResponse((response) => {
     const responseUrl = new URL(response.url());
     return responseUrl.pathname === '/api/search'
@@ -1177,6 +1181,13 @@ try {
     source: 'web',
     type: 'feed',
     text: /HubSpot Blog/i,
+  });
+  await submitExtraction({
+    url: 'https://www.copart.com/',
+    format: 'json',
+    source: 'web',
+    type: 'article',
+    text: /Online Auto Auctions/i,
   });
   await submitExtraction({
     url: 'https://bsky.app/profile/bsky.app/post/3mqcp5qjdfs26',

@@ -99,6 +99,33 @@ describe('web search', () => {
     expect(fetcher).toHaveBeenCalledOnce();
   });
 
+  it('removes leading stop words from private discovery while preserving ten public results', async () => {
+    const items = Array.from({ length: 10 }, (_, index) => `
+      <item>
+        <title>White House result ${index + 1}</title>
+        <link>https://example.com/white-house/${index + 1}</link>
+        <description>Public White House information number ${index + 1}.</description>
+      </item>`).join('');
+    const fetcher = vi.fn<typeof fetch>(async (input) => {
+      const url = new URL(String(input));
+      expect(url.searchParams.get('q')).toBe('white house');
+      return new Response(`<?xml version="1.0"?><rss><channel>${items}</channel></rss>`, {
+        headers: { 'Content-Type': 'application/rss+xml' },
+      });
+    });
+
+    const result = toPublicExtractionResult(await searchWeb('the white house', { fetcher }));
+
+    expect(ExtractionResponseSchema.parse(result)).toEqual(result);
+    expect(result).toMatchObject({
+      schemaVersion: 1,
+      type: 'feed',
+      attributes: { query: 'the white house', resultCount: 10 },
+    });
+    expect(result.items).toHaveLength(10);
+    expect(fetcher).toHaveBeenCalledOnce();
+  });
+
   it('canonicalizes locale controls and keeps strict safe search enabled', async () => {
     const fetcher = vi.fn<typeof fetch>(async (input) => {
       const url = new URL(String(input));

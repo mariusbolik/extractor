@@ -11,6 +11,7 @@ import { extractShopifyStorefront } from './shopify';
 import { extractWooCommerceStorefront } from './woocommerce';
 
 const MIN_MARKDOWN_LENGTH = 40;
+const MAX_TEMPLATE_EXPRESSION_LENGTH = 2_000;
 
 function mediaType(contentType: string): string {
   return contentType.split(';', 1)[0]?.trim().toLowerCase() || '';
@@ -34,6 +35,16 @@ function hasClientRenderingSignals(body: string): boolean {
   // likely to reveal content that is absent from the server response.
   return /<script\b/i.test(body)
     && /(?:<script\b[^>]*\bsrc\s*=|\bid\s*=\s*["'](?:app|root|__next|__nuxt)["']|\bdata-(?:reactroot|server-rendered)\b|<[^>]+-[^>]+>)/i.test(body);
+}
+
+function stripUnresolvedTemplateExpressions(html: string): string {
+  return html.replace(new RegExp(`\\{\\{[^{}]{1,${MAX_TEMPLATE_EXPRESSION_LENGTH}}\\}\\}`, 'g'), '');
+}
+
+function unresolvedTemplatesDominate(markdown: string): boolean {
+  const expression = new RegExp(`\\{\\{[^{}]{1,${MAX_TEMPLATE_EXPRESSION_LENGTH}}\\}\\}`, 'g');
+  if (!expression.test(markdown)) return false;
+  return markdownWordCount(markdown.replace(expression, '')) < 20;
 }
 
 function titleFromMarkdown(markdown: string): string | null {
@@ -111,7 +122,23 @@ export async function extractWebPage(
     if (productListing) return productListing;
     const blogListing = extractBlogListingFromHtml(page.body, new URL(fetchedUrl));
     if (blogListing) return blogListing;
-    const extracted = extractMarkdownFromHtml(page.body, fetchedUrl, dependencies.focus);
+    let extracted = extractMarkdownFromHtml(page.body, fetchedUrl, dependencies.focus);
+    if (shouldUseBrowser && unresolvedTemplatesDominate(extracted.content)) {
+      const cleaned = extractMarkdownFromHtml(
+        stripUnresolvedTemplateExpressions(page.body),
+        fetchedUrl,
+        dependencies.focus,
+      );
+      if (!cleaned.metadataOnly && cleaned.wordCount > extracted.wordCount) {
+        extracted = cleaned;
+      } else {
+        throw new ExtractionError(
+          'extraction_failed',
+          'The server response contained unresolved client templates.',
+          422,
+        );
+      }
+    }
     if (extracted.metadataOnly) {
       const discovered = await extractDiscoveredAlternative(sourceHtml, fetchedUrl, dependencies, sourceLinkHeader);
       if (discovered) return discovered;
@@ -168,7 +195,11 @@ export async function extractWebPage(
   try {
     const html = await dependencies.renderPageHtml(url);
     assertNoAccessInterstitial(html);
-    const extracted = extractMarkdownFromHtml(html, fetchedUrl, dependencies.focus);
+    const extracted = extractMarkdownFromHtml(
+      stripUnresolvedTemplateExpressions(html),
+      fetchedUrl,
+      dependencies.focus,
+    );
     const { metadataOnly: _metadataOnly, description, language, modifiedAt, wordCount, ...article } = extracted;
     return {
       type: 'article',

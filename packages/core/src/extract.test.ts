@@ -123,6 +123,39 @@ describe('extractUrl', () => {
     expect(result.media).toEqual([{ type: 'image', url: 'https://cdn.example.com/rendered.jpg' }]);
   });
 
+  it('does not mistake unresolved client templates for rendered page content', async () => {
+    const directHtml = `<html><head><title>Vehicle marketplace</title></head><body>
+      <header-actions>
+        <p>{{locale.messages['website.language']}}</p>
+        <p>{{locale.messages['language.read.' + selectedLanguage]}}</p>
+        <p>{{locale.messages['language.text.' + selectedLanguage]}}</p>
+      </header-actions>
+      <app-root></app-root><script src="/runtime.js"></script>
+    </body></html>`;
+    renderPageHtmlMock.mockResolvedValue(`<html><head><title>Vehicle marketplace</title></head><body>
+      <header-actions><p>{{locale.messages['website.language']}}</p></header-actions>
+      <app-root><main><h1>Online vehicle auctions</h1>
+        <p>Browse hundreds of thousands of public vehicle listings available through daily online auctions.</p>
+        <p>Register, search the inventory, and bid on cars, trucks, motorcycles, and industrial equipment.</p>
+      </main></app-root><script src="/runtime.js"></script>
+    </body></html>`);
+
+    const result = await extractUrl('https://vehicles.example.com/', {
+      fetcher: mockFetch(directHtml, 'text/html'),
+      renderPageHtml: renderPageHtmlMock,
+      allowBrowser: async () => true,
+    });
+    const publicResult = toPublicExtractionResult(result);
+
+    expect(result).toMatchObject({ type: 'article', method: 'browser' });
+    expect(result.content).toContain('Online vehicle auctions');
+    expect(result.content).toContain('hundreds of thousands');
+    expect(result.content).not.toContain('{{');
+    expect(publicResult).toMatchObject({ schemaVersion: 1, type: 'article' });
+    expect(publicResult).not.toHaveProperty('method');
+    expect(renderPageHtmlMock).toHaveBeenCalledOnce();
+  });
+
   it('uses descriptive publisher metadata before Browser Rendering', async () => {
     const description = 'This public application description is detailed enough to give an agent useful context without launching an expensive browser session.';
     const result = await extractUrl('https://example.com/app', {
