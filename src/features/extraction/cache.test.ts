@@ -30,7 +30,7 @@ describe('apiCacheKey', () => {
     const explicit = apiCacheKey(new Request('https://extractor.test/api/search?q=%20clean%20%20web%0Adata%20&format=json&limit=10'));
 
     expect(concise.url).toBe(explicit.url);
-    expect(new URL(concise.url).searchParams.get('__extractor_cache')).toBe('2026-08-search-stopwords-v8');
+    expect(new URL(concise.url).searchParams.get('__extractor_cache')).toBe('2026-08-search-context-v11');
     const siteRestricted = apiCacheKey(new Request('https://extractor.test/api/search?q=clean+web+data&site=%20LinkedIn.com.%20&unknown=1'));
     expect(new URL(siteRestricted.url).searchParams.get('site')).toBe('linkedin.com');
     expect(new URL(siteRestricted.url).searchParams.has('unknown')).toBe(false);

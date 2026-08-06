@@ -108,7 +108,7 @@ describe('web search', () => {
       </item>`).join('');
     const fetcher = vi.fn<typeof fetch>(async (input) => {
       const url = new URL(String(input));
-      expect(url.searchParams.get('q')).toBe('white house');
+      expect(url.searchParams.get('q')).toBe('united states white house');
       return new Response(`<?xml version="1.0"?><rss><channel>${items}</channel></rss>`, {
         headers: { 'Content-Type': 'application/rss+xml' },
       });

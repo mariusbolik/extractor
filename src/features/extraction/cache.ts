@@ -1,5 +1,5 @@
 export const API_CACHE_VERSION = '2026-08-client-templates-v12';
-const SEARCH_CACHE_VERSION = '2026-08-search-stopwords-v8';
+const SEARCH_CACHE_VERSION = '2026-08-search-context-v11';
 const NEWS_CACHE_VERSION = '2026-08-news-locales-timeframe-v3';
 const IMAGE_CACHE_VERSION = '2026-08-image-filters-v2';
 const VIDEO_CACHE_VERSION = '2026-08-video-search-v7';

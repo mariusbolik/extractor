@@ -26,6 +26,13 @@ const QUERY_STOP_WORDS = new Set([
   'wo', 'zu',
 ]);
 
+const LEADING_ARTICLES = new Set([
+  'a', 'an', 'the',
+  'das', 'der', 'die',
+  'el', 'la', 'las', 'los',
+  'le', 'les',
+]);
+
 const parser = new XMLParser({
   // Attributes are irrelevant to RSS search items. Ignoring them keeps the
   // accepted shape narrow and prevents upstream markup becoming public data.
@@ -165,7 +172,7 @@ function queryTerms(query: string, language: string): string[] {
   return [...new Set(meaningful.length > 0 ? meaningful : words)];
 }
 
-function upstreamDiscoveryQuery(query: string, language: string): string {
+function upstreamDiscoveryQuery(query: string, language: string, country: string): string {
   const tokens = query.split(/\s+/);
   let firstMeaningful = 0;
   // Some indexes treat a leading article or question word as the dominant
@@ -178,7 +185,25 @@ function upstreamDiscoveryQuery(query: string, language: string): string {
     if (!word || !QUERY_STOP_WORDS.has(word)) break;
     firstMeaningful += 1;
   }
-  return tokens.slice(firstMeaningful).join(' ');
+  const discovery = tokens.slice(firstMeaningful).join(' ');
+  const leadingWord = tokens[0]
+    ?.toLocaleLowerCase(language)
+    .match(/[\p{L}\p{N}]+/u)?.[0];
+
+  // A short name introduced by an article is commonly a landmark,
+  // institution, publication, or other named entity. Some regional search
+  // edges collapse these phrases to a single navigational result. Add the
+  // caller's existing country control as disambiguating context in the same
+  // request; the public query and relevance checks remain unchanged.
+  if (leadingWord && LEADING_ARTICLES.has(leadingWord) && tokens.length >= 3 && tokens.length <= 5) {
+    try {
+      const countryName = new Intl.DisplayNames([language], { type: 'region' }).of(country);
+      if (countryName) return `${countryName.toLocaleLowerCase(language)} ${discovery}`;
+    } catch {
+      return `${country.toLocaleLowerCase(language)} ${discovery}`;
+    }
+  }
+  return discovery;
 }
 
 function isRelevant(item: ExtractedItem, query: string, language: string): boolean {
@@ -408,7 +433,7 @@ export async function searchWeb(
   const language = normalizeLanguageTag(dependencies.language, 'en-US');
   const country = normalizeCountryCode(dependencies.country, 'US')!;
   const site = normalizeSearchSite(dependencies.site);
-  const upstreamQuery = upstreamDiscoveryQuery(query, language);
+  const upstreamQuery = upstreamDiscoveryQuery(query, language, country);
   const discoveryQuery = site ? `${upstreamQuery} site:${site}` : upstreamQuery;
   const endpoint = searchEndpoint(discoveryQuery, language, country);
   let rssWasValid = false;
