@@ -7,6 +7,7 @@ export type ExtractionMethod =
   | 'native-markdown'
   | 'linkedom'
   | 'metadata'
+  | 'blog-list-html'
   | 'product-list-html'
   | 'product-jsonld'
   | 'browser'

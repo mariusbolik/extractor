@@ -3,7 +3,8 @@ import { assertNoAccessInterstitial } from '../access-interstitial';
 import { fetchPublicPage } from '../fetch';
 import { extractMarkdownFromHtml, markdownWordCount } from '../markdown';
 import type { ExtractionDependencies, ExtractionResult } from '../types';
-import { extractDiscoveredAlternative } from './discovery';
+import { extractBlogListingFromHtml } from './blog-listing';
+import { extractDiscoveredAlternative, extractInferredFeedAlternative } from './discovery';
 import { extractProductDetailFromHtml } from './product-detail';
 import { extractProductListingFromHtml } from './product-listing';
 import { extractShopifyStorefront } from './shopify';
@@ -48,11 +49,13 @@ export async function extractWebPage(
   let directError: unknown;
   let shouldUseBrowser = false;
   let sourceHtml = '';
+  let sourceLinkHeader: string | null = null;
 
   try {
     const page = await fetchPublicPage(url, fetcher);
     fetchedUrl = page.url;
     sourceHtml = page.body;
+    sourceLinkHeader = page.linkHeader;
     const type = mediaType(page.contentType);
 
     if (isPlainTextType(type)) {
@@ -106,9 +109,11 @@ export async function extractWebPage(
     if (productDetail) return productDetail;
     const productListing = extractProductListingFromHtml(page.body, new URL(fetchedUrl));
     if (productListing) return productListing;
+    const blogListing = extractBlogListingFromHtml(page.body, new URL(fetchedUrl));
+    if (blogListing) return blogListing;
     const extracted = extractMarkdownFromHtml(page.body, fetchedUrl, dependencies.focus);
     if (extracted.metadataOnly) {
-      const discovered = await extractDiscoveredAlternative(sourceHtml, fetchedUrl, dependencies);
+      const discovered = await extractDiscoveredAlternative(sourceHtml, fetchedUrl, dependencies, sourceLinkHeader);
       if (discovered) return discovered;
     }
     const { metadataOnly, description, language, modifiedAt, wordCount, ...article } = extracted;
@@ -127,7 +132,7 @@ export async function extractWebPage(
       method: metadataOnly ? 'metadata' : 'linkedom',
     };
   } catch (error) {
-    if (error instanceof ExtractionError && ['invalid_url', 'unsafe_url', 'not_found', 'unsupported_content_type', 'content_too_large', 'source_blocked', 'timeout'].includes(error.code)) {
+    if (error instanceof ExtractionError && ['invalid_url', 'unsafe_url', 'not_found', 'unsupported_content_type', 'content_too_large', 'timeout'].includes(error.code)) {
       throw error;
     }
     directError = error;
@@ -137,9 +142,12 @@ export async function extractWebPage(
     // Publisher-advertised structured endpoints can rescue an otherwise empty
     // page without paying for Browser Rendering. Normal readable HTML never
     // reaches this branch, so ordinary pages retain their single-request path.
-    const discovered = await extractDiscoveredAlternative(sourceHtml, fetchedUrl, dependencies);
+    const discovered = await extractDiscoveredAlternative(sourceHtml, fetchedUrl, dependencies, sourceLinkHeader);
     if (discovered) return discovered;
   }
+
+  const inferredFeed = await extractInferredFeedAlternative(fetchedUrl, dependencies);
+  if (inferredFeed) return inferredFeed;
 
   if (!shouldUseBrowser) {
     // Network errors, HTTP blocks, static empty pages, and non-HTML responses

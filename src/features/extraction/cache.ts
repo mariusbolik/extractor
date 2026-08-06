@@ -1,4 +1,4 @@
-export const API_CACHE_VERSION = '2026-08-access-block-v10';
+export const API_CACHE_VERSION = '2026-08-publisher-feeds-v11';
 const SEARCH_CACHE_VERSION = '2026-08-search-site-v7';
 const NEWS_CACHE_VERSION = '2026-08-news-locales-timeframe-v3';
 const IMAGE_CACHE_VERSION = '2026-08-image-filters-v2';

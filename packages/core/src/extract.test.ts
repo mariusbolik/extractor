@@ -521,6 +521,186 @@ describe('extractUrl', () => {
     expect(renderPageHtmlMock).not.toHaveBeenCalled();
   });
 
+  it('discovers a JSON Feed from an HTTP Link header', async () => {
+    const jsonFeed = JSON.stringify({
+      version: 'https://jsonfeed.org/version/1.1',
+      title: 'Example JSON Feed',
+      items: [{
+        id: 'story-1',
+        url: 'https://example.com/story',
+        title: 'Structured feed story',
+        content_text: 'A useful story delivered through the publisher JSON Feed.',
+        date_published: '2026-08-01T12:00:00Z',
+        authors: [{ name: 'Ada Example' }],
+      }],
+    });
+    const fetcher = vi.fn(async (input: RequestInfo | URL) => {
+      if (input.toString().endsWith('/feed.json')) {
+        return new Response(jsonFeed, { headers: { 'Content-Type': 'application/feed+json' } });
+      }
+      return new Response('<html><body></body></html>', {
+        headers: {
+          'Content-Type': 'text/html',
+          Link: '</feed.json>; rel="alternate"; type="application/feed+json"',
+        },
+      });
+    }) as unknown as typeof fetch;
+
+    const result = await extractUrl('https://example.com/', { fetcher });
+    const publicResult = toPublicExtractionResult(result);
+    expect(result).toMatchObject({
+      type: 'feed',
+      method: 'discovered-feed',
+      title: 'Example JSON Feed',
+    });
+    expect(result.items?.[0]).toMatchObject({
+      title: 'Structured feed story',
+      author: 'Ada Example',
+      publishedAt: '2026-08-01T12:00:00.000Z',
+    });
+    expect(publicResult).toMatchObject({ schemaVersion: 1, type: 'feed' });
+    expect(publicResult).not.toHaveProperty('method');
+  });
+
+  it('uses a verified publisher feed when a blocked article has an exact matching entry', async () => {
+    const articleUrl = 'https://openai.com/index/gpt-5-6/';
+    const rss = `<?xml version="1.0"?><rss><channel><title>OpenAI News</title><item>
+      <title>GPT-5.6</title><link>https://openai.com/index/gpt-5-6</link>
+      <description>Frontier intelligence that scales with your ambition.</description>
+      <pubDate>Thu, 09 Jul 2026 10:00:00 GMT</pubDate>
+    </item></channel></rss>`;
+    const fetcherMock = vi.fn(async (input: RequestInfo | URL) => input.toString() === articleUrl
+      ? new Response('Forbidden', { status: 403, headers: { 'Content-Type': 'text/html' } })
+      : new Response(rss, { headers: { 'Content-Type': 'application/rss+xml' } }));
+    const fetcher = fetcherMock as unknown as typeof fetch;
+
+    const result = await extractUrl(articleUrl, {
+      fetcher,
+      renderPageHtml: renderPageHtmlMock,
+      allowBrowser: async () => true,
+    });
+    const publicResult = toPublicExtractionResult(result);
+    expect(result).toMatchObject({
+      type: 'article',
+      method: 'discovered-feed',
+      title: 'GPT-5.6',
+      url: 'https://openai.com/index/gpt-5-6',
+      publishedAt: '2026-07-09T10:00:00.000Z',
+    });
+    expect(result.content).toContain('Frontier intelligence');
+    expect(fetcherMock).toHaveBeenCalledTimes(2);
+    expect(fetcherMock.mock.calls[1]?.[0].toString()).toBe('https://openai.com/news/rss.xml');
+    expect(renderPageHtmlMock).not.toHaveBeenCalled();
+    expect(publicResult).toMatchObject({ schemaVersion: 1, type: 'article' });
+    expect(publicResult).not.toHaveProperty('method');
+  });
+
+  it('infers a section RSS feed and ignores tracking parameters while matching the article', async () => {
+    const articleUrl = 'https://blog.hubspot.com/marketing/loop-marketing';
+    const rss = `<?xml version="1.0"?><rss><channel><title>Marketing</title><item>
+      <title>Loop Marketing</title>
+      <link>https://blog.hubspot.com/marketing/loop-marketing?utm_source=rss</link>
+      <description>A practical guide to the loop marketing playbook.</description>
+    </item></channel></rss>`;
+    const fetcherMock = vi.fn(async (input: RequestInfo | URL) => input.toString() === articleUrl
+      ? new Response('Forbidden', { status: 403, headers: { 'Content-Type': 'text/html' } })
+      : new Response(rss, { headers: { 'Content-Type': 'application/rss+xml' } }));
+    const fetcher = fetcherMock as unknown as typeof fetch;
+
+    const result = await extractUrl(articleUrl, { fetcher });
+    const publicResult = toPublicExtractionResult(result);
+    expect(result).toMatchObject({
+      type: 'article',
+      method: 'discovered-feed',
+      title: 'Loop Marketing',
+    });
+    expect(fetcherMock).toHaveBeenCalledTimes(2);
+    expect(fetcherMock.mock.calls[1]?.[0].toString()).toBe('https://blog.hubspot.com/marketing/rss.xml');
+    expect(publicResult).toMatchObject({ schemaVersion: 1, type: 'article' });
+    expect(publicResult).not.toHaveProperty('method');
+  });
+
+  it('limits inferred feed guesses and preserves the page error when no item matches', async () => {
+    const articleUrl = 'https://blog.example.com/news/requested-story';
+    const unrelatedRss = `<?xml version="1.0"?><rss><channel><title>News</title><item>
+      <title>Another story</title><link>https://blog.example.com/news/another-story</link>
+      <description>This feed does not contain the requested article.</description>
+    </item></channel></rss>`;
+    const fetcher = vi.fn(async (input: RequestInfo | URL) => input.toString() === articleUrl
+      ? new Response('Forbidden', { status: 403, headers: { 'Content-Type': 'text/html' } })
+      : new Response(unrelatedRss, { headers: { 'Content-Type': 'application/rss+xml' } })) as unknown as typeof fetch;
+
+    await expect(extractUrl(articleUrl, {
+      fetcher,
+      renderPageHtml: renderPageHtmlMock,
+      allowBrowser: async () => true,
+    })).rejects.toMatchObject({ code: 'source_blocked', status: 502 });
+    expect(fetcher).toHaveBeenCalledTimes(5);
+    expect(renderPageHtmlMock).not.toHaveBeenCalled();
+  });
+
+  it('returns repeated posts from a server-rendered blog index as a feed', async () => {
+    const html = `<html><head><title>Example Engineering Blog</title></head><body><main>
+      <h1>Engineering posts</h1>
+      <ul>
+        <li><img src="/images/cache.jpg" alt="Cache diagram" width="640" height="360"><h2><a href="/blog/cache-first-apis">Building cache-first APIs</a></h2><p class="post-description">How bounded caches make public data APIs faster and more predictable.</p><p class="post-author">Ada Example</p><time datetime="2026-08-01">August 1</time></li>
+        <li><h2><a href="/blog/structured-results">Designing structured results</a></h2><p class="post-description">A practical guide to stable schemas for agents and applications.</p><p class="post-author">Lin Example</p><time datetime="2026-07-20">July 20</time></li>
+        <li><h2><a href="/blog/public-feeds">Finding publisher feeds</a></h2><p class="post-description">Standards-based discovery for public publisher content.</p></li>
+      </ul>
+    </main></body></html>`;
+
+    const result = await extractUrl('https://example.com/blog', {
+      fetcher: mockFetch(html, 'text/html'),
+      renderPageHtml: renderPageHtmlMock,
+      allowBrowser: async () => true,
+    });
+    const publicResult = toPublicExtractionResult(result);
+
+    expect(result).toMatchObject({
+      type: 'feed',
+      method: 'blog-list-html',
+      title: 'Engineering posts',
+      attributes: { feedType: 'publisher', resultCount: 3 },
+    });
+    expect(result.items?.[0]).toMatchObject({
+      type: 'article',
+      title: 'Building cache-first APIs',
+      author: 'Ada Example',
+      publishedAt: '2026-08-01T00:00:00.000Z',
+      url: 'https://example.com/blog/cache-first-apis',
+    });
+    expect(result.items?.[0].media[0]).toMatchObject({
+      type: 'image',
+      url: 'https://example.com/images/cache.jpg',
+      width: 640,
+      height: 360,
+    });
+    expect(publicResult).toMatchObject({ schemaVersion: 1, type: 'feed' });
+    expect(publicResult).not.toHaveProperty('method');
+    expect(renderPageHtmlMock).not.toHaveBeenCalled();
+  });
+
+  it('returns a publisher feed for a blocked blog index without requiring an article match', async () => {
+    const pageUrl = 'https://blog.example.com/';
+    const rss = `<?xml version="1.0"?><rss><channel><title>Example Blog</title>
+      <item><title>First post</title><link>https://blog.example.com/first-post</link><description>First useful post summary.</description></item>
+      <item><title>Second post</title><link>https://blog.example.com/second-post</link><description>Second useful post summary.</description></item>
+    </channel></rss>`;
+    const fetcherMock = vi.fn(async (input: RequestInfo | URL) => input.toString() === pageUrl
+      ? new Response('Forbidden', { status: 403, headers: { 'Content-Type': 'text/html' } })
+      : new Response(rss, { headers: { 'Content-Type': 'application/rss+xml' } }));
+
+    const result = await extractUrl(pageUrl, { fetcher: fetcherMock as unknown as typeof fetch });
+    const publicResult = toPublicExtractionResult(result);
+
+    expect(result).toMatchObject({ type: 'feed', method: 'discovered-feed', title: 'Example Blog' });
+    expect(result.items).toHaveLength(2);
+    expect(fetcherMock).toHaveBeenCalledTimes(2);
+    expect(fetcherMock.mock.calls[1]?.[0].toString()).toBe('https://blog.example.com/feed');
+    expect(publicResult).toMatchObject({ schemaVersion: 1, type: 'feed' });
+    expect(publicResult).not.toHaveProperty('method');
+  });
+
   it('uses Shopify product JSON for an exact storefront product page', async () => {
     const fetcher = vi.fn(async (input: RequestInfo | URL) => {
       if (input.toString().endsWith('/products/black-shirt.js')) {

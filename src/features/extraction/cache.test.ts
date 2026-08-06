@@ -6,7 +6,7 @@ describe('apiCacheKey', () => {
     const request = new Request('https://extractor.test/api/extract?url=https%3A%2F%2Fexample.com&format=json');
     const key = apiCacheKey(request);
 
-    expect(new URL(key.url).searchParams.get('__extractor_cache')).toBe('2026-08-access-block-v10');
+    expect(new URL(key.url).searchParams.get('__extractor_cache')).toBe('2026-08-publisher-feeds-v11');
     expect(new URL(request.url).searchParams.has('__extractor_cache')).toBe(false);
   });
 

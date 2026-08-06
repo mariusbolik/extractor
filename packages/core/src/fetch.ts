@@ -9,6 +9,7 @@ export interface FetchedPage {
   url: string;
   contentType: string;
   body: string;
+  linkHeader: string | null;
 }
 
 async function readTextLimited(response: Response): Promise<string> {
@@ -91,6 +92,7 @@ export async function fetchPublicPage(
       url: response.url || current.toString(),
       contentType: response.headers.get('content-type')?.toLowerCase() || '',
       body: await readTextLimited(response),
+      linkHeader: response.headers.get('link'),
     };
   }
 
@@ -154,6 +156,7 @@ export async function fetchPublicJsonPost(
       url: response.url || current.toString(),
       contentType: response.headers.get('content-type')?.toLowerCase() || '',
       body: await readTextLimited(response),
+      linkHeader: response.headers.get('link'),
     };
   }
 

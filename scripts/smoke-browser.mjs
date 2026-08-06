@@ -1165,6 +1165,20 @@ try {
   assertEntity(mcpExtraction, 'web', 'article');
 
   await submitExtraction({
+    url: 'https://openai.com/index/gpt-5-6/',
+    format: 'json',
+    source: 'web',
+    type: 'article',
+    text: /GPT-5\.6: Frontier intelligence/i,
+  });
+  await submitExtraction({
+    url: 'https://blog.hubspot.com/',
+    format: 'json',
+    source: 'web',
+    type: 'feed',
+    text: /HubSpot Blog/i,
+  });
+  await submitExtraction({
     url: 'https://bsky.app/profile/bsky.app/post/3mqcp5qjdfs26',
     format: 'markdown',
     source: 'bluesky',
