@@ -731,7 +731,7 @@ try {
   // Use a broad, durable documentation query here. Very small domains can
   // legitimately disappear from an index and turn the browser smoke into an
   // upstream-indexing check rather than a product regression check.
-  searchJsonUrl.searchParams.set('q', 'Cloudflare Workers');
+  searchJsonUrl.searchParams.set('q', 'Workers runtime APIs');
   searchJsonUrl.searchParams.set('limit', '3');
   searchJsonUrl.searchParams.set('format', 'json');
   searchJsonUrl.searchParams.set('language', 'en-US');
@@ -770,7 +770,7 @@ try {
   const searchMarkdown = await page.request.get(searchMarkdownUrl.toString());
   assert.equal(searchMarkdown.status(), 200);
   assert.match(searchMarkdown.headers()['content-type'] || '', /^text\/markdown/i);
-  assert.match(await searchMarkdown.text(), /^# Search results for Cloudflare Workers/m);
+  assert.match(await searchMarkdown.text(), /^# Search results for Workers runtime APIs/m);
 
   const newsJsonUrl = new URL('/api/news', origin);
   newsJsonUrl.searchParams.set('q', 'Cloudflare');
