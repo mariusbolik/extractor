@@ -1337,14 +1337,14 @@ try {
     text: /DailyTour E\+ 3 GTS/i,
   });
   await submitExtraction({
-    url: 'https://www.amazon.de/echo-dot-2022/dp/B09B8X9RGM',
+    url: 'https://www.amazon.com/dp/B09B8V1LZ3',
     format: 'json',
     source: 'amazon',
     type: 'product',
     text: /Echo Dot/i,
   });
   await submitExtraction({
-    url: 'https://www.amazon.de/s?k=mechanical+keyboard&extractor_adapter=browser-1',
+    url: 'https://www.amazon.com/s?k=mechanical+keyboard&extractor_adapter=browser-1',
     format: 'json',
     source: 'amazon',
     type: 'feed',
