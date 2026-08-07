@@ -156,6 +156,64 @@ describe('extractUrl', () => {
     expect(renderPageHtmlMock).toHaveBeenCalledOnce();
   });
 
+  it('renders a navigation-heavy client shell instead of returning its menu', async () => {
+    const menu = Array.from({ length: 20 }, (_, index) => `<a href="/menu/${index}">Menu destination ${index}</a>`).join('');
+    const directHtml = `<html><head><title>Vehicle listing</title></head><body>
+      <header><nav>${menu}</nav></header><main><app-lot></app-lot></main>
+      <script src="/runtime.js"></script></body></html>`;
+    renderPageHtmlMock.mockResolvedValue(`<html><head><title>Vehicle listing</title></head><body>
+      <main><h1>2025 Example Coupe</h1>
+        <dl><dt>Current bid</dt><dd>$72,000 USD</dd><dt>Odometer</dt><dd>12,159 miles</dd><dt>Damage</dt><dd>Normal wear</dd></dl>
+        <p>This public auction listing contains the current vehicle condition, location, and sale information.</p>
+      </main></body></html>`);
+
+    const result = await extractUrl('https://vehicles.example.com/lot/61517076', {
+      fetcher: mockFetch(directHtml, 'text/html'),
+      renderPageHtml: renderPageHtmlMock,
+      allowBrowser: async () => true,
+    });
+
+    expect(result).toMatchObject({ type: 'article', method: 'browser' });
+    expect(result.content).toContain('$72,000 USD');
+    expect(result.content).toContain('12,159 miles');
+    expect(result.content).not.toContain('Menu destination');
+    expect(renderPageHtmlMock).toHaveBeenCalledOnce();
+  });
+
+  it('preserves structured product prices discovered after client rendering', async () => {
+    const menu = Array.from({ length: 16 }, (_, index) => `<a href="/menu/${index}">Menu ${index}</a>`).join('');
+    renderPageHtmlMock.mockResolvedValue(`<html><head><title>Rendered product</title>
+      <script type="application/ld+json">${JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name: '2025 Example Coupe',
+        sku: '61517076',
+        brand: { '@type': 'Brand', name: 'Example' },
+        offers: { '@type': 'Offer', price: '72000', priceCurrency: 'USD', availability: 'https://schema.org/InStock' },
+      })}</script></head><body><main><h1>2025 Example Coupe</h1>
+      <section><h2>Vehicle details</h2>
+        <p>Current public auction bid and complete vehicle information for this automobile listing.</p>
+        <dl><dt>Odometer</dt><dd>12,159 miles (actual)</dd><dt>Damage</dt><dd>Normal wear</dd><dt>Keys</dt><dd>Available</dd></dl>
+      </section>
+      <section><h2>Legal notice</h2><p>This general legal warning contains enough words that a readability parser may select it instead of the vehicle specifications shown above.</p></section>
+      </main></body></html>`);
+
+    const result = await extractUrl('https://vehicles.example.com/lot/61517076', {
+      fetcher: mockFetch(`<html><body><nav>${menu}</nav><main><app-lot></app-lot></main><script src="/app.js"></script></body></html>`, 'text/html'),
+      renderPageHtml: renderPageHtmlMock,
+      allowBrowser: async () => true,
+    });
+
+    expect(result).toMatchObject({
+      type: 'product',
+      id: '61517076',
+      attributes: { price: 7_200_000, currency: 'USD', priceDisplay: '72000.00 USD' },
+    });
+    expect(result.content).toContain('12,159 miles (actual)');
+    expect(result.content).toContain('Normal wear');
+    expect(toPublicExtractionResult(result)).not.toHaveProperty('method');
+  });
+
   it('uses descriptive publisher metadata before Browser Rendering', async () => {
     const description = 'This public application description is detailed enough to give an agent useful context without launching an expensive browser session.';
     const result = await extractUrl('https://example.com/app', {

@@ -8,6 +8,7 @@ import {
 
 const BROWSER_TIMEOUT_MS = 12_000;
 const NETWORK_SETTLE_TIMEOUT_MS = 2_000;
+const CLIENT_RENDER_SETTLE_TIMEOUT_MS = 4_000;
 const BROWSER_CLOSE_TIMEOUT_MS = 1_000;
 const MAX_RENDERED_BYTES = 5 * 1024 * 1024;
 
@@ -160,6 +161,8 @@ export async function renderPageHtml(url: URL, binding: BrowserRun): Promise<str
       throw sourceResponseError(status);
     }
 
+    const initialVisibleText = await page.evaluate(() => document.body?.innerText ?? '').catch(() => '');
+
     try {
       // Give client-rendered content a short opportunity to settle. A timeout
       // here is intentionally non-fatal because the current DOM may be useful.
@@ -170,6 +173,25 @@ export async function renderPageHtml(url: URL, binding: BrowserRun): Promise<str
       });
     } catch {
       // Long-lived requests are common; the loaded DOM is still useful.
+    }
+
+    try {
+      // Network-idle alone is insufficient for applications that schedule
+      // their data request after bootstrap. Wait for a meaningful visible DOM
+      // change, but keep the bounded timeout so static pages and failed apps do
+      // not hold the browser session indefinitely.
+      await page.waitForFunction(
+        (initialText) => {
+          const current = document.body?.innerText ?? '';
+          return current !== initialText && current.replace(/\s+/g, ' ').trim().length >= 80;
+        },
+        { timeout: CLIENT_RENDER_SETTLE_TIMEOUT_MS, polling: 250 },
+        initialVisibleText,
+      );
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    } catch {
+      // The current DOM may already be complete or the application may be
+      // static. Extraction below decides whether it is useful.
     }
 
     const html = await page.content();

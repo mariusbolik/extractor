@@ -3,6 +3,7 @@ import { assertNoAccessInterstitial } from '../access-interstitial';
 import { fetchPublicPage } from '../fetch';
 import { extractMarkdownFromHtml, markdownWordCount } from '../markdown';
 import type { ExtractionDependencies, ExtractionResult } from '../types';
+import { parseHTML } from 'linkedom';
 import { extractBlogListingFromHtml } from './blog-listing';
 import { extractDiscoveredAlternative, extractInferredFeedAlternative } from './discovery';
 import { extractProductDetailFromHtml } from './product-detail';
@@ -45,6 +46,27 @@ function unresolvedTemplatesDominate(markdown: string): boolean {
   const expression = new RegExp(`\\{\\{[^{}]{1,${MAX_TEMPLATE_EXPRESSION_LENGTH}}\\}\\}`, 'g');
   if (!expression.test(markdown)) return false;
   return markdownWordCount(markdown.replace(expression, '')) < 20;
+}
+
+function navigationShellDominates(html: string, markdown: string): boolean {
+  const { document } = parseHTML(html);
+  const links = document.querySelectorAll('a[href]').length;
+  if (links < 15) return false;
+
+  const primary = document.querySelector('main, article, [role="main"]');
+  if (primary) {
+    const clone = primary.cloneNode(true) as Element;
+    clone.querySelectorAll('nav, header, footer, aside, form, button, script, style, template')
+      .forEach((node) => node.remove());
+    if (markdownWordCount(clone.textContent ?? '') < 30) return true;
+  }
+
+  // Client applications sometimes omit a main landmark entirely. A large
+  // menu with no content headings is still an app shell even though generic
+  // readability scores its many link labels as a substantial article.
+  const headings = markdown.match(/^#{1,6}\s+/gm)?.length ?? 0;
+  const withoutLinks = markdown.replace(/!?\[[^\]]*\]\([^\s)]+(?:\s+"[^"]*")?\)/g, '');
+  return headings <= 1 && markdownWordCount(withoutLinks) < 160;
 }
 
 function titleFromMarkdown(markdown: string): string | null {
@@ -139,6 +161,13 @@ export async function extractWebPage(
         );
       }
     }
+    if (shouldUseBrowser && navigationShellDominates(page.body, extracted.content)) {
+      throw new ExtractionError(
+        'extraction_failed',
+        'The server response contained only the client application shell.',
+        422,
+      );
+    }
     if (extracted.metadataOnly) {
       const discovered = await extractDiscoveredAlternative(sourceHtml, fetchedUrl, dependencies, sourceLinkHeader);
       if (discovered) return discovered;
@@ -195,6 +224,17 @@ export async function extractWebPage(
   try {
     const html = await dependencies.renderPageHtml(url);
     assertNoAccessInterstitial(html);
+    // Rendering can reveal the same portable structured metadata and visible
+    // listings handled on ordinary HTML pages. Reuse those parsers before the
+    // generic Markdown fallback so prices, variants, and feed items retain
+    // their semantic schema instead of being flattened into prose.
+    const renderedUrl = new URL(fetchedUrl);
+    const renderedProductDetail = extractProductDetailFromHtml(html, renderedUrl);
+    if (renderedProductDetail) return renderedProductDetail;
+    const renderedProductListing = extractProductListingFromHtml(html, renderedUrl);
+    if (renderedProductListing) return renderedProductListing;
+    const renderedBlogListing = extractBlogListingFromHtml(html, renderedUrl);
+    if (renderedBlogListing) return renderedBlogListing;
     const extracted = extractMarkdownFromHtml(
       stripUnresolvedTemplateExpressions(html),
       fetchedUrl,

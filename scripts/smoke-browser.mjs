@@ -1190,6 +1190,13 @@ try {
     text: /Online Auto Auctions/i,
   });
   await submitExtraction({
+    url: 'https://www.copart.com/lot/61517076',
+    format: 'json',
+    source: 'web',
+    type: 'product',
+    text: /Odometer|12,159|Current bid/i,
+  });
+  await submitExtraction({
     url: 'https://bsky.app/profile/bsky.app/post/3mqcp5qjdfs26',
     format: 'markdown',
     source: 'bluesky',

@@ -28,6 +28,13 @@ function createTurndown(): TurndownService {
       && /(?:check|close|cross|icon)(?:[._/-]|$)/i.test(node.getAttribute('src') ?? ''),
     replacement: () => '',
   });
+  // Inline data images are application chrome or placeholders and can expand
+  // a tiny logo into tens of kilobytes of useless Markdown. Keep useful alt
+  // text while never serializing the embedded binary payload.
+  service.addRule('inline-data-images', {
+    filter: (node) => node.nodeName === 'IMG' && /^data:/i.test(node.getAttribute('src') ?? ''),
+    replacement: (_content, node) => node.getAttribute('alt')?.trim() ?? '',
+  });
   return service;
 }
 

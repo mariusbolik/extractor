@@ -1,5 +1,5 @@
 import { parseHTML } from 'linkedom';
-import { escapeMarkdown, extractMarkdownFromHtml, htmlFragmentToMarkdown } from '../markdown';
+import { escapeMarkdown, extractMarkdownFromHtml, htmlFragmentToMarkdown, markdownWordCount } from '../markdown';
 import type { ExtractedMedia, ExtractionResult, ProductVariant } from '../types';
 
 type UnknownRecord = Record<string, unknown>;
@@ -158,6 +158,21 @@ function specificationFeatures(document: Document): string[] {
   return [...new Set(output)].slice(0, 100);
 }
 
+function productMainMarkdown(document: Document, title: string, pageUrl: URL): string {
+  const normalizedTitle = title.toLowerCase().replace(/\s+/g, ' ').trim();
+  const heading = [...document.querySelectorAll('h1, h2, h3')].find((candidate) => {
+    const value = (candidate.textContent ?? '').toLowerCase().replace(/\s+/g, ' ').trim();
+    return value === normalizedTitle || (value.length >= 8 && normalizedTitle.includes(value));
+  });
+  const root = heading?.closest('main, article, [role="main"]')
+    ?? document.querySelector('main, article, [role="main"]');
+  if (!root) return '';
+  const clone = root.cloneNode(true) as Element;
+  clone.querySelectorAll('nav, header, footer, aside, form, button, script, style, noscript, template, iframe')
+    .forEach((node) => node.remove());
+  return htmlFragmentToMarkdown(clone.innerHTML, pageUrl.toString());
+}
+
 /** Normalize an advertised schema.org Product while reusing the fetched HTML. */
 export function extractProductDetailFromHtml(html: string, pageUrl: URL): ExtractionResult | null {
   const { document } = parseHTML(html);
@@ -170,8 +185,20 @@ export function extractProductDetailFromHtml(html: string, pageUrl: URL): Extrac
   const sellerOffers = offersFrom(product.offers);
   const seller = sellerOffers.map((offer) => nameFrom(offer.seller)).find(Boolean) ?? '';
   const variants = variantsFrom(sellerOffers);
-  const productPrice = variants.map((variant) => variant.price).filter((price): price is number => price !== undefined).sort((a, b) => a - b)[0];
-  const pricedVariant = productPrice === undefined ? undefined : variants.find((variant) => variant.price === productPrice);
+  const advertisedPrices = sellerOffers
+    .map((offer) => money(
+      offer.price ?? record(offer.priceSpecification)?.price,
+      offer.priceCurrency ?? record(offer.priceSpecification)?.priceCurrency,
+    ))
+    .filter((price): price is NonNullable<typeof price> => price !== null);
+  const pricedVariant = variants
+    .filter((variant) => variant.price !== undefined)
+    .sort((a, b) => a.price! - b.price!)[0];
+  // Schema.org commonly advertises one product-level Offer without an
+  // itemOffered variant. Preserve that price instead of requiring a synthetic
+  // variant title before the amount can enter the public product schema.
+  const pricedOffer = pricedVariant
+    ?? advertisedPrices.sort((a, b) => a.price - b.price)[0];
   const states = sellerOffers.map((offer) => availability(offer.availability)).filter(Boolean) as string[];
   const productAvailability = states.some((state) => state.toLowerCase() === 'instock')
     ? 'InStock'
@@ -187,6 +214,12 @@ export function extractProductDetailFromHtml(html: string, pageUrl: URL): Extrac
   const images = imagesFrom(product.image, pageUrl, title);
   const readable = extractMarkdownFromHtml(html, pageUrl.toString());
   const readableDetails = readable.content.replace(/^#\s+.*?(?:\r?\n){2}/, '').trim();
+  const mainDetails = productMainMarkdown(document as unknown as Document, title, pageUrl)
+    .replace(/^#\s+.*?(?:\r?\n){2}/, '')
+    .trim();
+  const productDetails = markdownWordCount(mainDetails) > markdownWordCount(readableDetails)
+    ? mainDetails
+    : readableDetails;
   const variantLines = variants.map((variant) => [
     `- ${escapeMarkdown(variant.title)}`,
     variant.sku ? `SKU ${escapeMarkdown(variant.sku)}` : '',
@@ -196,11 +229,11 @@ export function extractProductDetailFromHtml(html: string, pageUrl: URL): Extrac
   const content = [
     `# ${escapeMarkdown(title)}`,
     brand ? `Brand: ${escapeMarkdown(brand)}` : '',
-    pricedVariant ? `Price: ${escapeMarkdown(pricedVariant.priceDisplay ?? '')}` : '',
+    pricedOffer ? `Price: ${escapeMarkdown(pricedOffer.priceDisplay ?? '')}` : '',
     productAvailability ? `Availability: ${escapeMarkdown(productAvailability)}` : '',
     seller ? `Seller: ${escapeMarkdown(seller)}` : '',
     description,
-    readableDetails ? `## Details\n\n${readableDetails}` : '',
+    productDetails ? `## Details\n\n${productDetails}` : '',
     features.length ? `## Specifications\n\n${features.map((feature) => `- ${escapeMarkdown(feature)}`).join('\n')}` : '',
     variantLines.length ? `## Variants\n\n${variantLines.join('\n')}` : '',
     images[0] ? `![${escapeMarkdown(title)}](${images[0].url})` : '',
@@ -224,10 +257,10 @@ export function extractProductDetailFromHtml(html: string, pageUrl: URL): Extrac
       ...(category ? { category } : {}),
       ...(sku ? { sku } : {}),
       ...(gtin ? { gtin } : {}),
-      ...(pricedVariant?.price !== undefined ? {
-        price: pricedVariant.price,
-        ...(pricedVariant.currency ? { currency: pricedVariant.currency } : {}),
-        ...(pricedVariant.priceDisplay ? { priceDisplay: pricedVariant.priceDisplay } : {}),
+      ...(pricedOffer?.price !== undefined ? {
+        price: pricedOffer.price,
+        ...(pricedOffer.currency ? { currency: pricedOffer.currency } : {}),
+        ...(pricedOffer.priceDisplay ? { priceDisplay: pricedOffer.priceDisplay } : {}),
       } : {}),
       ...(productAvailability ? { availability: productAvailability } : {}),
       ...(Number.isFinite(rating) && rating >= 0 ? { rating, ratingScale: 5 } : {}),

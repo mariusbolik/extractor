@@ -30,6 +30,18 @@ describe('HTML to Markdown', () => {
     );
   });
 
+  it('keeps inline image labels without serializing embedded data', () => {
+    const markdown = htmlFragmentToMarkdown(
+      '<p><img alt="Marketplace logo" src="data:image/svg+xml;base64,PHN2Zz48L3N2Zz4="></p><p>Useful listing details.</p>',
+      'https://example.com/',
+    );
+
+    expect(markdown).toContain('Marketplace logo');
+    expect(markdown).toContain('Useful listing details');
+    expect(markdown).not.toContain('data:image');
+    expect(markdown).not.toContain('PHN2');
+  });
+
   it('selects a requested landing-page section instead of an unrelated code demo', () => {
     const html = `
       <html><head><title>Search API</title></head><body>
