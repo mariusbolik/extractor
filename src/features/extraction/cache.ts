@@ -1,4 +1,4 @@
-export const API_CACHE_VERSION = '2026-08-rendered-products-v14';
+export const API_CACHE_VERSION = '2026-08-rendered-roots-v15';
 const SEARCH_CACHE_VERSION = '2026-08-search-context-v11';
 const NEWS_CACHE_VERSION = '2026-08-news-locales-timeframe-v3';
 const IMAGE_CACHE_VERSION = '2026-08-image-filters-v2';

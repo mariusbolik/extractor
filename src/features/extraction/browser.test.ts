@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { alignedBrowserUserAgent, normalizeBrowserRunError } from './browser';
+import { parseHTML } from 'linkedom';
+import { alignedBrowserUserAgent, clientRenderRootSelector, normalizeBrowserRunError } from './browser';
 
 describe('Browser Run normalization', () => {
   it('uses the managed Chromium version instead of a stale hard-coded version', () => {
@@ -12,6 +13,16 @@ describe('Browser Run normalization', () => {
   it('preserves the managed identity when its version cannot be determined', () => {
     const userAgent = 'ManagedBrowser/1.0';
     expect(alignedBrowserUserAgent(userAgent, 'unknown')).toBe(userAgent);
+  });
+
+  it('selects framework hydration roots before generic page landmarks', () => {
+    const react = parseHTML('<body><main>Server content</main><div id="__next">React application</div></body>').document;
+    const vue = parseHTML('<body><main>Server content</main><div id="app">Vue application</div></body>').document;
+    const plain = parseHTML('<body><main>Server content</main></body>').document;
+
+    expect(clientRenderRootSelector(react as unknown as Document)).toBe('#__next');
+    expect(clientRenderRootSelector(vue as unknown as Document)).toBe('#app');
+    expect(clientRenderRootSelector(plain as unknown as Document)).toBe('main');
   });
 
   it('maps platform capacity exhaustion to a retryable high-cost limit', () => {

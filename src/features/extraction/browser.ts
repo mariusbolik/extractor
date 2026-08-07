@@ -9,15 +9,37 @@ import {
 const BROWSER_TIMEOUT_MS = 12_000;
 const NETWORK_SETTLE_TIMEOUT_MS = 2_000;
 const CLIENT_RENDER_SETTLE_TIMEOUT_MS = 4_000;
+const CLIENT_RENDER_STABILITY_MS = 500;
 const BROWSER_CLOSE_TIMEOUT_MS = 1_000;
 const MAX_RENDERED_BYTES = 5 * 1024 * 1024;
 
 const UNNEEDED_RESOURCE_TYPES = new Set(['font', 'image', 'media']);
+const CLIENT_ROOT_SELECTORS = [
+  '#__next', '#__nuxt', '#root', '#app', '[data-reactroot]', '[data-v-app]',
+  '[data-server-rendered]', 'app-root', 'main', '[role="main"]', 'body',
+];
 
 export function alignedBrowserUserAgent(originalUserAgent: string, browserVersion: string): string {
   const version = browserVersion.match(/(?:HeadlessChrome|Chrome)\/([\d.]+)/i)?.[1];
   if (!version) return originalUserAgent;
   return originalUserAgent.replace(/HeadlessChrome\/[\d.]+/i, `Chrome/${version}`);
+}
+
+/** Select the public DOM root whose content should settle after hydration. */
+export function clientRenderRootSelector(document: Pick<Document, 'querySelector'>): string {
+  return CLIENT_ROOT_SELECTORS.find((selector) => document.querySelector(selector)) ?? 'body';
+}
+
+function rootSnapshot(selectors: string[]) {
+  for (const selector of selectors) {
+    const root = document.querySelector(selector);
+    if (root) return { selector, text: (root as HTMLElement).innerText ?? root.textContent ?? '' };
+  }
+  return { selector: 'body', text: document.body?.innerText ?? '' };
+}
+
+function meaningfulText(value: string): boolean {
+  return value.replace(/\s+/g, ' ').trim().length >= 80;
 }
 
 function numericErrorStatus(error: unknown): number | null {
@@ -161,7 +183,7 @@ export async function renderPageHtml(url: URL, binding: BrowserRun): Promise<str
       throw sourceResponseError(status);
     }
 
-    const initialVisibleText = await page.evaluate(() => document.body?.innerText ?? '').catch(() => '');
+    const initialRoot = await page.evaluate(rootSnapshot, CLIENT_ROOT_SELECTORS).catch(() => ({ selector: 'body', text: '' }));
 
     try {
       // Give client-rendered content a short opportunity to settle. A timeout
@@ -175,20 +197,38 @@ export async function renderPageHtml(url: URL, binding: BrowserRun): Promise<str
       // Long-lived requests are common; the loaded DOM is still useful.
     }
 
+    let renderedRoot = await page.evaluate(rootSnapshot, CLIENT_ROOT_SELECTORS).catch(() => initialRoot);
     try {
-      // Network-idle alone is insufficient for applications that schedule
-      // their data request after bootstrap. Wait for a meaningful visible DOM
-      // change, but keep the bounded timeout so static pages and failed apps do
-      // not hold the browser session indefinitely.
-      await page.waitForFunction(
-        (initialText) => {
-          const current = document.body?.innerText ?? '';
-          return current !== initialText && current.replace(/\s+/g, ' ').trim().length >= 80;
-        },
-        { timeout: CLIENT_RENDER_SETTLE_TIMEOUT_MS, polling: 250 },
-        initialVisibleText,
-      );
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // React, Vue, Next, and Nuxt all hydrate a stable application root. A
+      // body-level change is too broad: analytics banners can arrive before
+      // the actual application data. Wait only for the selected root to gain
+      // meaningful content, then sample it again to avoid serializing a
+      // transient loading state.
+      if (
+        renderedRoot.selector === initialRoot.selector
+        && renderedRoot.text === initialRoot.text
+        && renderedRoot.selector !== 'body'
+      ) {
+        await page.waitForFunction(
+          ({ selector, initialText }) => {
+            const root = document.querySelector(selector);
+            const current = (root as HTMLElement | null)?.innerText ?? root?.textContent ?? '';
+            return current !== initialText && current.replace(/\s+/g, ' ').trim().length >= 80;
+          },
+          { timeout: CLIENT_RENDER_SETTLE_TIMEOUT_MS, polling: 250 },
+          { selector: renderedRoot.selector, initialText: renderedRoot.text },
+        );
+        renderedRoot = await page.evaluate(rootSnapshot, CLIENT_ROOT_SELECTORS).catch(() => renderedRoot);
+      }
+      if (meaningfulText(renderedRoot.text)) {
+        await new Promise((resolve) => setTimeout(resolve, CLIENT_RENDER_STABILITY_MS));
+        const afterStability = await page.evaluate(rootSnapshot, CLIENT_ROOT_SELECTORS).catch(() => renderedRoot);
+        if (afterStability.selector === renderedRoot.selector && afterStability.text !== renderedRoot.text) {
+          // One additional quiet interval captures a final hydration update
+          // without extending the bounded wait into an open-ended poll.
+          await new Promise((resolve) => setTimeout(resolve, CLIENT_RENDER_STABILITY_MS));
+        }
+      }
     } catch {
       // The current DOM may already be complete or the application may be
       // static. Extraction below decides whether it is useful.
